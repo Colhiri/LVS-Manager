@@ -54,6 +54,7 @@ namespace AutoCAD_2022_Plugin1
      * 
      * 
     */
+
     public class Commands
     {
 
@@ -139,73 +140,6 @@ namespace AutoCAD_2022_Plugin1
             objectIDs = new ObjectIdCollection(selectResult.Value.GetObjectIds());
 
             test(ref objectIDs);
-
-
-            //string nameLayout = "Лист2";
-            //ObjectId layoutID = layoutManager.GetLayoutId(nameLayout);
-
-            //using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            //{
-            //    // Получаем коробку с выбранными объектами из МОДЕЛИ
-            //    Extents3d ext = new Extents3d();
-            //    foreach (ObjectId id in objectIDs)
-            //    {
-            //        var entity = acTrans.GetObject(id, OpenMode.ForRead) as Entity;
-            //        if (entity != null)
-            //        {
-            //            ext.AddExtents(entity.GeometricExtents);
-            //        }
-            //    }
-
-            //    // Получаем список видовых экранов на выбранном ЛИСТЕ
-            //    double modelScrRatio;
-            //    Layout layout = acTrans.GetObject(layoutID, OpenMode.ForRead) as Layout;
-            //    ObjectIdCollection viewColl = layout.GetViewports();
-
-            //    for (int i = 1; i < viewColl.Count; i++)
-            //    {
-            //        Viewport vp = acTrans.GetObject(viewColl[i], OpenMode.ForRead) as Viewport;
-
-            //        modelScrRatio = vp.Width / vp.Height;
-            //        // Преобразование матрицы DCS to WCS
-            //        Matrix3d matWCS2DCS;
-            //        // Преобразование плоскости в мировые координаты
-            //        matWCS2DCS = Matrix3d.PlaneToWorld(vp.ViewDirection);
-            //        // Возвращение вектора смещения
-            //        matWCS2DCS = Matrix3d.Displacement(vp.ViewTarget - Point3d.Origin) * matWCS2DCS;
-            //        // Возвращение матрицы поворота на угол вокруг оси с вектором оси через точку центра
-            //        matWCS2DCS = Matrix3d.Rotation(-vp.TwistAngle, vp.ViewDirection, vp.ViewTarget) * matWCS2DCS;
-            //        // Возвращение обратной матрицы
-            //        matWCS2DCS.Inverse();
-            //        ext.TransformBy(matWCS2DCS);
-
-            //        double modelWidth = ext.MaxPoint.X - ext.MinPoint.X;
-            //        double modelHeight = ext.MaxPoint.Y - ext.MinPoint.Y;
-
-            //        Point2d modelCenter = new Point2d((ext.MaxPoint.X + ext.MinPoint.X) * 0.5,
-            //                                          (ext.MaxPoint.Y + ext.MinPoint.Y) * 0.5);
-
-            //        vp.UpgradeOpen();
-
-            //        if (modelWidth > (modelHeight * modelScrRatio))
-            //        {
-            //            modelHeight = modelWidth / modelScrRatio;
-            //        }
-            //        vp.ViewHeight = modelHeight * 1.01;
-            //        vp.ViewCenter = modelCenter;
-            //        vp.On = true;
-            //        vp.StandardScale = StandardScaleType.Scale1To50;
-            //        vp.UpdateDisplay();
-
-            //        vp.On = false;
-            //        vp.StandardScale = StandardScaleType.Scale1To50;
-            //        vp.UpdateDisplay();
-
-            //    }
-
-            //    acTrans.Commit();
-
-            //}
         }
 
 
@@ -214,6 +148,10 @@ namespace AutoCAD_2022_Plugin1
             Document doc = Application.DocumentManager.MdiActiveDocument;
             Editor ed = doc.Editor;
             Database db = doc.Database;
+
+            double modelHeight;
+            double modelWidth;
+
 
             using (Transaction tr = doc.TransactionManager.StartTransaction())
             {
@@ -224,8 +162,12 @@ namespace AutoCAD_2022_Plugin1
                     if (ent != null)
                     {
                         ext.AddExtents(ent.GeometricExtents);
+                        
                     }
                 }
+
+
+
 
                 LayoutManager layman = LayoutManager.Current;
 
@@ -278,6 +220,11 @@ namespace AutoCAD_2022_Plugin1
                 }
                 tr.Commit();
             }
+        }
+
+        private static ObjectId CreateViewport()
+        {
+
         }
     
 
@@ -335,30 +282,17 @@ namespace AutoCAD_2022_Plugin1
                         acBlkTblRec.AppendEntity(acVport);
                         acTrans.AddNewlyCreatedDBObject(acVport, true);
 
-                        // Change the view direction
-                        acVport.ViewDirection = acVec3dCol[nCnt];
+                        // Change the view direction AND Increment the counter by 1
+                        acVport.ViewDirection = acVec3dCol[nCnt++];
 
                         // Enable the viewport
                         acVport.On = true;
 
                         // Record the last viewport created
                         acVportLast = acVport;
-
-                        // Increment the counter by 1
-                        nCnt = nCnt + 1;
                     }
                 }
 
-                if (acVportLast != null)
-                {
-                    // Activate model space in the viewport
-                    // acDoc.Editor.SwitchToModelSpace();
-
-                    // Set the new viewport current via an imported ObjectARX function
-                    // acedSetCurrentVPort(acVportLast.UnmanagedObject);
-                }
-
-                // Save the new objects to the database
                 acTrans.Commit();
             }
         }
