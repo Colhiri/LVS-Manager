@@ -62,7 +62,7 @@ namespace AutoCAD_2022_Plugin1
         /// Шаблон для методов
         /// </summary>
         [CommandMethod("Shablon")]
-        private void Shablon()
+        public void Shablon()
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
             if (AcDocument is null) return;
@@ -142,6 +142,17 @@ namespace AutoCAD_2022_Plugin1
             test(ref objectIDs);
         }
 
+        /// <summary>
+        /// Шаблон для методов
+        /// </summary>
+        [CommandMethod("CreateViewport")]
+        public void CreateViewport()
+        {
+            CreateViewport(width: 100, height: 100, layoutName: "Лист1",
+            centerPoint: new Point3d(100, 100, 100), orientation: new Vector3d(0, 0, 1));
+        }
+        
+
 
         public static void test(ref ObjectIdCollection ids)
         {
@@ -165,9 +176,6 @@ namespace AutoCAD_2022_Plugin1
                         
                     }
                 }
-
-
-
 
                 LayoutManager layman = LayoutManager.Current;
 
@@ -222,81 +230,62 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
-        private static ObjectId CreateViewport()
+        /// <summary>
+        /// Создает видовой экран по заданным параметрам
+        /// Creating viewport in set layout in set point
+        /// 
+        /// CreateViewport(width: dWidth, height: dHeight, layoutName: "Лист2",
+        /// centerPoint: acPt3d, orientation: acVec3dCol[nCnt++]);
+        /// </summary>
+        /// <param name="width"></param>
+        /// <param name="height"></param>
+        /// <param name="layoutName"></param>
+        /// <param name="centerPoint"></param>
+        /// <param name="orientation">Направление viewport 001 стандартный к модели</param>
+        /// <returns></returns>
+        private static ObjectId CreateViewport(double width, double height, string layoutName, Point3d centerPoint, Vector3d orientation)
         {
+            //ObjectId layoutID
 
-        }
-    
+            ObjectId viewportID;
 
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layoutManager = LayoutManager.Current;
 
-        [CommandMethod("FourFloatingViewports")]
-        public static void FourFloatingViewports()
-        {
-            // Get the current document and database, and start a transaction
-            Document acDoc = Application.DocumentManager.MdiActiveDocument;
-            Database acCurDb = acDoc.Database;
+            layoutManager.CurrentLayout = layoutName;
 
-            using (Transaction acTrans = acCurDb.TransactionManager.StartTransaction())
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
-                // Open the Block table for read
-                BlockTable acBlkTbl;
-                acBlkTbl = acTrans.GetObject(acCurDb.BlockTableId,
-                                             OpenMode.ForRead) as BlockTable;
+                BlockTable acBlkTbl = acTrans.GetObject(AcDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
 
-                // Open the Block table record Paper space for write
-                BlockTableRecord acBlkTblRec;
-                acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.PaperSpace],
-                                                OpenMode.ForWrite) as BlockTableRecord;
+                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.PaperSpace], OpenMode.ForWrite) as BlockTableRecord;
 
-                // Switch to the previous Paper space layout
-                Application.SetSystemVariable("TILEMODE", 0);
-                acDoc.Editor.SwitchToPaperSpace();
-
-                Point3dCollection acPt3dCol = new Point3dCollection();
-                acPt3dCol.Add(new Point3d(0, 0, 0));
-                acPt3dCol.Add(new Point3d(50, 50, 0));
-                acPt3dCol.Add(new Point3d(100, 50, 0));
-                acPt3dCol.Add(new Point3d(100, 50, 0));
-
-                Vector3dCollection acVec3dCol = new Vector3dCollection();
-                acVec3dCol.Add(new Vector3d(0, 0, 1));
-                acVec3dCol.Add(new Vector3d(0, 0, 1));
-                acVec3dCol.Add(new Vector3d(0, 0, 1));
-                acVec3dCol.Add(new Vector3d(0, 0, 1));
-
-                double dWidth = 20;
-                double dHeight = 20;
-
-                Viewport acVportLast = null;
-                int nCnt = 0;
-
-                foreach (Point3d acPt3d in acPt3dCol)
+                Viewport viewport = new Viewport
                 {
-                    using (Viewport acVport = new Viewport())
-                    {
-                        acVport.CenterPoint = acPt3d;
-                        acVport.Width = dWidth;
-                        acVport.Height = dHeight;
+                    Width = width,
+                    Height = height,
+                    CenterPoint = centerPoint
+                };
 
-                        // Add the new object to the block table record and the transaction
-                        acBlkTblRec.AppendEntity(acVport);
-                        acTrans.AddNewlyCreatedDBObject(acVport, true);
+                // Add new DBObject in Database
+                // Set ObjectId Creating ViewPort
+                viewportID = acBlkTblRec.AppendEntity(viewport);
+                acTrans.AddNewlyCreatedDBObject(viewport, true);
 
-                        // Change the view direction AND Increment the counter by 1
-                        acVport.ViewDirection = acVec3dCol[nCnt++];
-
-                        // Enable the viewport
-                        acVport.On = true;
-
-                        // Record the last viewport created
-                        acVportLast = acVport;
-                    }
-                }
+                // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
+                viewport.ViewDirection = orientation;
+                viewport.On = true;
 
                 acTrans.Commit();
-            }
-        }
 
+                acTrans.Dispose();
+            }
+
+            return viewportID;
+        }
 
 
         /// <summary>
