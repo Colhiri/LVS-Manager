@@ -431,6 +431,44 @@ namespace AutoCAD_2022_Plugin1
         }
 
 
+        public (double, double) CheckSizeLayout(string nameLayout)
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+
+            double layHeight;
+            double layWidth;
+
+            ObjectId layID = layManager.GetLayoutId(nameLayout);
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                // var lay = acTrans.GetObject(layID, OpenMode.ForRead) as Layout;
+                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+                double numerator = layWrite.CustomPrintScale.Numerator;
+
+                var variable = layWrite.Limits;
+                layWrite.UseStandardScale = true;
+
+
+                var variable = layWrite.StdScaleType;
+                var variable = layWrite.;
+
+
+                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+            }
+
+
+
+        }
+
+
+
 
 
         /// <summary>
