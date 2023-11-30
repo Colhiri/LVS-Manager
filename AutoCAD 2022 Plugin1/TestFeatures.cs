@@ -9,11 +9,16 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
+using static AutoCAD_2022_Plugin1.Working_functions;
+
+
 
 [assembly: CommandClass(typeof(AutoCAD_2022_Plugin1.CommandsTest))]
 
 namespace AutoCAD_2022_Plugin1
 {
+
+
     public class CommandsTest : Commands
     {
         /*
@@ -43,17 +48,21 @@ namespace AutoCAD_2022_Plugin1
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK) return;
-            ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
+            // if (select.Status != PromptStatus.OK) return;
+            //ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
 
+            //
+            //(double, double) SizeModel = CheckModelSize(objectIds);
+            //Point3d CenterModel = CheckCenterModel(objectIds);
+            //
+            //ObjectId vpID = CreateViewport(width: SizeModel.Item1, height: SizeModel.Item2, layoutName: "Лист2",
+            //centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1));
 
-            (double, double) SizeModel = CheckModelSize(objectIds);
-            Point3d CenterModel = CheckCenterModel(objectIds);
+            //
+            //MoveSelectToVP(objectIds, vpID);
 
-            ObjectId vpID = CreateViewport(width: SizeModel.Item1, height: SizeModel.Item2, layoutName: "Лист2",
-            centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1));
-
-            MoveSelectToVP(objectIds, vpID);
+            // 
+            CheckSizeLayout("Лист2");
 
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
