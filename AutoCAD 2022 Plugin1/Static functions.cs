@@ -32,7 +32,8 @@ namespace AutoCAD_2022_Plugin1
         /// <returns>
         /// Creating viewport ID
         /// </returns>
-        public static ObjectId CreateViewport(double width, double height, string layoutName, Point3d centerPoint, Vector3d orientation)
+        public static ObjectId CreateViewport(double widthObjectsModel, double heightObjectsModel, string layoutName, 
+                                              Point3d centerPoint, Vector3d orientation, StandardScaleType scaleVP)
         {
             //ObjectId layoutID
 
@@ -54,9 +55,10 @@ namespace AutoCAD_2022_Plugin1
 
                 Viewport viewport = new Viewport
                 {
-                    Width = width,
-                    Height = height,
-                    CenterPoint = centerPoint
+                    Width = widthObjectsModel,
+                    Height = heightObjectsModel,
+                    CenterPoint = centerPoint,
+                    StandardScale = scaleVP
                 };
 
                 // Add new DBObject in Database

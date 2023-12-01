@@ -48,15 +48,17 @@ namespace AutoCAD_2022_Plugin1
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
-            // if (select.Status != PromptStatus.OK) return;
-            //ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
+            if (select.Status != PromptStatus.OK) return;
+            ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
 
             //
-            //(double, double) SizeModel = CheckModelSize(objectIds);
-            //Point3d CenterModel = CheckCenterModel(objectIds);
+            (double, double) SizeModel = CheckModelSize(objectIds);
+            Point3d CenterModel = CheckCenterModel(objectIds);
             //
-            //ObjectId vpID = CreateViewport(width: SizeModel.Item1, height: SizeModel.Item2, layoutName: "Лист2",
-            //centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1));
+            ObjectId vpid = CreateViewport(widthObjectsModel: SizeModel.Item1, heightObjectsModel: SizeModel.Item2, layoutName: "Лист2",
+            centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To2);
+
+
 
             //
             //MoveSelectToVP(objectIds, vpID);
