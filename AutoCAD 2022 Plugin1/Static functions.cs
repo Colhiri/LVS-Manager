@@ -276,9 +276,9 @@ namespace AutoCAD_2022_Plugin1
 
                 if (formatsLayout == null) throw new ArgumentNullException();
 
-                layHeight = layWrite.PlotPaperSize.X;
+                layHeight = layWrite.PlotPaperSize.Y;
 
-                layWidth = layWrite.PlotPaperSize.Y;
+                layWidth = layWrite.PlotPaperSize.X;
 
                 acTrans.Commit();
             }

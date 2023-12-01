@@ -53,7 +53,17 @@ namespace AutoCAD_2022_Plugin1
 
             //
             (double, double) SizeModel = CheckModelSize(objectIds);
+            (double, double) SizeLayout = CheckSizeLayout("Лист2");
+
+
+            bool checking = CheckSizeViewportOnSizeLayout("Лист2", new Point2d(SizeModel.Item1, SizeModel.Item2));
+            if (!checking)
+            {
+                throw new System.Exception("Scale selected objects is too big for choicing layout!");
+            }
+
             Point3d CenterModel = CheckCenterModel(objectIds);
+
             //
             ObjectId vpid = CreateViewport(widthObjectsModel: SizeModel.Item1, heightObjectsModel: SizeModel.Item2, layoutName: "Лист2",
             centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To2);
@@ -64,7 +74,6 @@ namespace AutoCAD_2022_Plugin1
             //MoveSelectToVP(objectIds, vpID);
 
             // 
-            CheckSizeLayout("Лист2");
 
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {

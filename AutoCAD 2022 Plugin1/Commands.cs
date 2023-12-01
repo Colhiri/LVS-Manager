@@ -11,6 +11,8 @@ using System.Resources;
 using System.Runtime.InteropServices;
 using static Autodesk.AutoCAD.Windows.Window;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+using static AutoCAD_2022_Plugin1.Working_functions;
+
 
 [assembly: CommandClass(typeof(AutoCAD_2022_Plugin1.Commands))]
 
@@ -154,8 +156,8 @@ namespace AutoCAD_2022_Plugin1
         [CommandMethod("CreateViewport")]
         public void CreateViewportTESTFUNC()
         {
-            CreateViewport(width: 100, height: 100, layoutName: "Лист1",
-            centerPoint: new Point3d(100, 100, 100), orientation: new Vector3d(0, 0, 1));
+            CreateViewport(widthObjectsModel: 100, heightObjectsModel: 100, layoutName: "Лист1",
+            centerPoint: new Point3d(100, 100, 100), orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To1);
         }
         
 
