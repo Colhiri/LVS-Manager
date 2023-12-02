@@ -32,6 +32,12 @@ namespace AutoCAD_2022_Plugin1
          * 
          */
 
+        //"ISO_full_bleed_A5_(148.00_x_210.00_MM)"
+        //"ISO_full_bleed_A4_(210.00_x_297.00_MM)"
+        //"ISO_full_bleed_A3_(297.00_x_420.00_MM)"
+        //"ISO_full_bleed_A2_(420.00_x_594.00_MM)"
+        //"ISO_full_bleed_A1_(594.00_x_841.00_MM)"
+
 
 
         /// <summary>
@@ -46,10 +52,15 @@ namespace AutoCAD_2022_Plugin1
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layoutManager = LayoutManager.Current;
 
+            GetAllCanonicalScales();
+
+            TESTING("Лист2");
+
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
             if (select.Status != PromptStatus.OK) return;
             ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
+
 
             //
             (double, double) SizeModel = CheckModelSize(objectIds);

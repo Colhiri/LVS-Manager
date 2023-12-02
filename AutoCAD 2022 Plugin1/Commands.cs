@@ -146,7 +146,44 @@ namespace AutoCAD_2022_Plugin1
         }
 
 
-        
+
+        [LispFunction("DisplayFullName")]
+        public static void DisplayFullName(ResultBuffer rbArgs)
+        {
+            string Name1 = "";
+            string Name2 = "";
+
+            Document doc = Application.DocumentManager.MdiActiveDocument;
+            Editor ed = doc.Editor;
+            Database db = doc.Database;
+
+            if (rbArgs != null)
+            {
+                int count = 0;
+
+                foreach (TypedValue rb in rbArgs)
+                {
+                    // ВОзвращает целочисленный код типа данных в Lisp Data Types
+                    // rb.TypeCode;
+
+                    if (rb.TypeCode == (int)LispDataType.Text)
+                    {
+                        if (count == 0)
+                        {
+                            Name1 = rb.ToString();
+                        }
+                        else
+                        {
+                            Name2 = rb.ToString();
+                        }
+                    }
+
+                    count++;
+                }
+                ed.WriteMessage($"Name = {Name1} {Name2}");
+
+            }
+        }
 
 
 
@@ -385,15 +422,7 @@ namespace AutoCAD_2022_Plugin1
                 if (dBDictionaryEntries.Contains(nameToDelete))
                 {
                     LayoutManager.Current.DeleteLayout(nameToDelete);
-
-                    AcTrans.Dispose();
                 }
-                else
-                {
-                    AcTrans.Dispose();
-                    return;
-                }
-
                 AcTrans.Dispose(); 
             }
         }

@@ -2,6 +2,8 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Internal;
+using Autodesk.AutoCAD.PlottingServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
@@ -58,7 +60,6 @@ namespace AutoCAD_2022_Plugin1
                     Width = widthObjectsModel,
                     Height = heightObjectsModel,
                     CenterPoint = centerPoint,
-                    StandardScale = scaleVP
                 };
 
                 // Add new DBObject in Database
@@ -67,6 +68,7 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.AddNewlyCreatedDBObject(viewport, true);
 
                 // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
+                viewport.StandardScale = scaleVP;
                 viewport.ViewDirection = orientation;
                 viewport.On = true;
 
@@ -87,16 +89,21 @@ namespace AutoCAD_2022_Plugin1
         /// </returns>
         public static bool CheckSizeViewportOnSizeLayout(string nameLayout, Point2d viewportSize, double borderLayout = 5)
         {
-            (double, double) size = CheckSizeLayout(nameLayout);
-
             double height, width;
-
+            (double, double) size = CheckSizeLayout(nameLayout);
             size.ToTuple().Deconstruct(out height, out width);
+            Point2d layoutSize = new Point2d(height, width);
 
-            Point2d sizeLayout = new Point2d(height, width);
+            if (layoutSize.X - layoutSize.X * (borderLayout / 100) < viewportSize.X ||
+                layoutSize.Y - layoutSize.Y * (borderLayout / 100) < viewportSize.Y)
+                return false;
+            return true;
+        }
+        public static bool CheckSizeViewportOnSizeLayout(Point2d layoutSize, Point2d viewportSize, double borderLayout = 5)
+        {
 
-            if (sizeLayout.X - sizeLayout.X * (borderLayout / 100) < viewportSize.X || 
-                sizeLayout.Y - sizeLayout.Y * (borderLayout / 100) < viewportSize.Y)
+            if (layoutSize.X - layoutSize.X * (borderLayout / 100) < viewportSize.X ||
+                layoutSize.Y - layoutSize.Y * (borderLayout / 100) < viewportSize.Y)
                 return false;
             return true;
         }
@@ -260,21 +267,17 @@ namespace AutoCAD_2022_Plugin1
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
                 var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
-
+                
+                // Обновляем девайс печати для листа, потому что он не знает изначально что у него за форматы печати есть.
                 PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
-
-                List<string> formatsLayout;
-
                 try
                 {
-                    formatsLayout = pltValidator.GetCanonicalMediaNameList(layWrite).Cast<string>().ToList();
+                    pltValidator.SetPlotConfigurationName(layWrite, layWrite.PlotConfigurationName, null);
                 }
                 catch
                 {
-                    throw new System.Exception("Refresh layout. Check it.");
+                    pltValidator.SetPlotConfigurationName(layWrite, "Default Windows System Printer.pc3", null);
                 }
-
-                if (formatsLayout == null) throw new ArgumentNullException();
 
                 layHeight = layWrite.PlotPaperSize.Y;
 
@@ -285,6 +288,201 @@ namespace AutoCAD_2022_Plugin1
 
             return (layHeight, layWidth);
         }
+
+        /// <summary>
+        /// Получаем все канонические масштабы в открытом чертеже
+        /// </summary>
+        /// <returns></returns>
+        public static string[] GetAllCanonicalScales(string deviceName = "Default Windows System Printer.pc3")
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+            PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+
+            string[] device = pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
+            if (!device.Contains(deviceName))
+            {
+                throw new System.Exception("Not found your device in device list in Autocad.");
+            }
+
+            string[] scales;
+
+            using (PlotSettings pltSet = new PlotSettings(true))
+            {
+                pltValidator.SetPlotConfigurationName(pltSet, deviceName, null);
+                scales = pltValidator.GetCanonicalMediaNameList(pltSet).Cast<string>().ToArray();
+            }
+
+            return scales;
+        }
+
+
+        ////// Функция, которая применяет стандартный масштаб к видовому экрану
+        ////// 
+        ////// 
+        ////// 
+
+
+
+        ////// Функция, которая применяет пользовательский масштаб к видовому экрану
+        ////// 
+        ////// 
+        ////// 
+
+
+        ////// Функция, которая проверяет границы на макете (их наличие и если да то сколько)
+        ////// 
+        ////// Нужна чтобы понимать как показывать прямоугольник над выделенной областью
+        ////// а также чтобы правильно рассчитывать границы макета
+
+        ////// Нужно будет перерабатывать функцию Создания и проверки видового экрана, так как эти функции не учитывают границы отхождения видового экрана
+        ////// 
+        ////// 
+        ////// 
+
+
+
+        /// <summary>
+        /// Применение выбранного мастшаба на выбранные объекты в модели 
+        /// </summary>
+        public static Point2d ApplyScaleToSizeObjectsInModel(Point2d sizeObjects, StandardScaleType scaleObjects)
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+
+            string nameLayout = layManager.CurrentLayout;
+
+            ObjectId layID = layManager.GetLayoutId(nameLayout);
+
+            double newWidth;
+            double newHeight;
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+                BlockTable acBlkTbl = acTrans.GetObject(AcDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
+
+                BlockTableRecord acBlkTblRec = acTrans.GetObject(acBlkTbl[BlockTableRecord.PaperSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                Viewport viewport = new Viewport
+                {
+                    Width = sizeObjects.X,
+                    Height = sizeObjects.Y,
+                    CenterPoint = new Point3d(0, 0, 0),
+                };
+
+                // Add new DBObject in Database
+                // Set ObjectId Creating ViewPort
+                ObjectId viewportID = acBlkTblRec.AppendEntity(viewport);
+                acTrans.AddNewlyCreatedDBObject(viewport, true);
+
+                viewport.StandardScale = scaleObjects;
+
+                // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
+                // viewport.ViewDirection = new Vector3d(0, 0, 1);
+                // viewport.On = true;
+
+                newWidth = viewport.Width;
+                newHeight = viewport.Height;
+
+                acTrans.Abort();
+            }
+
+            return new Point2d(newWidth, newHeight);
+        }
+
+        /// <summary>
+        /// Если результат сравнения размеров пройден успешно, то рисуем прямоугольник, в котором будет "будущий" видовой экран
+        /// </summary>
+        public static void CheckingResultDraw(Point2d sizeLayout, Point2d sizeObjects, ObjectIdCollection objectIds)
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+
+            double heightObjects = sizeObjects.Y;
+            double weightObjects = sizeObjects.X;
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                Extents3d ext = new Extents3d();
+
+                foreach (ObjectId id in objectIds)
+                {
+                    var GetObject = acTrans.GetObject(id, OpenMode.ForRead) as Entity;
+
+                    if (GetObject != null)
+                    {
+                        ext.AddExtents(GetObject.GeometricExtents);
+                    }
+                }
+
+                double startPointX = (ext.MaxPoint.X + ext.MinPoint.X) * 0.5;
+                double startPointY = ext.MaxPoint.Y * 1.1;
+                Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, StandardScaleType.Scale1To4);
+                startPointX = startPointX - newSizeLayout.X * 0.5;
+                Point2d startPoint = new Point2d(startPointX, startPointY);
+                Point2d secondPoint = new Point2d(startPointX, startPointY+newSizeLayout.Y);
+                Point2d thirdPoint = new Point2d(startPointX + newSizeLayout.X, startPointY + newSizeLayout.Y);
+                Point2d fouthPoint = new Point2d(startPointX + newSizeLayout.X, startPointY);
+                Point2d fifthPoint = new Point2d(startPointX, startPointY);
+
+
+                BlockTable blkTbl = acTrans.GetObject(AcDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
+                BlockTableRecord records = acTrans.GetObject(blkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
+
+                /// Макет
+                using (Polyline acPoly = new Polyline())
+                {
+                    acPoly.AddVertexAt(0, startPoint, 0, 0, 0);
+                    acPoly.AddVertexAt(1, secondPoint, 0, 0, 0);
+                    acPoly.AddVertexAt(2, thirdPoint, 0, 0, 0);
+                    acPoly.AddVertexAt(3, fouthPoint, 0, 0, 0);
+                    acPoly.AddVertexAt(4, fifthPoint, 0, 0, 0);
+
+
+                    records.AppendEntity(acPoly);
+                    acTrans.AddNewlyCreatedDBObject(acPoly, true);
+                    
+                }
+
+                Point2d startPointObj = new Point2d(startPointX, startPointY);
+                Point2d secondPointObj = new Point2d(startPointX, startPointY + heightObjects);
+                Point2d thirdPointObj = new Point2d(startPointX + weightObjects, startPointY + heightObjects);
+                Point2d fouthPointObj = new Point2d(startPointX + weightObjects, startPointY);
+                Point2d fifthPointObj = new Point2d(startPointX, startPointY);
+
+                /// Объект
+                using (Polyline acPoly = new Polyline())
+                {
+                    acPoly.AddVertexAt(0, startPointObj, 0, 0, 0);
+                    acPoly.AddVertexAt(1, secondPointObj, 0, 0, 0);
+                    acPoly.AddVertexAt(2, thirdPointObj, 0, 0, 0);
+                    acPoly.AddVertexAt(3, fouthPointObj, 0, 0, 0);
+                    acPoly.AddVertexAt(4, fifthPointObj, 0, 0, 0);
+
+
+                    records.AppendEntity(acPoly);
+                    acTrans.AddNewlyCreatedDBObject(acPoly, true);
+
+                }
+
+                acTrans.Commit();   
+            }
+
+        }
+
+
+
 
         /// <summary>
         /// Меняет масштаб листа на заданный стандартный масштаб
@@ -307,6 +505,7 @@ namespace AutoCAD_2022_Plugin1
                 var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
 
                 PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+
                 pltValidator.SetStdScaleType(layWrite, scale);
 
                 acTrans.Commit();
@@ -333,11 +532,87 @@ namespace AutoCAD_2022_Plugin1
             {
                 var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
 
+                // Получаем значение девайса печати для макета
+                string deviceName = layWrite.PlotConfigurationName;
+
+                if (!layManager.LayoutExists(nameLayout))
+                    throw new System.Exception($"Layout with name {nameLayout} already exists.");
+                if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
+                    throw new System.Exception($"Canonical scale is wrong.");
+
                 PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+
+                pltValidator.SetPlotConfigurationName(layWrite, deviceName, null);
                 pltValidator.SetCanonicalMediaName(layWrite, canonicalScale);
 
                 acTrans.Commit();
             }
+        }
+
+        /// <summary>
+        /// TEST TEST TEST
+        /// </summary>
+        /// <param name="nameLayout"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void TESTING(string nameLayout)
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+
+            ObjectId layID = layManager.GetLayoutId(nameLayout);
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+                PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+
+                string check1 = layWrite.PlotConfigurationName;
+
+
+
+
+                pltValidator.SetPlotConfigurationName(layWrite, "DWG To PDF.pc3", null);
+                pltValidator.GetLocaleMediaName(layWrite, "ISO_full_bleed_A4_(210.00_x_297.00_MM)");
+                // pltValidator.SetPlotConfigurationName(layWrite, deviceName, null);
+                // pltValidator.SetCanonicalMediaName(layWrite, canonicalScale);
+
+                acTrans.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Создать макет с указанным именем и масштабом
+        /// </summary>
+        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Default Windows System Printer.pc3")
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+
+            if (layManager.LayoutExists(nameLayout))
+            {
+                throw new System.Exception($"Layout with name {nameLayout} already exists.");
+            }
+            if (!GetAllCanonicalScales().Contains(canonicalScale))
+            {
+                throw new System.Exception($"Canonical scale is wrong.");
+            }
+
+            ObjectId id = layManager.CreateLayout(nameLayout);
+
+            // Меняем масштаб листа на заданный масштаб выбранного девайса
+            SetSizeLayout(nameLayout, canonicalScale);
+
+            AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
+
+            return id;
+
         }
 
     }
