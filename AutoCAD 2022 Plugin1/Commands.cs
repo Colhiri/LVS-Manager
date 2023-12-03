@@ -74,6 +74,8 @@ namespace AutoCAD_2022_Plugin1
             Database AcDatabase = AcDocument.Database;
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layoutManager = LayoutManager.Current;
+            ObjectContextManager ocm = AcDatabase.ObjectContextManager;
+
 
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
@@ -194,7 +196,7 @@ namespace AutoCAD_2022_Plugin1
         public void CreateViewportTESTFUNC()
         {
             CreateViewport(widthObjectsModel: 100, heightObjectsModel: 100, layoutName: "Лист1",
-            centerPoint: new Point3d(100, 100, 100), orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To1);
+            centerPoint: new Point3d(100, 100, 100), orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To4);
         }
         
 

@@ -5,9 +5,12 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Internal;
 using Autodesk.AutoCAD.PlottingServices;
 using Autodesk.AutoCAD.Runtime;
+using CsvHelper;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Resources;
 using System.Runtime.InteropServices;
@@ -46,6 +49,7 @@ namespace AutoCAD_2022_Plugin1
             Database AcDatabase = AcDocument.Database;
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layoutManager = LayoutManager.Current;
+            ObjectContextManager ocm = AcDatabase.ObjectContextManager;
 
             layoutManager.CurrentLayout = layoutName;
 
@@ -68,9 +72,34 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.AddNewlyCreatedDBObject(viewport, true);
 
                 // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
-                viewport.StandardScale = scaleVP;
                 viewport.ViewDirection = orientation;
                 viewport.On = true;
+
+                
+
+                viewport.StandardScale = StandardScaleType.Scale1To1;
+
+                acTrans.Commit();
+                
+            }
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                Viewport vp = acTrans.GetObject(viewportID, OpenMode.ForWrite) as Viewport;
+
+                AnnotationScale dbAnnoScale = AcDatabase.Cannoscale;
+                // AnnotationScale vpAnnScale = vp.AnnotationScale;
+                // double AnnScale = vpAnnScale.Scale;
+
+                // vp.AnnotationScale.Name = "1:4";
+                double cstScaleVP = vp.CustomScale;
+
+
+
+                vp.StandardScale = scaleVP;
+                cstScaleVP = vp.CustomScale;
+
+
 
                 acTrans.Commit();
             }
@@ -342,13 +371,43 @@ namespace AutoCAD_2022_Plugin1
         ////// 
         ////// 
         ////// 
+        ///
+
+
+        public class WrapInfoScale
+        {
+            /// <summary>
+            /// Класс обертки для получения аннотационного масштаба и его параметров
+            /// </summary>
+            public static int Id { get; set; } = 1;
+            public string Name { get; set; }
+            public double CustomScale { get; set; }
+            public int FirstNumberScale {  get; set; }
+            public int SecondNumberScale { get; set; }
+            public StandardScaleType standardScale { get; set; }
+
+            public WrapInfoScale(string Name, double CustomScale) 
+            {
+                this.Name = Name;
+                int[] scales = Name.Split(':').Select(x => int.Parse(x)).ToArray();
+                this.CustomScale = CustomScale; // scales[0] / scales[1];
+                Id++;
+                this.FirstNumberScale = scales[0];
+                this.SecondNumberScale = scales[1];
+
+                foreach (string std in Enum.GetNames(typeof(StandardScaleType)))
+                {
+                }
+            }
+        }
+
 
 
 
         /// <summary>
         /// Применение выбранного мастшаба на выбранные объекты в модели 
         /// </summary>
-        public static Point2d ApplyScaleToSizeObjectsInModel(Point2d sizeObjects, StandardScaleType scaleObjects)
+        public static Point2d ApplyScaleToSizeObjectsInModel(Point2d sizeObjects, string annotationScaleName)
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
             if (AcDocument is null) throw new System.Exception("No active document!");
@@ -378,19 +437,35 @@ namespace AutoCAD_2022_Plugin1
                     CenterPoint = new Point3d(0, 0, 0),
                 };
 
+                ObjectContextManager ocm = AcDatabase.ObjectContextManager;
+                ObjectContextCollection occ = ocm.GetContextCollection("ACDB_ANNOTATIONSCALES");
+
+
+                List<ObjectContext> annoScales = new List<ObjectContext>();
+
+                foreach (var oc in occ)
+                {
+                    annoScales.Add(oc);
+                }
+
+
                 // Add new DBObject in Database
                 // Set ObjectId Creating ViewPort
                 ObjectId viewportID = acBlkTblRec.AppendEntity(viewport);
                 acTrans.AddNewlyCreatedDBObject(viewport, true);
 
-                viewport.StandardScale = scaleObjects;
+                Viewport vp = acTrans.GetObject(viewportID, OpenMode.ForWrite) as Viewport;
 
                 // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
-                // viewport.ViewDirection = new Vector3d(0, 0, 1);
-                // viewport.On = true;
 
-                newWidth = viewport.Width;
-                newHeight = viewport.Height;
+                
+
+                vp.On = true;
+                vp.StandardScale = scaleObjects;
+                double cstScaleVP = vp.CustomScale;
+
+                newWidth = vp.Width * cstScaleVP;
+                newHeight = vp.Height * cstScaleVP;
 
                 acTrans.Abort();
             }
@@ -440,6 +515,7 @@ namespace AutoCAD_2022_Plugin1
                 BlockTable blkTbl = acTrans.GetObject(AcDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
                 BlockTableRecord records = acTrans.GetObject(blkTbl[BlockTableRecord.ModelSpace], OpenMode.ForWrite) as BlockTableRecord;
 
+
                 /// Макет
                 using (Polyline acPoly = new Polyline())
                 {
@@ -452,7 +528,7 @@ namespace AutoCAD_2022_Plugin1
 
                     records.AppendEntity(acPoly);
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
-                    
+
                 }
 
                 Point2d startPointObj = new Point2d(startPointX, startPointY);
@@ -469,6 +545,8 @@ namespace AutoCAD_2022_Plugin1
                     acPoly.AddVertexAt(2, thirdPointObj, 0, 0, 0);
                     acPoly.AddVertexAt(3, fouthPointObj, 0, 0, 0);
                     acPoly.AddVertexAt(4, fifthPointObj, 0, 0, 0);
+
+                    acPoly.Closed = true;
 
 
                     records.AppendEntity(acPoly);

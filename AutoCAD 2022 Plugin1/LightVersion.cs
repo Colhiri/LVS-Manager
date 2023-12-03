@@ -13,6 +13,9 @@ using System.Runtime.InteropServices;
 using static Autodesk.AutoCAD.Windows.Window;
 using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+using CsvHelper;
+using System.Globalization;
+using System.IO;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -91,7 +94,6 @@ namespace LightProgram
 
         }
 
-
         /// <summary>
         /// 
         /// </summary>
@@ -103,6 +105,22 @@ namespace LightProgram
             Database AcDatabase = AcDocument.Database;
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layManager = LayoutManager.Current;
+
+            ///
+            ///
+            ///
+            ObjectContextManager ocm = AcDatabase.ObjectContextManager;
+            ObjectContextCollection occ = ocm.GetContextCollection("ACDB_ANNOTATIONSCALES");
+            
+            List<AnnotationScale> annoScales = occ.Cast<AnnotationScale>().ToList();
+
+            using (var writer = new StreamWriter("Scales.csv"))
+            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            {
+                List<WrapInfoScale> lst = annoScales.Select(x => new WrapInfoScale(x.Name, x.Scale)).ToList();
+
+                csv.WriteRecords(lst);
+            }
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
@@ -117,12 +135,12 @@ namespace LightProgram
             if (!layManager.LayoutExists(resultNameList))
                 throw new System.Exception($"{resultNameList} not exists in layouts list.");
 
-
             // Получаем масштаб будущего видового экрана
             // Получаем масштаб будущего видового экрана
             // Получаем масштаб будущего видового экрана
             // Требуется создание WPF формы для передачи масштаба объектов
             StandardScaleType scale = StandardScaleType.Scale1To4;
+            double CSTMscale = (double)scale;
             // PromptStringOptions promptScaleObjects = new PromptStringOptions("Enter scale objects: ");
             // string resultScale = AcEditor.GetString(promptScaleObjects).StringResult;
             // if (resultScale == null)
@@ -138,7 +156,6 @@ namespace LightProgram
                 throw new System.Exception("Scale selected objects is too big for choicing layout!");
             }
             CheckingResultDraw(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel, objectIds);
-            
 
         }
 
