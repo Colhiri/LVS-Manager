@@ -148,7 +148,7 @@ namespace LightProgram
 
             (double, double) SizeModel = CheckModelSize(objectIds);
             (double, double) SizeLayout = CheckSizeLayout(resultNameList);
-            Point2d newSizeModel = ApplyScaleToSizeObjectsInModel(new Point2d(SizeModel.Item1, SizeModel.Item2), scale);
+            Point2d newSizeModel = ApplyScaleToSizeObjectsInModel(new Point2d(SizeModel.Item1, SizeModel.Item2), "1:4");
 
             bool checking = CheckSizeViewportOnSizeLayout(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel);
             if (!checking)

@@ -457,15 +457,27 @@ namespace AutoCAD_2022_Plugin1
                 Viewport vp = acTrans.GetObject(viewportID, OpenMode.ForWrite) as Viewport;
 
                 // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
+                List<AnnotationScale> annotation = occ.Cast<AnnotationScale>().ToList();
 
-                
+                AnnotationScale rightScale = annotation[0];
+
+                foreach (AnnotationScale annoSC in annotation)
+                {
+                    if (annoSC.Name == annotationScaleName)
+                    {
+                        rightScale = annoSC;
+                    }
+                }
 
                 vp.On = true;
-                vp.StandardScale = scaleObjects;
-                double cstScaleVP = vp.CustomScale;
+                vp.AnnotationScale = rightScale;
+                vp.CustomScale = rightScale.Scale;
 
-                newWidth = vp.Width * cstScaleVP;
-                newHeight = vp.Height * cstScaleVP;
+                // vp.StandardScale = scaleObjects;
+                // double cstScaleVP = vp.CustomScale;
+
+                newWidth = vp.Width * rightScale.Scale;
+                newHeight = vp.Height * rightScale.Scale;
 
                 acTrans.Abort();
             }
@@ -503,7 +515,7 @@ namespace AutoCAD_2022_Plugin1
 
                 double startPointX = (ext.MaxPoint.X + ext.MinPoint.X) * 0.5;
                 double startPointY = ext.MaxPoint.Y * 1.1;
-                Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, StandardScaleType.Scale1To4);
+                Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, "1:4");
                 startPointX = startPointX - newSizeLayout.X * 0.5;
                 Point2d startPoint = new Point2d(startPointX, startPointY);
                 Point2d secondPoint = new Point2d(startPointX, startPointY+newSizeLayout.Y);
