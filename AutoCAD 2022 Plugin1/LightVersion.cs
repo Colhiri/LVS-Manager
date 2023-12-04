@@ -16,6 +16,7 @@ using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using CsvHelper;
 using System.Globalization;
 using System.IO;
+using AutoCAD_2022_Plugin1;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -37,6 +38,9 @@ namespace LightProgram
          * с выделенные объекты на выбранном масштабе
          * 
          * bool = false, кинуть ошибку прямо в автокад (это как бы предупреждение, что все не очень хорошо)
+         * 
+         * 
+         * Анализ области печати на листе и вывод области печати в рамку вхождения объектов на макет
          * 
          */
 
@@ -105,13 +109,14 @@ namespace LightProgram
             Database AcDatabase = AcDocument.Database;
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layManager = LayoutManager.Current;
+            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
-            ///
-            ///
-            ///
-            ObjectContextManager ocm = AcDatabase.ObjectContextManager;
-            ObjectContextCollection occ = ocm.GetContextCollection("ACDB_ANNOTATIONSCALES");
-            
+            /// Получить аннотационные масштабы
+            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
+
+            (double, double) SizeLayoutTest = CheckSizeLayout("Лист1");
+
+
             List<AnnotationScale> annoScales = occ.Cast<AnnotationScale>().ToList();
 
             using (var writer = new StreamWriter("Scales.csv"))
@@ -139,23 +144,25 @@ namespace LightProgram
             // Получаем масштаб будущего видового экрана
             // Получаем масштаб будущего видового экрана
             // Требуется создание WPF формы для передачи масштаба объектов
-            StandardScaleType scale = StandardScaleType.Scale1To4;
-            double CSTMscale = (double)scale;
+
             // PromptStringOptions promptScaleObjects = new PromptStringOptions("Enter scale objects: ");
             // string resultScale = AcEditor.GetString(promptScaleObjects).StringResult;
             // if (resultScale == null)
             //     throw new System.Exception("Empty input.");
+            string resultScale = "1:4";
+
+            Point2d startPoint = GetStartPointDraw(objectIds);
 
             (double, double) SizeModel = CheckModelSize(objectIds);
             (double, double) SizeLayout = CheckSizeLayout(resultNameList);
-            Point2d newSizeModel = ApplyScaleToSizeObjectsInModel(new Point2d(SizeModel.Item1, SizeModel.Item2), "1:4");
+            Point2d newSizeModel = ApplyScaleToSizeObjectsInModel(new Point2d(SizeModel.Item1, SizeModel.Item2), resultScale);
 
             bool checking = CheckSizeViewportOnSizeLayout(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel);
             if (!checking)
             {
                 throw new System.Exception("Scale selected objects is too big for choicing layout!");
             }
-            CheckingResultDraw(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel, objectIds);
+            CheckingResultDraw(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel, startPoint);
 
         }
 
