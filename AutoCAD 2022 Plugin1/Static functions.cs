@@ -545,21 +545,23 @@ namespace AutoCAD_2022_Plugin1
         {
             // A4 210 297
             // Letter 216 279
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            {
-                // Применяем уменьшающий масштаб листа и объектов на листе к модели для рисования 
-                Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, canon1icalUnscale);
-                Point2d newSizeObjects = ApplyScaleToSizeObjectsInModel(sizeObjects, canon1icalUnscale);
+            // Применяем уменьшающий масштаб листа и объектов на листе к модели для рисования 
+            Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, canon1icalUnscale);
+            Point2d newSizeObjects = ApplyScaleToSizeObjectsInModel(sizeObjects, canon1icalUnscale);
 
-                Extents2d margins = new Extents2d(new Point2d(0, 0), new Point2d(0, 0));
+            Point2d newStartPoint = new Point2d(startPointMain.X - newSizeLayout.X * 0.5, startPointMain.Y);
+            
+            // Получаем прямоугольник границ
+            Extents2d margins = new Extents2d(new Point2d(0, 0), new Point2d(0, 0));
+            Point2d marginStartPoint = new Point2d(newStartPoint.X + margins.MaxPoint.X, newStartPoint.Y + margins.MaxPoint.Y);
+            Point2d sizeLayoutMargins = new Point2d(sizeLayout.X - margins.MaxPoint.X, sizeLayout.Y - margins.MaxPoint.Y);
 
-                Point2d newStartPoint = new Point2d(startPointMain.X - newSizeLayout.X * 0.5, startPointMain.Y);
-
-                // Рисуем макет
-                DrawRectangle(newStartPoint, sizeLayout);
-                // Рисуем контур объектов
-                DrawRectangle(newStartPoint, sizeObjects);
-            }
+            // Рисуем макет
+            DrawRectangle(newStartPoint, sizeLayout);
+            // Рисуем границу
+            DrawRectangle(marginStartPoint, sizeLayoutMargins);
+            // Рисуем контур объектов
+            DrawRectangle(marginStartPoint, sizeObjects);
         }
 
 
