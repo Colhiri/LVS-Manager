@@ -19,11 +19,56 @@ using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
 {
+    public struct Size
+    {
+        public double Width {  get; set; }
+        public double Height { get; set; }
+
+        public Size(double Width, double Height)
+        {
+            this.Width = Width;
+            this.Height = Height;
+        }
+    }
+
+
+
+
+    /// <summary>
+    /// Класс содержащий в себе область объектов, относящихся к определенному листу
+    /// </summary>
+    public class Field
+    {
+        public static int Id { get; private set; } = 0;
+        public string NameLayout { get; set; }
+        public static int CountViewportOnLayout { get; private set; }
+        public string AnnotationScaleViewport { get; set; }
+        public double CustomScaleViewport { get; set; }
+        public string CanonicalPaperSize {  get; set; }
+        public Size sizeObjects {  get; set; }
+        public Size SizeLayout {  get; set; }
+        public Point2d StartPoint { get; private set; }
+        public ObjectIdCollection ObjectsIDs { get; private set; }
+
+        /// Возможные поля
+        public Extents2d Margins;
+
+
+        public Field(string NameLayout, string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
+        {
+            this.NameLayout = NameLayout;
+            this.AnnotationScaleViewport = AnnotationScaleViewport;
+            this.ObjectsIDs = ObjectsId;
+            Id++;
+        }
+
+    }
+
+    /// <summary>
+    /// Класс обертки для получения аннотационного масштаба и его параметров
+    /// </summary>
     public class WrapInfoScale
     {
-        /// <summary>
-        /// Класс обертки для получения аннотационного масштаба и его параметров
-        /// </summary>
         public static int Id { get; set; } = 1;
         public string Name { get; set; }
         public double CustomScale { get; set; }

@@ -42,6 +42,19 @@ namespace LightProgram
          * 
          * Анализ области печати на листе и вывод области печати в рамку вхождения объектов на макет
          * 
+         * 
+         * Task 06 12 2023
+         * 
+         * Необходимо назначать слои, таким образом можно будет отделять "объекты" на листах
+         * 
+         * При назначении нового листа необходимо создавать новую область листа над объектами, которые относятся к этому листу
+         * Это проще всего сделать событием -- проверка существования листа
+         * 
+         * Должна быть обертка класса в виде Field ()
+         * 
+         * 
+         * 
+         * 
          */
 
         //"ISO_full_bleed_A5_(148.00_x_210.00_MM)"
@@ -149,7 +162,7 @@ namespace LightProgram
             // string resultScale = AcEditor.GetString(promptScaleObjects).StringResult;
             // if (resultScale == null)
             //     throw new System.Exception("Empty input.");
-            string resultScale = "1:4";
+            string resultScale = "1:4"; // Это имитация получения канонического масштаба от пользователя
 
             Point2d startPoint = GetStartPointDraw(objectIds);
 
