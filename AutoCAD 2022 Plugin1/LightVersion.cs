@@ -127,7 +127,7 @@ namespace LightProgram
             /// Получить аннотационные масштабы
             ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
 
-            (double, double) SizeLayoutTest = CheckSizeLayout("Лист1");
+            Size SizeLayoutTest = CheckSizeLayout("Лист1");
 
 
             List<AnnotationScale> annoScales = occ.Cast<AnnotationScale>().ToList();
@@ -166,16 +166,16 @@ namespace LightProgram
 
             Point2d startPoint = GetStartPointDraw(objectIds);
 
-            (double, double) SizeModel = CheckModelSize(objectIds);
-            (double, double) SizeLayout = CheckSizeLayout(resultNameList);
-            Point2d newSizeModel = ApplyScaleToSizeObjectsInModel(new Point2d(SizeModel.Item1, SizeModel.Item2), resultScale);
+            Size SizeModel = CheckModelSize(objectIds);
+            Size SizeLayout = CheckSizeLayout(resultNameList);
+            Size newSizeModel = ApplyScaleToSizeObjectsInModel(SizeModel, resultScale);
 
-            bool checking = CheckSizeViewportOnSizeLayout(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel);
+            bool checking = CheckSizeViewportOnSizeLayout(SizeLayout, newSizeModel);
             if (!checking)
             {
                 throw new System.Exception("Scale selected objects is too big for choicing layout!");
             }
-            CheckingResultDraw(new Point2d(SizeLayout.Item1, SizeLayout.Item2), newSizeModel, startPoint);
+            CheckingResultDraw(resultNameList, SizeLayout, newSizeModel, startPoint);
 
         }
 

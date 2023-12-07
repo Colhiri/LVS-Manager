@@ -2,26 +2,19 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Internal;
-using Autodesk.AutoCAD.PlottingServices;
-using Autodesk.AutoCAD.Runtime;
-using CsvHelper;
 using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Resources;
-using System.Runtime.InteropServices;
-using static Autodesk.AutoCAD.Windows.Window;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
 {
+    /// <summary>
+    /// Просто удобные размеры объектов в прямоугольном формате
+    /// </summary>
     public struct Size
     {
-        public double Width {  get; set; }
+        public double Width { get; set; }
         public double Height { get; set; }
 
         public Size(double Width, double Height)
@@ -32,36 +25,95 @@ namespace AutoCAD_2022_Plugin1
     }
 
 
+    /// <summary>
+    /// Пока это главный класс
+    /// </summary>
+    public class FieldList
+    {
+        private List<Field> Fields {  get; set; } = new List<Field>();
+        public string CurrentLayout { get; private set; }
+        public FieldList Current => new FieldList();
+
+        private void AddField(string nameLayout)
+        {
+            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(nameLayout))
+            {
+                Fields.Add(new Field(nameLayout));
+            }
+        }
+
+
+        private Field UpdateField(string nameLayout)
+        {
+            return Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)];
+        }
+
+        public void DeleteField(string nameLayout)
+        {
+             Fields.Remove(Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)]);
+        }
+
+    }
+
+    /// <summary>
+    /// Класс содержащий в себе информацию об отдельном видовом экране на макете
+    /// </summary>
+    public class ViewportInField
+    {
+        public static int IdMove { get; private set; } = 0;
+        public int Id {  get; private set; }
+        public string AnnotationScaleViewport { get; set; }
+        public double CustomScaleViewport { get; set; }
+        public Size sizeObjects { get; set; }
+        public ObjectIdCollection ObjectsIDs { get; private set; }
+
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
+        {
+            this.AnnotationScaleViewport = AnnotationScaleViewport;
+            this.ObjectsIDs = ObjectsId;
+            this.Id = IdMove++;
+        }
+    }
+
 
 
     /// <summary>
-    /// Класс содержащий в себе область объектов, относящихся к определенному листу
+    /// Класс содержащий в себе область объектов в видовых экранах, относящихся к определенному листу
     /// </summary>
     public class Field
     {
-        public static int Id { get; private set; } = 0;
+        public static int IdMove { get; private set; } = 0;
+        public int Id { get; private set; }
         public string NameLayout { get; set; }
-        public static int CountViewportOnLayout { get; private set; }
-        public string AnnotationScaleViewport { get; set; }
-        public double CustomScaleViewport { get; set; }
         public string CanonicalPaperSize {  get; set; }
-        public Size sizeObjects {  get; set; }
         public Size SizeLayout {  get; set; }
         public Point2d StartPoint { get; private set; }
-        public ObjectIdCollection ObjectsIDs { get; private set; }
+        private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
 
         /// Возможные поля
-        public Extents2d Margins;
+        public Extents2d Margins { get; set; }
+        public Point2d StartMarginsPoint { get; set; }
 
-
-        public Field(string NameLayout, string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
+        public Field(string NameLayout)
         {
             this.NameLayout = NameLayout;
-            this.AnnotationScaleViewport = AnnotationScaleViewport;
-            this.ObjectsIDs = ObjectsId;
-            Id++;
+            Id = IdMove++;
         }
 
+        public void AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
+        {
+            Viewports.Add(new ViewportInField(AnnotationScaleViewport, ObjectsId));
+        }
+
+        public void DeleteViewport(int Id)
+        {
+            Viewports.Remove(Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)]);
+        }
+
+        public void UpdateViewport(int Id, string AnnotationScaleViewport)
+        {
+            Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)].AnnotationScaleViewport = AnnotationScaleViewport;
+        }
     }
 
     /// <summary>
@@ -88,6 +140,8 @@ namespace AutoCAD_2022_Plugin1
             foreach (string std in Enum.GetNames(typeof(StandardScaleType)))
             {
             }
+
+
         }
     }
 
@@ -182,23 +236,20 @@ namespace AutoCAD_2022_Plugin1
         /// <returns>
         /// Layout size + border layout  >= Viewport size
         /// </returns>
-        public static bool CheckSizeViewportOnSizeLayout(string nameLayout, Point2d viewportSize, double borderLayout = 5)
+        public static bool CheckSizeViewportOnSizeLayout(string nameLayout, Size viewportSize, double borderLayout = 5)
         {
-            double height, width;
-            (double, double) size = CheckSizeLayout(nameLayout);
-            size.ToTuple().Deconstruct(out height, out width);
-            Point2d layoutSize = new Point2d(height, width);
+            Size layoutSize = CheckSizeLayout(nameLayout);
 
-            if (layoutSize.X - layoutSize.X * (borderLayout / 100) < viewportSize.X ||
-                layoutSize.Y - layoutSize.Y * (borderLayout / 100) < viewportSize.Y)
+            if (layoutSize.Width - layoutSize.Width * (borderLayout / 100) < viewportSize.Width ||
+                layoutSize.Height - layoutSize.Height * (borderLayout / 100) < viewportSize.Height)
                 return false;
             return true;
         }
-        public static bool CheckSizeViewportOnSizeLayout(Point2d layoutSize, Point2d viewportSize, double borderLayout = 5)
+        public static bool CheckSizeViewportOnSizeLayout(Size layoutSize, Size viewportSize, double borderLayout = 5)
         {
 
-            if (layoutSize.X - layoutSize.X * (borderLayout / 100) < viewportSize.X ||
-                layoutSize.Y - layoutSize.Y * (borderLayout / 100) < viewportSize.Y)
+            if (layoutSize.Width - layoutSize.Width * (borderLayout / 100) < viewportSize.Width ||
+                layoutSize.Height - layoutSize.Height * (borderLayout / 100) < viewportSize.Height)
                 return false;
             return true;
         }
@@ -210,7 +261,7 @@ namespace AutoCAD_2022_Plugin1
         /// <returns>
         /// Return Width, Height
         /// </returns>
-        public static (double, double) CheckModelSize(ObjectIdCollection ids)
+        public static Size CheckModelSize(ObjectIdCollection ids)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -232,7 +283,7 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.Abort();
             }
 
-            return (ModelWidth, ModelHeight);
+            return new Size(ModelWidth, ModelHeight);
         }
 
 
@@ -334,7 +385,7 @@ namespace AutoCAD_2022_Plugin1
         /// </returns>
         /// <exception cref="System.Exception"></exception>
         /// <exception cref="ArgumentNullException"></exception>
-        public static (double, double) CheckSizeLayout(string nameLayout)
+        public static Size CheckSizeLayout(string nameLayout)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -370,7 +421,7 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.Commit();
             }
 
-            return (layHeight, layWidth);
+            return new Size(layHeight, layWidth);
         }
 
         /// <summary>
@@ -427,7 +478,7 @@ namespace AutoCAD_2022_Plugin1
         /// <summary>
         /// Применение выбранного мастшаба на выбранные объекты в модели 
         /// </summary>
-        public static Point2d ApplyScaleToSizeObjectsInModel(Point2d sizeObjects, string annotationScaleName)
+        public static Size ApplyScaleToSizeObjectsInModel(Size sizeObjects, string annotationScaleName)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -448,8 +499,8 @@ namespace AutoCAD_2022_Plugin1
 
                 Viewport viewport = new Viewport
                 {
-                    Width = sizeObjects.X,
-                    Height = sizeObjects.Y,
+                    Width = sizeObjects.Width,
+                    Height = sizeObjects.Height,
                     CenterPoint = new Point3d(0, 0, 0),
                 };
 
@@ -495,7 +546,7 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.Abort();
             }
 
-            return new Point2d(newWidth, newHeight);
+            return new Size(newWidth, newHeight);
         }
 
         /// <summary>
@@ -560,7 +611,7 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         /// <param name="startPoint"></param>
         /// <param name="size"></param>
-        public static void DrawRectangle(Point2d startPoint, Point2d size)
+        public static void DrawRectangle(Point2d startPoint, Size size)
         {
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
@@ -570,9 +621,9 @@ namespace AutoCAD_2022_Plugin1
                 using (Polyline acPoly = new Polyline())
                 {
                     acPoly.AddVertexAt(0, new Point2d(startPoint.X, startPoint.Y), 0, 0, 0);
-                    acPoly.AddVertexAt(1, new Point2d(startPoint.X, startPoint.Y + size.Y), 0, 0, 0);
-                    acPoly.AddVertexAt(2, new Point2d(startPoint.X + size.X, startPoint.Y + size.Y), 0, 0, 0);
-                    acPoly.AddVertexAt(3, new Point2d(startPoint.X + size.X, startPoint.Y), 0, 0, 0);
+                    acPoly.AddVertexAt(1, new Point2d(startPoint.X, startPoint.Y + size.Height), 0, 0, 0);
+                    acPoly.AddVertexAt(2, new Point2d(startPoint.X + size.Width, startPoint.Y + size.Height), 0, 0, 0);
+                    acPoly.AddVertexAt(3, new Point2d(startPoint.X + size.Width, startPoint.Y), 0, 0, 0);
                     acPoly.AddVertexAt(4, new Point2d(startPoint.X, startPoint.Y), 0, 0, 0);
 
                     records.AppendEntity(acPoly);
@@ -586,27 +637,27 @@ namespace AutoCAD_2022_Plugin1
         /// <summary>
         /// Если результат сравнения размеров пройден успешно, то рисуем прямоугольник, в котором будет "будущий" видовой экран
         /// </summary>
-        public static void CheckingResultDraw(Point2d sizeLayout, Point2d sizeObjects, Point2d startPointMain, string canon1icalUnscale = "1:4")
+        public static void CheckingResultDraw(string nameLayout, Size sizeLayout, Size sizeObjects, Point2d startPointMain, string canon1icalUnscale = "1:4")
         {
             // A4 210 297
             // Letter 216 279
             // Применяем уменьшающий масштаб листа и объектов на листе к модели для рисования 
-            Point2d newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, canon1icalUnscale);
-            Point2d newSizeObjects = ApplyScaleToSizeObjectsInModel(sizeObjects, canon1icalUnscale);
+            Size newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, canon1icalUnscale);
+            Size newSizeObjects = ApplyScaleToSizeObjectsInModel(sizeObjects, canon1icalUnscale);
 
-            Point2d newStartPoint = new Point2d(startPointMain.X - newSizeLayout.X * 0.5, startPointMain.Y);
+            Point2d newStartPoint = new Point2d(startPointMain.X - newSizeLayout.Width * 0.5, startPointMain.Y);
             
             // Получаем прямоугольник границ
-            Extents2d margins = new Extents2d(new Point2d(0, 0), new Point2d(0, 0));
+            Extents2d margins = GetMargins(nameLayout);
             Point2d marginStartPoint = new Point2d(newStartPoint.X + margins.MaxPoint.X, newStartPoint.Y + margins.MaxPoint.Y);
-            Point2d sizeLayoutMargins = new Point2d(sizeLayout.X - margins.MaxPoint.X, sizeLayout.Y - margins.MaxPoint.Y);
+            Size sizeLayoutMargins = new Size(sizeLayout.Width - margins.MaxPoint.X, sizeLayout.Height - margins.MaxPoint.Y);
 
             // Рисуем макет
             DrawRectangle(newStartPoint, sizeLayout);
             // Рисуем границу
             DrawRectangle(marginStartPoint, sizeLayoutMargins);
             // Рисуем контур объектов
-            DrawRectangle(marginStartPoint, sizeObjects);
+            DrawRectangle(marginStartPoint, newSizeObjects);
         }
 
 
@@ -665,36 +716,11 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
-        /// <summary>
-        /// TEST TEST TEST
-        /// </summary>
-        /// <param name="nameLayout"></param>
-        /// <exception cref="System.Exception"></exception>
-        public static void TESTING(string nameLayout)
-        {
-            if (AcDocument is null) throw new System.Exception("No active document!");
-
-            ObjectId layID = layoutManager.GetLayoutId(nameLayout);
-
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            {
-                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
-
-                string check1 = layWrite.PlotConfigurationName;
-
-                pltValidator.SetPlotConfigurationName(layWrite, "DWG To PDF.pc3", null);
-                pltValidator.GetLocaleMediaName(layWrite, "ISO_full_bleed_A4_(210.00_x_297.00_MM)");
-                // pltValidator.SetPlotConfigurationName(layWrite, deviceName, null);
-                // pltValidator.SetCanonicalMediaName(layWrite, canonicalScale);
-
-                acTrans.Commit();
-            }
-        }
 
         /// <summary>
         /// Создать макет с указанным именем и масштабом
         /// </summary>
-        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Default Windows System Printer.pc3")
+        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Нет")
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 

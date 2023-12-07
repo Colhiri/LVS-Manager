@@ -54,7 +54,6 @@ namespace AutoCAD_2022_Plugin1
 
             GetAllCanonicalScales();
 
-            TESTING("Лист2");
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
@@ -63,11 +62,11 @@ namespace AutoCAD_2022_Plugin1
 
 
             //
-            (double, double) SizeModel = CheckModelSize(objectIds);
-            (double, double) SizeLayout = CheckSizeLayout("Лист2");
+            Size SizeModel = CheckModelSize(objectIds);
+            Size SizeLayout = CheckSizeLayout("Лист2");
 
 
-            bool checking = CheckSizeViewportOnSizeLayout("Лист2", new Point2d(SizeModel.Item1, SizeModel.Item2));
+            bool checking = CheckSizeViewportOnSizeLayout("Лист2", SizeModel);
             if (!checking)
             {
                 throw new System.Exception("Scale selected objects is too big for choicing layout!");
@@ -76,7 +75,7 @@ namespace AutoCAD_2022_Plugin1
             Point3d CenterModel = CheckCenterModel(objectIds);
 
             //
-            ObjectId vpid = CreateViewport(widthObjectsModel: SizeModel.Item1, heightObjectsModel: SizeModel.Item2, layoutName: "Лист2",
+            ObjectId vpid = CreateViewport(widthObjectsModel: SizeModel.Width, heightObjectsModel: SizeModel.Height, layoutName: "Лист2",
             centerPoint: CenterModel, orientation: new Vector3d(0, 0, 1), StandardScaleType.Scale1To2);
 
 
