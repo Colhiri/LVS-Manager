@@ -24,98 +24,6 @@ namespace AutoCAD_2022_Plugin1
         }
     }
 
-
-    /// <summary>
-    /// Пока это главный класс
-    /// </summary>
-    public class FieldList
-    {
-        private List<Field> Fields {  get; set; } = new List<Field>();
-        public string CurrentLayout { get; private set; }
-        public FieldList Current => new FieldList();
-
-        private void AddField(string nameLayout)
-        {
-            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(nameLayout))
-            {
-                Fields.Add(new Field(nameLayout));
-            }
-        }
-
-
-        private Field UpdateField(string nameLayout)
-        {
-            return Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)];
-        }
-
-        public void DeleteField(string nameLayout)
-        {
-             Fields.Remove(Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)]);
-        }
-
-    }
-
-    /// <summary>
-    /// Класс содержащий в себе информацию об отдельном видовом экране на макете
-    /// </summary>
-    public class ViewportInField
-    {
-        public static int IdMove { get; private set; } = 0;
-        public int Id {  get; private set; }
-        public string AnnotationScaleViewport { get; set; }
-        public double CustomScaleViewport { get; set; }
-        public Size sizeObjects { get; set; }
-        public ObjectIdCollection ObjectsIDs { get; private set; }
-
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
-        {
-            this.AnnotationScaleViewport = AnnotationScaleViewport;
-            this.ObjectsIDs = ObjectsId;
-            this.Id = IdMove++;
-        }
-    }
-
-
-
-    /// <summary>
-    /// Класс содержащий в себе область объектов в видовых экранах, относящихся к определенному листу
-    /// </summary>
-    public class Field
-    {
-        public static int IdMove { get; private set; } = 0;
-        public int Id { get; private set; }
-        public string NameLayout { get; set; }
-        public string CanonicalPaperSize {  get; set; }
-        public Size SizeLayout {  get; set; }
-        public Point2d StartPoint { get; private set; }
-        private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
-
-        /// Возможные поля
-        public Extents2d Margins { get; set; }
-        public Point2d StartMarginsPoint { get; set; }
-
-        public Field(string NameLayout)
-        {
-            this.NameLayout = NameLayout;
-            Id = IdMove++;
-        }
-
-        public void AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
-        {
-            Viewports.Add(new ViewportInField(AnnotationScaleViewport, ObjectsId));
-        }
-
-        public void DeleteViewport(int Id)
-        {
-            Viewports.Remove(Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)]);
-        }
-
-        public void UpdateViewport(int Id, string AnnotationScaleViewport)
-        {
-            Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)].AnnotationScaleViewport = AnnotationScaleViewport;
-        }
-    }
-
     /// <summary>
     /// Класс обертки для получения аннотационного масштаба и его параметров
     /// </summary>
@@ -140,8 +48,6 @@ namespace AutoCAD_2022_Plugin1
             foreach (string std in Enum.GetNames(typeof(StandardScaleType)))
             {
             }
-
-
         }
     }
 
@@ -153,6 +59,14 @@ namespace AutoCAD_2022_Plugin1
         private static LayoutManager layoutManager = LayoutManager.Current;
         private static ObjectContextManager OCM = AcDatabase.ObjectContextManager;
         private static PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+        
+        // TESTING
+        // TESTING
+        // TESTING
+        // TESTING
+        public static FieldList FL = FieldList.Current;
+
+
 
         /// <summary>
         /// Создает видовой экран по заданным параметрам
@@ -626,7 +540,7 @@ namespace AutoCAD_2022_Plugin1
                     acPoly.AddVertexAt(3, new Point2d(startPoint.X + size.Width, startPoint.Y), 0, 0, 0);
                     acPoly.AddVertexAt(4, new Point2d(startPoint.X, startPoint.Y), 0, 0, 0);
 
-                    records.AppendEntity(acPoly);
+                    ObjectId polylineId = records.AppendEntity(acPoly);
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
                 }
                 acTrans.Commit();
@@ -649,8 +563,8 @@ namespace AutoCAD_2022_Plugin1
             
             // Получаем прямоугольник границ
             Extents2d margins = GetMargins(nameLayout);
-            Point2d marginStartPoint = new Point2d(newStartPoint.X + margins.MaxPoint.X, newStartPoint.Y + margins.MaxPoint.Y);
-            Size sizeLayoutMargins = new Size(sizeLayout.Width - margins.MaxPoint.X, sizeLayout.Height - margins.MaxPoint.Y);
+            Point2d marginStartPoint = new Point2d(newStartPoint.X + margins.MaxPoint.Y, newStartPoint.Y + margins.MaxPoint.X);
+            Size sizeLayoutMargins = new Size(sizeLayout.Width - margins.MaxPoint.Y * 2, sizeLayout.Height - margins.MaxPoint.X * 2);
 
             // Рисуем макет
             DrawRectangle(newStartPoint, sizeLayout);

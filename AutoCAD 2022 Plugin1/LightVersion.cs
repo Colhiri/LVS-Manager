@@ -2,21 +2,12 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.PlottingServices;
 using Autodesk.AutoCAD.Runtime;
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Resources;
-using System.Runtime.InteropServices;
-using static Autodesk.AutoCAD.Windows.Window;
 using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
-using CsvHelper;
-using System.Globalization;
-using System.IO;
 using AutoCAD_2022_Plugin1;
+using Field = AutoCAD_2022_Plugin1.Field;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -114,6 +105,32 @@ namespace LightProgram
         /// <summary>
         /// 
         /// </summary>
+        [CommandMethod("DeleteField")]
+        public static void DeleteField()
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
+
+            // Получаем имя листа на который хотим поместить объекты
+            PromptStringOptions promptNameList = new PromptStringOptions("Enter name layout where you decide move objects: ");
+            string resultNameList = AcEditor.GetString(promptNameList).StringResult;
+            if (resultNameList == null)
+                throw new System.Exception("Empty input.");
+            if (!layManager.LayoutExists(resultNameList))
+                throw new System.Exception($"{resultNameList} not exists in layouts list.");
+
+            FL.DeleteField(resultNameList);
+        }
+
+
+
+        /// <summary>
+        /// 
+        /// </summary>
         [CommandMethod("SelectCheckingUser", CommandFlags.UsePickSet)]
         public static void SelectCheckingUser()
         {
@@ -125,20 +142,14 @@ namespace LightProgram
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
             /// Получить аннотационные масштабы
-            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
-
-            Size SizeLayoutTest = CheckSizeLayout("Лист1");
-
-
-            List<AnnotationScale> annoScales = occ.Cast<AnnotationScale>().ToList();
-
-            using (var writer = new StreamWriter("Scales.csv"))
-            using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
-            {
-                List<WrapInfoScale> lst = annoScales.Select(x => new WrapInfoScale(x.Name, x.Scale)).ToList();
-
-                csv.WriteRecords(lst);
-            }
+            // ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
+            // List<AnnotationScale> annoScales = occ.Cast<AnnotationScale>().ToList();
+            // using (var writer = new StreamWriter("Scales.csv"))
+            // using (var csv = new CsvWriter(writer, CultureInfo.InvariantCulture))
+            // {
+            //     List<WrapInfoScale> lst = annoScales.Select(x => new WrapInfoScale(x.Name, x.Scale)).ToList();
+            //     csv.WriteRecords(lst);
+            // }
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
@@ -153,29 +164,48 @@ namespace LightProgram
             if (!layManager.LayoutExists(resultNameList))
                 throw new System.Exception($"{resultNameList} not exists in layouts list.");
 
-            // Получаем масштаб будущего видового экрана
-            // Получаем масштаб будущего видового экрана
-            // Получаем масштаб будущего видового экрана
-            // Требуется создание WPF формы для передачи масштаба объектов
+            PromptStringOptions promptScaleObjects = new PromptStringOptions("Enter scale objects: Example \"1:4\"");
+            string resultScale = AcEditor.GetString(promptScaleObjects).StringResult;
+            if (resultScale == null)
+                throw new System.Exception("Empty input.");
+            // string resultScale = "1:4"; // Это имитация получения канонического масштаба от пользователя
 
+
+            // Добавлем новую филду
+            Field field = FL.AddField(resultNameList) as Field;
+            if (field == null) throw new ArgumentNullException();
+            ViewportInField viewport = field.AddViewport(resultScale, objectIds);
+
+            if (field.stateInModel == State.NoExist) 
+            {
+                field.Draw();
+            }
+
+            if (viewport.stateInModel == State.NoExist)
+            {
+                viewport.Draw();
+            }
+
+
+
+            /// Получаем масштаб будущего видового экрана Требуется создание WPF формы для передачи масштаба объектов
             // PromptStringOptions promptScaleObjects = new PromptStringOptions("Enter scale objects: ");
             // string resultScale = AcEditor.GetString(promptScaleObjects).StringResult;
             // if (resultScale == null)
             //     throw new System.Exception("Empty input.");
-            string resultScale = "1:4"; // Это имитация получения канонического масштаба от пользователя
 
-            Point2d startPoint = GetStartPointDraw(objectIds);
+            /// Получаем стартовую точку для макета. А также пересчитываем размер выбранных в модели объектов
+            // Point2d startPoint = GetStartPointDraw(objectIds);
+            // Size SizeModel = CheckModelSize(objectIds);
+            // Size SizeLayout = CheckSizeLayout(resultNameList);
+            // Size newSizeModel = ApplyScaleToSizeObjectsInModel(SizeModel, resultScale);
 
-            Size SizeModel = CheckModelSize(objectIds);
-            Size SizeLayout = CheckSizeLayout(resultNameList);
-            Size newSizeModel = ApplyScaleToSizeObjectsInModel(SizeModel, resultScale);
-
-            bool checking = CheckSizeViewportOnSizeLayout(SizeLayout, newSizeModel);
-            if (!checking)
-            {
-                throw new System.Exception("Scale selected objects is too big for choicing layout!");
-            }
-            CheckingResultDraw(resultNameList, SizeLayout, newSizeModel, startPoint);
+            /// Проверка вхождения выбранных объектов на макет.
+            // bool checking = CheckSizeViewportOnSizeLayout(SizeLayout, newSizeModel);
+            // if (!checking) throw new System.Exception("Scale selected objects is too big for choicing layout!");
+            
+            /// Рисуем все сразу
+            //CheckingResultDraw(resultNameList, SizeLayout, newSizeModel, startPoint);
 
         }
 
