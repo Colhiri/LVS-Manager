@@ -2,6 +2,7 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using Autodesk.AutoCAD.Runtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -59,14 +60,6 @@ namespace AutoCAD_2022_Plugin1
         private static LayoutManager layoutManager = LayoutManager.Current;
         private static ObjectContextManager OCM = AcDatabase.ObjectContextManager;
         private static PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
-        
-        // TESTING
-        // TESTING
-        // TESTING
-        // TESTING
-        public static FieldList FL = FieldList.Current;
-
-
 
         /// <summary>
         /// Создает видовой экран по заданным параметрам
@@ -232,6 +225,16 @@ namespace AutoCAD_2022_Plugin1
         }
 
         /// <summary>
+        /// Усекает часть Z и возвращает Point2d
+        /// </summary>
+        /// <param name="point"></param>
+        /// <returns></returns>
+        public static Point2d Point3dTo2d(Point3d point)
+        {
+            return new Point2d(point.X, point.Y);
+        }
+
+        /// <summary>
         /// Переносит выбранные объекты на выбранный видовой экран
         /// </summary>
         /// <param name="ids"></param>
@@ -289,6 +292,8 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
+        
+
 
         /// <summary>
         /// Возвращает размер макета
@@ -334,9 +339,50 @@ namespace AutoCAD_2022_Plugin1
 
                 acTrans.Commit();
             }
-
             return new Size(layHeight, layWidth);
         }
+
+        /// <summary>
+        /// Возвращает размеры бумаги исходя из заданного стандартного макета в модели
+        /// </summary>
+        /// <param name="formatPaper"></param>
+        /// <param name="devicePlotter"></param>
+        /// <returns></returns>
+        /// <exception cref="System.Exception"></exception>
+        public static Size GetSizePaper(string formatPaper, string devicePlotter = "Нет")
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            string[] devices = pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
+            if (!devices.Contains(devicePlotter)) throw new System.Exception("Not found your device in device list in Autocad.");
+
+            string[] scales;
+
+            ObjectId ModelSpaceId;
+
+            double width = 0.0;
+            double height = 0.0;
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                DBDictionary layoutDict = acTrans.GetObject(AcDatabase.LayoutDictionaryId, OpenMode.ForRead) as DBDictionary;
+
+                foreach (DBDictionaryEntry entry in layoutDict)
+                {
+                    Layout layout = acTrans.GetObject(entry.Value, OpenMode.ForRead) as Layout;
+
+                    if (layout.ModelType)
+                    {
+                        width = layout.PlotPaperSize.X;
+                        height = layout.PlotPaperSize.Y;
+
+                        break;
+                    }
+                }
+            }
+            return new Size(width, height);
+        }
+
 
         /// <summary>
         /// Получаем все канонические масштабы в открытом чертеже
@@ -459,7 +505,6 @@ namespace AutoCAD_2022_Plugin1
 
                 acTrans.Abort();
             }
-
             return new Size(newWidth, newHeight);
         }
 
@@ -495,8 +540,6 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
-
-
         /// <summary>
         /// Дает размеры поля печати на листе
         /// </summary>
@@ -525,8 +568,10 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         /// <param name="startPoint"></param>
         /// <param name="size"></param>
-        public static void DrawRectangle(Point2d startPoint, Size size)
+        public static ObjectId DrawRectangle(Point2d startPoint, Size size)
         {
+            ObjectId polylineId;
+
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
                 BlockTable blkTbl = acTrans.GetObject(AcDatabase.BlockTableId, OpenMode.ForRead) as BlockTable;
@@ -540,38 +585,13 @@ namespace AutoCAD_2022_Plugin1
                     acPoly.AddVertexAt(3, new Point2d(startPoint.X + size.Width, startPoint.Y), 0, 0, 0);
                     acPoly.AddVertexAt(4, new Point2d(startPoint.X, startPoint.Y), 0, 0, 0);
 
-                    ObjectId polylineId = records.AppendEntity(acPoly);
+                    polylineId = records.AppendEntity(acPoly);
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
                 }
                 acTrans.Commit();
             }
-        }
 
-
-        /// <summary>
-        /// Если результат сравнения размеров пройден успешно, то рисуем прямоугольник, в котором будет "будущий" видовой экран
-        /// </summary>
-        public static void CheckingResultDraw(string nameLayout, Size sizeLayout, Size sizeObjects, Point2d startPointMain, string canon1icalUnscale = "1:4")
-        {
-            // A4 210 297
-            // Letter 216 279
-            // Применяем уменьшающий масштаб листа и объектов на листе к модели для рисования 
-            Size newSizeLayout = ApplyScaleToSizeObjectsInModel(sizeLayout, canon1icalUnscale);
-            Size newSizeObjects = ApplyScaleToSizeObjectsInModel(sizeObjects, canon1icalUnscale);
-
-            Point2d newStartPoint = new Point2d(startPointMain.X - newSizeLayout.Width * 0.5, startPointMain.Y);
-            
-            // Получаем прямоугольник границ
-            Extents2d margins = GetMargins(nameLayout);
-            Point2d marginStartPoint = new Point2d(newStartPoint.X + margins.MaxPoint.Y, newStartPoint.Y + margins.MaxPoint.X);
-            Size sizeLayoutMargins = new Size(sizeLayout.Width - margins.MaxPoint.Y * 2, sizeLayout.Height - margins.MaxPoint.X * 2);
-
-            // Рисуем макет
-            DrawRectangle(newStartPoint, sizeLayout);
-            // Рисуем границу
-            DrawRectangle(marginStartPoint, sizeLayoutMargins);
-            // Рисуем контур объектов
-            DrawRectangle(marginStartPoint, newSizeObjects);
+            return polylineId;
         }
 
 

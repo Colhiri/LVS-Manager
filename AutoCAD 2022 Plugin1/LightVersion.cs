@@ -8,6 +8,9 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
+using System.Linq;
+using System.Xml.Linq;
+using Autodesk.AutoCAD.GraphicsSystem;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -99,7 +102,6 @@ namespace LightProgram
             {
                 CreateLayout(nameLayout, canonicalScale, deviceName);
             }
-
         }
 
         /// <summary>
@@ -126,13 +128,18 @@ namespace LightProgram
             FL.DeleteField(resultNameList);
         }
 
+        [CommandMethod("TESTING", CommandFlags.UsePickSet)]
+        public static void GetSizeLayoutWithoutLayout()
+        {
+            GetSizePaper("A4");
+        }
 
 
         /// <summary>
         /// 
         /// </summary>
-        [CommandMethod("SelectCheckingUser", CommandFlags.UsePickSet)]
-        public static void SelectCheckingUser()
+        [CommandMethod("COLHIRU", CommandFlags.UsePickSet)]
+        public static void COLHIRU()
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
             if (AcDocument is null) throw new System.Exception("No active document!");
@@ -140,6 +147,13 @@ namespace LightProgram
             Editor AcEditor = AcDocument.Editor;
             LayoutManager layManager = LayoutManager.Current;
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
+
+            // Нужно сделать функцию которая выдает точку на основе всех объектов и выбранного перечисления по расположению макетов
+            // Сейчас стоит заглушка
+            // Сейчас стоит заглушка
+            // Сейчас стоит заглушка
+            // Сейчас стоит заглушка
+            FieldList FL = new FieldList(new Point2d(0, 0));
 
             /// Получить аннотационные масштабы
             // ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
@@ -169,19 +183,19 @@ namespace LightProgram
             if (resultScale == null)
                 throw new System.Exception("Empty input.");
             // string resultScale = "1:4"; // Это имитация получения канонического масштаба от пользователя
-
+            ///         public static LocationDraw StartLocationDrawing { get; private set; } = LocationDraw.TopLeft;
 
             // Добавлем новую филду
             Field field = FL.AddField(resultNameList) as Field;
             if (field == null) throw new ArgumentNullException();
             ViewportInField viewport = field.AddViewport(resultScale, objectIds);
 
-            if (field.stateInModel == State.NoExist) 
+            if (field.StateInModel == State.NoExist) 
             {
                 field.Draw();
             }
 
-            if (viewport.stateInModel == State.NoExist)
+            if (viewport.StateInModel == State.NoExist)
             {
                 viewport.Draw();
             }
