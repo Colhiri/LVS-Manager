@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
+using Microsoft.SqlServer.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -383,20 +384,57 @@ namespace AutoCAD_2022_Plugin1
             return new Size(width, height);
         }
 
+        /// <summary>
+        /// Предоставляет список всех плоттеров в текущей сессии AutoCad
+        /// </summary>
+        public static string[] GetPlotters()
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            return pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
+        }
+
+        /// <summary>
+        /// Проверяет находится ли данный плоттер в листе всех плоттеров
+        /// </summary>
+        /// <param name="PlotterName"></param>
+        /// <returns></returns>
+        public static bool CheckPlotter(string PlotterName)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            string[] plotterNames = pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
+            return plotterNames.Contains(PlotterName);
+        }
+
+        /// <summary>
+        /// Проверяет верный ли формат листа и есть ли он в AutoCad
+        /// </summary>
+        /// <param name="PageFormat"></param>
+        /// <returns></returns>
+        public static bool CheckPageFormat(string PageFormat, string PlotterName)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            string[] formats;
+
+            using (PlotSettings plt = new PlotSettings(true))
+            {
+                formats = pltValidator.GetCanonicalMediaNameList(plt).Cast<string>().ToArray();
+            }
+
+            return formats.Contains(PageFormat);
+        }
+
 
         /// <summary>
         /// Получаем все канонические масштабы в открытом чертеже
         /// </summary>
         /// <returns></returns>
-        public static string[] GetAllCanonicalScales(string deviceName = "Нет")
+        public static string[] GetAllCanonicalScales(string deviceName)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
-            string[] device = pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
-            if (!device.Contains(deviceName))
-            {
-                throw new System.Exception("Not found your device in device list in Autocad.");
-            }
+            if (!CheckPlotter(deviceName)) throw new System.Exception("Not found your device in device list in Autocad.");
 
             string[] scales;
 
@@ -407,6 +445,17 @@ namespace AutoCAD_2022_Plugin1
             }
 
             return scales;
+        }
+
+        /// <summary>
+        /// Возвращает все аннотационные масштабы принятые в AutoCad
+        /// </summary>
+        /// <returns></returns>
+        public static string[] GetAllAnnotationScales()
+        {
+            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
+            string[] annoScales = occ.Cast<AnnotationScale>().Select(x => x.Name).ToArray();
+            return annoScales;
         }
 
 
@@ -661,7 +710,7 @@ namespace AutoCAD_2022_Plugin1
             if (layoutManager.LayoutExists(nameLayout))
                 throw new System.Exception($"Layout with name {nameLayout} already exists.");
 
-            if (!GetAllCanonicalScales().Contains(canonicalScale))
+            if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
                 throw new System.Exception($"Canonical scale is wrong.");
 
             ObjectId id = layoutManager.CreateLayout(nameLayout);

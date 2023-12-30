@@ -17,7 +17,6 @@ namespace AutoCAD_2022_Plugin1
     /// 
     /// Ну или проосто делать все через команды удаления
     /// 
-    /// 
     /// Создай отдельные команды для взаимодействия и обновления Полей, макетов, видовых экранов
     /// Вынести команды удаления, обновления в отдельные автокадовские команды
     /// 
@@ -47,6 +46,7 @@ namespace AutoCAD_2022_Plugin1
         private List<Field> Fields { get; set; } = new List<Field>();
         public string CurrentLayout { get; private set; }
         public Point2d StartPoint { get; set; }
+        public static Point2d CurrentStartPoint {  get; private set; } 
 
         public FieldList(Point2d StartPoint)
         {
@@ -76,15 +76,33 @@ namespace AutoCAD_2022_Plugin1
             if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(oldFormatLayout))
                 throw new System.Exception($"Layout with name - {oldFormatLayout} does not exists.");
             Field CurrentField = GetField(oldFormatLayout);
-            CurrentField.PaperFormat = newFormatLayout;
+            CurrentField.LayoutFormat = newFormatLayout;
             CurrentField.UpdatePaperSize();
             return CurrentField;
         }
 
-        public Field AddField(string nameLayout, string PaperFormat = "A4", string PlotterName = "Нет")
+        private Point2d IncreaseStart()
         {
-            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(nameLayout))
-                Fields.Add(new Field(nameLayout, PaperFormat, PlotterName));
+            double newPlusX = 0;
+
+            if (Fields.Count == 0) return StartPoint;
+
+            for (int i = 0; i < Fields.Count; i++)
+            {
+                Size sizeLayout = GetSizePaper(Fields[i].LayoutFormat, Fields[i].PlotterName);
+                newPlusX = newPlusX + sizeLayout.Width * 0.5 + sizeLayout.Width;
+            }
+
+            return new Point2d(StartPoint.X + newPlusX, StartPoint.Y);
+        }
+
+        public Field AddField(string nameLayout, string LayoutFormat, string PlotterName)
+        {
+            if (Fields.Count == 0 && CheckPageFormat(LayoutFormat, PlotterName) && CheckPlotter(PlotterName))
+            {   
+                IncreaseStart();
+                Fields.Add(new Field(nameLayout, LayoutFormat, PlotterName));
+            }
             return GetField(nameLayout);
         }
 
@@ -113,7 +131,7 @@ namespace AutoCAD_2022_Plugin1
         // Параметры размеров
         public static string DownScale { get; set; } = "1:1";
         public string NameLayout { get; set; }
-        public string PaperFormat { get; set; }
+        public string LayoutFormat { get; set; }
         public string PlotterName { get; set; }
         public Size OriginalSizeLayout { get; set; }
         public Size DownScaleSizeLayout { get; set; }
@@ -124,10 +142,10 @@ namespace AutoCAD_2022_Plugin1
         public Point2d StartPoint { get; private set; }
         private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
 
-        public Field(string NameLayout, string PaperFormat, string PlotterName)
+        public Field(string NameLayout, string LayoutFormat, string PlotterName)
         {
             this.NameLayout = NameLayout;
-            this.PaperFormat = PaperFormat;
+            this.LayoutFormat = LayoutFormat;
             this.PlotterName = PlotterName;
             Id = IdMove++;
             UpdatePaperSize();
@@ -143,7 +161,7 @@ namespace AutoCAD_2022_Plugin1
             // Добавляем стартовую точку
             if (StateInModel == State.NoExist)
             {
-                StartPoint = GetStartPointDraw(ObjectsId);
+                StartPoint = FieldList.CurrentStartPoint;
 
                 StartPoint = new Point2d(StartPoint.X - DownScaleSizeLayout.Width * 0.5, StartPoint.Y);
             }
@@ -178,7 +196,7 @@ namespace AutoCAD_2022_Plugin1
         public void UpdatePaperSize()
         {
             // Получаем оригинальный масштаб
-            OriginalSizeLayout = GetSizePaper(PaperFormat, PlotterName);
+            OriginalSizeLayout = GetSizePaper(LayoutFormat, PlotterName);
             // Применяем уменьшающий коэффициент
             DownScaleSizeLayout = ApplyScaleToSizeObjectsInModel(OriginalSizeLayout, DownScale);
         }
