@@ -52,5 +52,22 @@ namespace AutoCAD_2022_Plugin1
         {
             Formats.ItemsSource = GetAllCanonicalScales(tempData.PlotterName);
         }
+
+        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (FL.Contains(NameLayoutTextBox.Text))
+            {
+                Plotters.SelectedValue = FL.GetPlotter(NameLayoutTextBox.Text);
+                Formats.SelectedValue = FL.GetFormat(NameLayoutTextBox.Text);
+
+                Plotters.IsEnabled = false;
+                Formats.IsEnabled = false;
+            }
+            else
+            {
+                Plotters.IsEnabled = true;
+                Formats.IsEnabled = true;
+            }
+        }
     }
 }

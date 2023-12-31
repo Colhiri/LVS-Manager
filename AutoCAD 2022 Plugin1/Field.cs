@@ -9,25 +9,17 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 namespace AutoCAD_2022_Plugin1
 {
     /// <summary>
-    /// При обновлении области из автокада у нас просто рисуются прямоугольники в рандомных местах
-    /// Это должен решать нахождения в базе автокада полилиний, которые были созданы DrawRectangle
-    /// 
-    /// А также нужно создать область рисования макета, в которой как раз и будут находиться 
-    /// все объекты этого макета
-    /// 
-    /// Ну или проосто делать все через команды удаления
-    /// 
-    /// Создай отдельные команды для взаимодействия и обновления Полей, макетов, видовых экранов
-    /// Вынести команды удаления, обновления в отдельные автокадовские команды
-    /// 
-    // </summary>
-
+    /// Состояние отрисовки видового экрана или поля в пространстве модели
+    /// </summary>
     public enum State
     {
         Exist,
         NoExist
     }
 
+    /// <summary>
+    /// Где находится стартовая точка отрисовки полей и видовых экранов
+    /// </summary>
     public enum LocationDraw
     {
         TopLeft, 
@@ -37,21 +29,22 @@ namespace AutoCAD_2022_Plugin1
         Custom
     }
 
-
     /// <summary>
-    /// Пока это главный класс
+    /// Создать массив Полей
     /// </summary>
     public class FieldList
     {
         private List<Field> Fields { get; set; } = new List<Field>();
         public string CurrentLayout { get; private set; }
         public Point2d StartPoint { get; set; }
-        public static Point2d CurrentStartPoint {  get; private set; } 
+        public static Point2d CurrentStartPoint { get; private set; }
+        public static int ColorIndexForField {  get; set; }
+        public static int ColorIndexForViewport {  get; set; }
 
-        public FieldList(Point2d StartPoint)
-        {
-            this.StartPoint = StartPoint;
-        }
+        // Свойства для Fields
+        public bool Contains(string NameField) => Fields.Select(x => x.NameLayout).Contains(NameField);
+        public string GetPlotter(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
+        public string GetFormat(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
 
         public Field UpdateFieldName(string oldNameLayout, string newNameLayout)
         {
@@ -98,10 +91,10 @@ namespace AutoCAD_2022_Plugin1
 
         public Field AddField(string nameLayout, string LayoutFormat, string PlotterName)
         {
-            if (Fields.Count == 0 && CheckPageFormat(LayoutFormat, PlotterName) && CheckPlotter(PlotterName))
+            if ((Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(nameLayout)) && CheckPageFormat(LayoutFormat, PlotterName) && CheckPlotter(PlotterName))
             {   
-                IncreaseStart();
                 Fields.Add(new Field(nameLayout, LayoutFormat, PlotterName));
+                CurrentStartPoint = IncreaseStart();
             }
             return GetField(nameLayout);
         }
@@ -123,7 +116,6 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class Field
     {
-        // Параметры идентификации
         public static int IdMove { get; private set; } = 0;
         public int Id { get; private set; }
         public ObjectId ContourField { get; private set; }
@@ -167,7 +159,7 @@ namespace AutoCAD_2022_Plugin1
             }
 
             // Добавляем параметры видового экрана
-            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, StartPoint);
+            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, StartPoint, NameLayout);
             Viewports.Add(viewport);
 
             return viewport;
@@ -201,14 +193,14 @@ namespace AutoCAD_2022_Plugin1
             DownScaleSizeLayout = ApplyScaleToSizeObjectsInModel(OriginalSizeLayout, DownScale);
         }
 
-        /// <summary>
-        /// 
+        /// <summary
+        /// Рисуем Field
         /// </summary>
         /// <returns></returns>
         public object Draw()
         {
-            // Рисуем макет
             ContourField = DrawRectangle(StartPoint, DownScaleSizeLayout);
+            SetLayer(ContourField, NameLayout, FieldList.ColorIndexForField);
             StateInModel = State.Exist;
             return null;
         }
@@ -224,6 +216,7 @@ namespace AutoCAD_2022_Plugin1
         public int Id { get; private set; }
         public ObjectId ContourObjects { get; private set; }
         public ObjectIdCollection ObjectsIDs { get; private set; }
+        public string NameLayout { get; set; }
 
         // Параметры размеров
         public string AnnotationScaleViewport { get; set; }
@@ -236,11 +229,12 @@ namespace AutoCAD_2022_Plugin1
         public State StateInModel { get; set; } = State.NoExist;
         public Point2d StartDrawPointVP { get; private set; }
 
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, Point2d StartDrawPointVP)
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, Point2d StartDrawPointVP, string NameLayout)
         {
             this.AnnotationScaleViewport = AnnotationScaleViewport;
             this.ObjectsIDs = ObjectsIDs;
             this.StartDrawPointVP = StartDrawPointVP;
+            this.NameLayout = NameLayout;
             this.Id = IdMove++;
 
             SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
@@ -256,6 +250,7 @@ namespace AutoCAD_2022_Plugin1
         public object Draw()
         {
             ContourObjects = DrawRectangle(StartDrawPointVP, SizeObjectsWithScaling);
+            SetLayer(ContourObjects, NameLayout, FieldList.ColorIndexForViewport);
             StateInModel = State.Exist;
             return null;
         }

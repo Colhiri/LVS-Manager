@@ -8,7 +8,7 @@
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight">
     <StackPanel>
         <TextBlock Margin="2">Введите имя листа</TextBlock>
-        <TextBox Margin="2" MinWidth="150" Text="{Binding Path=Name}"></TextBox>
+        <TextBox Name="NameLayoutTextBox" Margin="2" MinWidth="150" Text="{Binding Path=Name}" TextChanged="TextBox_TextChanged"></TextBox>
         
         <TextBlock Margin="2">Выберите плоттер для будущего листа</TextBlock>
         <ComboBox Name="Plotters" 

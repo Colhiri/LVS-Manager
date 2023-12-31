@@ -2,57 +2,16 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
-using Microsoft.SqlServer.Server;
+using Autodesk.AutoCAD.LayerManager;
+using Autodesk.AutoCAD.Colors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Windows.Media;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
 {
-    /// <summary>
-    /// Просто удобные размеры объектов в прямоугольном формате
-    /// </summary>
-    public struct Size
-    {
-        public double Width { get; set; }
-        public double Height { get; set; }
-
-        public Size(double Width, double Height)
-        {
-            this.Width = Width;
-            this.Height = Height;
-        }
-    }
-
-    /// <summary>
-    /// Класс обертки для получения аннотационного масштаба и его параметров
-    /// </summary>
-    public class WrapInfoScale
-    {
-        public static int Id { get; set; } = 1;
-        public string Name { get; set; }
-        public double CustomScale { get; set; }
-        public int FirstNumberScale { get; set; }
-        public int SecondNumberScale { get; set; }
-        public StandardScaleType standardScale { get; set; }
-
-        public WrapInfoScale(string Name, double CustomScale)
-        {
-            this.Name = Name;
-            int[] scales = Name.Split(':').Select(x => int.Parse(x)).ToArray();
-            this.CustomScale = CustomScale; // scales[0] / scales[1];
-            Id++;
-            this.FirstNumberScale = scales[0];
-            this.SecondNumberScale = scales[1];
-
-            foreach (string std in Enum.GetNames(typeof(StandardScaleType)))
-            {
-            }
-        }
-    }
-
     public static class Working_functions
     {
         private static Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
@@ -61,6 +20,8 @@ namespace AutoCAD_2022_Plugin1
         private static LayoutManager layoutManager = LayoutManager.Current;
         private static ObjectContextManager OCM = AcDatabase.ObjectContextManager;
         private static PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+        private static LayerStateManager layerManager = new LayerStateManager(AcDatabase);
+        public static FieldList FL = new FieldList();
 
         /// <summary>
         /// Создает видовой экран по заданным параметрам
@@ -293,8 +254,6 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
-        
-
 
         /// <summary>
         /// Возвращает размер макета
@@ -370,13 +329,16 @@ namespace AutoCAD_2022_Plugin1
 
                 foreach (DBDictionaryEntry entry in layoutDict)
                 {
-                    Layout layout = acTrans.GetObject(entry.Value, OpenMode.ForRead) as Layout;
+                    Layout layout = acTrans.GetObject(entry.Value, OpenMode.ForWrite) as Layout;
 
                     if (layout.ModelType)
                     {
+                        pltValidator.SetPlotConfigurationName(layout, devicePlotter, null);
+                        pltValidator.SetCanonicalMediaName(layout, formatPaper);
+
                         width = layout.PlotPaperSize.X;
                         height = layout.PlotPaperSize.Y;
-
+                        
                         break;
                     }
                 }
@@ -515,13 +477,6 @@ namespace AutoCAD_2022_Plugin1
 
                 ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
 
-                List<ObjectContext> annoScales = new List<ObjectContext>();
-
-                foreach (var oc in occ)
-                {
-                    annoScales.Add(oc);
-                }
-
                 // Add new DBObject in Database
                 // Set ObjectId Creating ViewPort
                 ObjectId viewportID = acBlkTblRec.AppendEntity(viewport);
@@ -534,20 +489,11 @@ namespace AutoCAD_2022_Plugin1
 
                 AnnotationScale rightScale = annotation[0];
 
-                foreach (AnnotationScale annoSC in annotation)
-                {
-                    if (annoSC.Name == annotationScaleName)
-                    {
-                        rightScale = annoSC;
-                    }
-                }
+                rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
 
                 vp.On = true;
                 vp.AnnotationScale = rightScale;
                 vp.CustomScale = rightScale.Scale;
-
-                // vp.StandardScale = scaleObjects;
-                // double cstScaleVP = vp.CustomScale;
 
                 newWidth = vp.Width * rightScale.Scale;
                 newHeight = vp.Height * rightScale.Scale;
@@ -617,8 +563,12 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         /// <param name="startPoint"></param>
         /// <param name="size"></param>
+        /// <param name="NameLayer">Имя слоя, которое равно имени макета</param>
+        /// <returns></returns>
         public static ObjectId DrawRectangle(Point2d startPoint, Size size)
         {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
             ObjectId polylineId;
 
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
@@ -639,13 +589,62 @@ namespace AutoCAD_2022_Plugin1
                 }
                 acTrans.Commit();
             }
-
             return polylineId;
+        }
+
+        /// <summary>
+        /// Создать слой
+        /// </summary>
+        /// <param name="NameLayer"></param>
+        public static void CreateLayer(string NameLayer, int IndexColor)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                LayerTable layColl = acTrans.GetObject(AcDatabase.LayerTableId, OpenMode.ForRead) as LayerTable;
+
+                if (layColl.Has(NameLayer)) return;
+
+                using (LayerTableRecord layTableRec = new LayerTableRecord())
+                {
+                    layTableRec.Name = NameLayer;
+                    layTableRec.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(ColorMethod.ByAci, IndexColor);
+
+                    layColl.UpgradeOpen();
+
+                    layColl.Add(layTableRec);
+                    acTrans.AddNewlyCreatedDBObject(layTableRec, true);
+                }
+                acTrans.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Установить имя слоя и создать, если такого слоя не существует
+        /// </summary>
+        /// <param name="objID"></param>
+        /// <param name="NameLayer"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void SetLayer(ObjectId objID, string NameLayer, int IndexColor = 0)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                if (!layerManager.HasLayerState(NameLayer)) CreateLayer(NameLayer, IndexColor);
+
+                Entity objectRecord = acTrans.GetObject(objID, OpenMode.ForWrite) as Entity;
+
+                objectRecord.Layer = NameLayer;
+
+                acTrans.Commit();
+            }
         }
 
 
         /// <summary>
-        /// Меняет масштаб листа на заданный стандартный масштаб
+        /// Изменить масштаб листа на заданный стандартный масштаб
         /// </summary>
         /// <param name="nameLayout"></param>
         /// <param name="scale"></param>
