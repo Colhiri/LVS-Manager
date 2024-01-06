@@ -2,7 +2,6 @@
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Policy;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 

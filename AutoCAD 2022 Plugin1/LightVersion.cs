@@ -8,9 +8,6 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
-using System.Linq;
-using System.Xml.Linq;
-using Autodesk.AutoCAD.GraphicsSystem;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -156,6 +153,30 @@ namespace LightProgram
 
             if (viewport.StateInModel == State.NoExist)
                 viewport.Draw();
+        }
+
+
+        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
+        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
+        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
+        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
+
+
+        /// <summary>
+        /// Тест работы второго окна и его функций
+        /// </summary>
+        [CommandMethod("zoomtest", CommandFlags.UsePickSet)]
+        public static void zoomtest()
+        {
+            Document acDoc = AcCoreAp.DocumentManager.MdiActiveDocument;
+            Database acDatabase = acDoc.Database;
+            Editor acEditor = acDoc.Editor;
+
+            PromptSelectionResult select = acEditor.SelectImplied();
+            if (select.Status != PromptStatus.OK) return;
+            ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
+
+            ZoomToObjects(objectsIDs);
         }
     }
 }

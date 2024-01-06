@@ -1,17 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 namespace AutoCAD_2022_Plugin1
@@ -47,15 +35,15 @@ namespace AutoCAD_2022_Plugin1
 
         private void btnDone_Click(object sender, RoutedEventArgs e)
         {
-            // Проверяем имя на соответствие
-            tempData.Name = CheckStackPanel();
-            if (tempData.AnnotationScaleObjectsVP == "System.Windows.Controls.StackPanel")
-                tempData.AnnotationScaleObjectsVP = ScaleTextBox.Text;
-            else
-                tempData.AnnotationScaleObjectsVP = Scales.SelectedItem.ToString();
-
             if (tempData.IsValidName && tempData.IsValidScale)
             {
+                // Проверяем имя на соответствие
+                tempData.Name = CheckStackPanel();
+                if (tempData.AnnotationScaleObjectsVP == "System.Windows.Controls.StackPanel")
+                    tempData.AnnotationScaleObjectsVP = ScaleTextBox.Text;
+                else
+                    tempData.AnnotationScaleObjectsVP = Scales.SelectedItem.ToString();
+
                 this.DialogResult = true;
                 this.Close();
             }

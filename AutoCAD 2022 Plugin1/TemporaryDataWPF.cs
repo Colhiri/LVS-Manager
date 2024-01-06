@@ -1,9 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -51,12 +48,10 @@ namespace AutoCAD_2022_Plugin1
         {
             get
             {
-                if (string.IsNullOrEmpty(Name)) return false;
+                if (string.IsNullOrEmpty(AnnotationScaleObjectsVP)) return false;
                 try
                 {
-                    string[] parts = AnnotationScaleObjectsVP.Split(':');
-
-                    int[] parts1 = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
+                    int[] parts = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
                 }
                 catch
                 {

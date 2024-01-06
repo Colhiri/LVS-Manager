@@ -2,12 +2,10 @@
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.LayerManager;
 using Autodesk.AutoCAD.Colors;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Media;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
@@ -748,6 +746,25 @@ namespace AutoCAD_2022_Plugin1
             AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
 
             return id;
+        }
+
+        /// <summary>
+        /// Наводится объекты в пространстве модели
+        /// </summary>
+        /// <param name="objectsIDs"></param>
+        public static void ZoomToObjects(ObjectIdCollection objectsIDs)
+        {
+            using (ViewTableRecord view = AcEditor.GetCurrentView())
+            {
+                Size sizeObjects = CheckModelSize(objectsIDs);
+
+                view.Width = sizeObjects.Width;
+                view.Height = sizeObjects.Height;
+                view.CenterPoint = Point3dTo2d(CheckCenterModel(objectsIDs));
+
+                AcEditor.SetCurrentView(view);
+            }
+
         }
     }
 }
