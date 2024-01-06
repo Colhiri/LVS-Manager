@@ -21,25 +21,52 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public partial class ParametersLayout : Window
     {
-        TemporaryDataWPF tempData;
+        private TemporaryDataWPF tempData;
 
         public ParametersLayout(TemporaryDataWPF tempData)
         {
             InitializeComponent();
             this.tempData = tempData;
             this.DataContext = tempData;
+
+            // Работа со списком имен МАКЕТОВ с возможностью введения значений
+            var stackPanelNames = NamesLayoutComboBox.Items[0];
+            NamesLayoutComboBox.Items.Clear();
+            NamesLayoutComboBox.Items.Add(stackPanelNames);
+            foreach (string name in FL.GetNames()) NamesLayoutComboBox.Items.Add(name);
+
+            // Работа со списком имен МАСШТАБОВ с возможностью введения значений
+            var stackPanelScales = Scales.Items[0];
+            Scales.Items.Clear();
+            Scales.Items.Add(stackPanelScales);
+            foreach (string name in GetAllAnnotationScales()) Scales.Items.Add(name);
+
             Plotters.ItemsSource = GetPlotters();
             Formats.ItemsSource = GetAllCanonicalScales(tempData.PlotterName);
-            Scales.ItemsSource = GetAllAnnotationScales();
         }
 
         private void btnDone_Click(object sender, RoutedEventArgs e)
         {
-            if (tempData.IsValidName)
+            // Проверяем имя на соответствие
+            tempData.Name = CheckStackPanel();
+            if (tempData.AnnotationScaleObjectsVP == "System.Windows.Controls.StackPanel")
+                tempData.AnnotationScaleObjectsVP = ScaleTextBox.Text;
+            else
+                tempData.AnnotationScaleObjectsVP = Scales.SelectedItem.ToString();
+
+            if (tempData.IsValidName && tempData.IsValidScale)
             {
                 this.DialogResult = true;
                 this.Close();
             }
+        }
+
+        private string CheckStackPanel()
+        {
+            // Проверяем выбранное значение, чтобы там не было StackPanel
+            string currentValue = NamesLayoutComboBox.SelectedItem.ToString();
+            if (currentValue == "System.Windows.Controls.StackPanel") currentValue = NamesLayoutTextBox.Text;
+            return currentValue;
         }
 
         private void btnCancel_Click(object sender, RoutedEventArgs e)
@@ -53,12 +80,12 @@ namespace AutoCAD_2022_Plugin1
             Formats.ItemsSource = GetAllCanonicalScales(tempData.PlotterName);
         }
 
-        private void TextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private void NamesLayout_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (FL.Contains(NameLayoutTextBox.Text))
+            if (FL.Contains(CheckStackPanel()))
             {
-                Plotters.SelectedValue = FL.GetPlotter(NameLayoutTextBox.Text);
-                Formats.SelectedValue = FL.GetFormat(NameLayoutTextBox.Text);
+                Plotters.SelectedValue = FL.GetPlotter(NamesLayoutComboBox.SelectedItem.ToString());
+                Formats.SelectedValue = FL.GetFormat(NamesLayoutComboBox.SelectedItem.ToString());
 
                 Plotters.IsEnabled = false;
                 Formats.IsEnabled = false;

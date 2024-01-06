@@ -441,9 +441,28 @@ namespace AutoCAD_2022_Plugin1
 
         ////// Нужно будет перерабатывать функцию Создания и проверки видового экрана, так как эти функции не учитывают границы отхождения видового экрана
         ////// 
-        ////// 
-        ////// 
-        ///
+
+        /// <summary>
+        /// Добавить новый аннотационный масштаб
+        /// </summary>
+        /// <param name="annoScale"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void AddNewAnnotationScale(string annoScale)
+        {
+            int[] parts = annoScale.Split(':').Select(x => int.Parse(x)).ToArray();
+
+            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
+            if (occ == null) throw new System.Exception("Object Context Collection is null. Some errors with standart annotation scales.");
+
+            AnnotationScale newAnnoScale = new AnnotationScale()
+            {
+                Name = annoScale,
+                PaperUnits = parts[0],
+                DrawingUnits = parts[1],
+            };
+
+            occ.AddContext(newAnnoScale);
+        }
 
 
         /// <summary>
@@ -489,7 +508,16 @@ namespace AutoCAD_2022_Plugin1
 
                 AnnotationScale rightScale = annotation[0];
 
-                rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
+                try
+                {
+                    rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
+                }
+                catch
+                {
+                    AddNewAnnotationScale(annotationScaleName);
+                    annotation = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES").Cast<AnnotationScale>().ToList();
+                    rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
+                }
 
                 vp.On = true;
                 vp.AnnotationScale = rightScale;
@@ -565,7 +593,7 @@ namespace AutoCAD_2022_Plugin1
         /// <param name="size"></param>
         /// <param name="NameLayer">Имя слоя, которое равно имени макета</param>
         /// <returns></returns>
-        public static ObjectId DrawRectangle(Point2d startPoint, Size size)
+        public static ObjectId DrawRectangle(Point2d startPoint, Size size, int IndexColor)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -585,6 +613,7 @@ namespace AutoCAD_2022_Plugin1
                     acPoly.AddVertexAt(4, new Point2d(startPoint.X, startPoint.Y), 0, 0, 0);
 
                     polylineId = records.AppendEntity(acPoly);
+                    acPoly.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(ColorMethod.ByAci, (short)IndexColor);
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
                 }
                 acTrans.Commit();
@@ -596,7 +625,7 @@ namespace AutoCAD_2022_Plugin1
         /// Создать слой
         /// </summary>
         /// <param name="NameLayer"></param>
-        public static void CreateLayer(string NameLayer, int IndexColor)
+        public static void CreateLayer(string NameLayer)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -609,7 +638,6 @@ namespace AutoCAD_2022_Plugin1
                 using (LayerTableRecord layTableRec = new LayerTableRecord())
                 {
                     layTableRec.Name = NameLayer;
-                    layTableRec.Color = Autodesk.AutoCAD.Colors.Color.FromColorIndex(ColorMethod.ByAci, IndexColor);
 
                     layColl.UpgradeOpen();
 
@@ -626,13 +654,13 @@ namespace AutoCAD_2022_Plugin1
         /// <param name="objID"></param>
         /// <param name="NameLayer"></param>
         /// <exception cref="System.Exception"></exception>
-        public static void SetLayer(ObjectId objID, string NameLayer, int IndexColor = 0)
+        public static void SetLayer(ObjectId objID, string NameLayer)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
-                if (!layerManager.HasLayerState(NameLayer)) CreateLayer(NameLayer, IndexColor);
+                if (!layerManager.HasLayerState(NameLayer)) CreateLayer(NameLayer);
 
                 Entity objectRecord = acTrans.GetObject(objID, OpenMode.ForWrite) as Entity;
 

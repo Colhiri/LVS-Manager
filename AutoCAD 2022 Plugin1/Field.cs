@@ -45,6 +45,7 @@ namespace AutoCAD_2022_Plugin1
         public bool Contains(string NameField) => Fields.Select(x => x.NameLayout).Contains(NameField);
         public string GetPlotter(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
         public string GetFormat(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
+        public List<string> GetNames() => Fields.Select(x => x.NameLayout).ToList();
 
         public Field UpdateFieldName(string oldNameLayout, string newNameLayout)
         {
@@ -199,8 +200,8 @@ namespace AutoCAD_2022_Plugin1
         /// <returns></returns>
         public object Draw()
         {
-            ContourField = DrawRectangle(StartPoint, DownScaleSizeLayout);
-            SetLayer(ContourField, NameLayout, FieldList.ColorIndexForField);
+            ContourField = DrawRectangle(StartPoint, DownScaleSizeLayout, FieldList.ColorIndexForField);
+            SetLayer(ContourField, NameLayout);
             StateInModel = State.Exist;
             return null;
         }
@@ -249,8 +250,8 @@ namespace AutoCAD_2022_Plugin1
         /// <returns></returns>
         public object Draw()
         {
-            ContourObjects = DrawRectangle(StartDrawPointVP, SizeObjectsWithScaling);
-            SetLayer(ContourObjects, NameLayout, FieldList.ColorIndexForViewport);
+            ContourObjects = DrawRectangle(StartDrawPointVP, SizeObjectsWithScaling, FieldList.ColorIndexForViewport);
+            SetLayer(ContourObjects, NameLayout);
             StateInModel = State.Exist;
             return null;
         }

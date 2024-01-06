@@ -7,8 +7,16 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight">
     <StackPanel>
-        <TextBlock Margin="2">Введите имя листа</TextBlock>
-        <TextBox Name="NameLayoutTextBox" Margin="2" MinWidth="150" Text="{Binding Path=Name}" TextChanged="TextBox_TextChanged"></TextBox>
+        
+        <TextBlock Margin="2">Введите имя листа или выберите созданный</TextBlock>
+        <ComboBox Name="NamesLayoutComboBox" Margin="2" MinWidth="150" SelectedItem="{Binding Path=Name}" 
+                  SelectionChanged="NamesLayout_SelectionChanged"
+                  IsSynchronizedWithCurrentItem="True">
+            <StackPanel Orientation="Horizontal">
+                <TextBlock Text="Новый лист: " VerticalAlignment="Center"/>
+                <TextBox Name="NamesLayoutTextBox" MinWidth="100"></TextBox>
+            </StackPanel>
+        </ComboBox>
         
         <TextBlock Margin="2">Выберите плоттер для будущего листа</TextBlock>
         <ComboBox Name="Plotters" 
@@ -26,6 +34,10 @@
         <ComboBox Name="Scales" 
                   SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
                   IsSynchronizedWithCurrentItem="True">
+            <StackPanel>
+                <TextBlock Text="Новый лист: " VerticalAlignment="Center"/>
+                <TextBox Name="ScaleTextBox" MinWidth="100"></TextBox>
+            </StackPanel>
         </ComboBox>
         
         <StackPanel Orientation="Horizontal">

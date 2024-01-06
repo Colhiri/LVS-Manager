@@ -13,7 +13,7 @@ namespace AutoCAD_2022_Plugin1
     public class TemporaryDataWPF
     {
         private string _Name;
-
+        private string _Scale;
         public List<string> plotterNames { get; set; }
         public List<string> layoutFormats { get; set; } 
         public List<string> annotationScales { get; set; }
@@ -25,7 +25,11 @@ namespace AutoCAD_2022_Plugin1
         }
         public string PlotterName { get; set; }
         public string LayoutFormat { get; set; }
-        public string AnnotationScaleObjectsVP {  get; set; }
+        public string AnnotationScaleObjectsVP
+        {
+            get { return _Scale; }
+            set { _Scale = value.Trim(); }
+        }
         public bool IsValidName 
         {
             get 
@@ -34,6 +38,25 @@ namespace AutoCAD_2022_Plugin1
                 try
                 {
                     SymbolUtilityServices.ValidateSymbolName(Name, false);
+                }
+                catch
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        public bool IsValidScale
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Name)) return false;
+                try
+                {
+                    string[] parts = AnnotationScaleObjectsVP.Split(':');
+
+                    int[] parts1 = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
                 }
                 catch
                 {
