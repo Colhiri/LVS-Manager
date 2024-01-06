@@ -28,6 +28,42 @@ namespace AutoCAD_2022_Plugin1
         Custom
     }
 
+
+    public abstract class FieldAbstract
+    {
+        public Point2d StartPoint { get; private protected set; }
+    }
+
+    public class FieldNew : FieldAbstract
+    {
+        private List<ViewportNew> Viewports { get; set; } = new List<ViewportNew>();
+
+        public ViewportNew AddViewport()
+        {
+            ViewportNew vpNew = new ViewportNew(new Point2d(0, 0));
+
+            Viewports.Add(vpNew);
+
+            return vpNew;
+        }
+
+        public void ChangeStartPoint(int indexListVP, Point2d newStartPoint)
+        {
+            FieldNew vpFromList = (Viewports[indexListVP] as FieldAbstract) as FieldNew;
+
+            vpFromList.StartPoint = newStartPoint;
+        }
+    }
+
+    public class ViewportNew : FieldAbstract
+    {
+        public ViewportNew(Point2d StartPoint)
+        {
+            this.StartPoint = StartPoint;
+        }
+    }
+
+
     /// <summary>
     /// Создать массив Полей
     /// </summary>
@@ -74,6 +110,18 @@ namespace AutoCAD_2022_Plugin1
             return CurrentField;
         }
 
+        /// <summary>
+        /// Пересчитать стартовые точки, чтобы не было пересечения между макетами и видовыми экранами
+        /// </summary>
+        public void RefreshStartPoints()
+        {
+
+        }
+
+        /// <summary>
+        /// Увеличивает стартовый Х в зависимости от выбранного формата макета
+        /// </summary>
+        /// <returns></returns>
         private Point2d IncreaseStart()
         {
             double newPlusX = 0;
@@ -111,13 +159,23 @@ namespace AutoCAD_2022_Plugin1
         }
     }
 
+
+    public class TestingField
+    {
+        public Point2d StartPoint { get; private  set; }
+
+
+
+    }
+
+
+
     /// <summary>
     /// Класс содержащий в себе область объектов в видовых экранах, относящихся к определенному листу
     /// </summary>
     public class Field
     {
-        public static int IdMove { get; private set; } = 0;
-        public int Id { get; private set; }
+        public Identificator Id { get; private set; }
         public ObjectId ContourField { get; private set; }
 
         // Параметры размеров
@@ -139,7 +197,7 @@ namespace AutoCAD_2022_Plugin1
             this.NameLayout = NameLayout;
             this.LayoutFormat = LayoutFormat;
             this.PlotterName = PlotterName;
-            Id = IdMove++;
+            Id = new Identificator();
             UpdatePaperSize();
         }
 
@@ -165,17 +223,22 @@ namespace AutoCAD_2022_Plugin1
             return viewport;
         }
 
-        public void DeleteViewport(int Id)
+        public void UpdateStartPoint()
+        {
+
+        }
+
+        public void DeleteViewport(Identificator Id)
         {
             Viewports.Remove(Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)]);
         }
 
-        public ViewportInField UpdateViewport(int Id)
+        public ViewportInField UpdateViewport(Identificator Id)
         {
             return Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)];
         }
 
-        public ViewportInField UpdateScaleVP(int Id, string NewScaleVP)
+        public ViewportInField UpdateScaleVP(Identificator Id, string NewScaleVP)
         {
             ViewportInField currentVP = UpdateViewport(Id);
             if (currentVP == null)
@@ -206,14 +269,15 @@ namespace AutoCAD_2022_Plugin1
         }
     }
 
+
+
     /// <summary>
     /// Класс содержащий в себе информацию об отдельном видовом экране на макете
     /// </summary>
     public class ViewportInField
     {
         // Параметры идентификации
-        public static int IdMove { get; private set; } = 0;
-        public int Id { get; private set; }
+        public Identificator Id { get; private set; }
         public ObjectId ContourObjects { get; private set; }
         public ObjectIdCollection ObjectsIDs { get; private set; }
         public string NameLayout { get; set; }
@@ -227,7 +291,7 @@ namespace AutoCAD_2022_Plugin1
         // Общие параметры
         public Point2d CenterPoint { get; private set; }
         public State StateInModel { get; set; } = State.NoExist;
-        public Point2d StartDrawPointVP { get; private set; }
+        public Point2d StartDrawPointVP { get; set; }
 
         public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, Point2d StartDrawPointVP, string NameLayout)
         {
@@ -235,7 +299,7 @@ namespace AutoCAD_2022_Plugin1
             this.ObjectsIDs = ObjectsIDs;
             this.StartDrawPointVP = StartDrawPointVP;
             this.NameLayout = NameLayout;
-            this.Id = IdMove++;
+            this.Id = new Identificator();
 
             SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
@@ -261,5 +325,14 @@ namespace AutoCAD_2022_Plugin1
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
         }
+    }
+
+    /// <summary>
+    /// Инкапсуляция логики идентификатора для возможных будущих изменений
+    /// </summary>
+    public class Identificator
+    {
+        public static int ID { get; private set; } = 0;
+        public Identificator() => ID++;
     }
 }

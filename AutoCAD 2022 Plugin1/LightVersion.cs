@@ -22,6 +22,8 @@ namespace LightProgram
          * Цвет видового экрана
          * ??? Стандартный формат
          * ??? Опциональный масштаб (Он будет рассчитываться исходя из размера поля по высоте или ширине)
+         * Глобальный параметр с указанием того, что делать с объектами которые не вписываются на лист
+         * ??? DownScale
          * 
          * Сделать:
          * Функции апдейта полей и видовых экранов
@@ -113,11 +115,6 @@ namespace LightProgram
             LayoutManager layManager = LayoutManager.Current;
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
-            // Нужно сделать функцию которая выдает точку на основе всех объектов и выбранного перечисления по расположению макетов
-            // Сейчас стоит заглушка
-            // Сейчас стоит заглушка
-            // Сейчас стоит заглушка
-
             // Создаем форму
             // Нужно сделать подгрузку конфига для того, чтобы сразу было можно настроить глобальные параметры плагина, например, где 
             // располагаются точки, какой начальный принтер.
@@ -147,6 +144,8 @@ namespace LightProgram
             Field field = FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter) as Field;
             if (field == null) throw new ArgumentNullException();
             ViewportInField viewport = field.AddViewport(resultScale, objectIds);
+            viewport.StartDrawPointVP = new Point2d(0, 0);
+            //viewport.ChangeStartPoint(new Point2d(0, 0));
 
             if (field.StateInModel == State.NoExist) 
                 field.Draw();
@@ -154,13 +153,6 @@ namespace LightProgram
             if (viewport.StateInModel == State.NoExist)
                 viewport.Draw();
         }
-
-
-        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
-        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
-        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
-        // Исправь ошибку с крашем автокада, когда ничего не выбирается в имени макета
-
 
         /// <summary>
         /// Тест работы второго окна и его функций
