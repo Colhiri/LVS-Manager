@@ -9,9 +9,9 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public partial class ParametersLayout : Window
     {
-        private TemporaryDataWPF tempData;
+        private LayoutData tempData;
 
-        public ParametersLayout(TemporaryDataWPF tempData)
+        public ParametersLayout(LayoutData tempData)
         {
             InitializeComponent();
             this.tempData = tempData;

@@ -28,42 +28,6 @@ namespace AutoCAD_2022_Plugin1
         Custom
     }
 
-
-    public abstract class FieldAbstract
-    {
-        public Point2d StartPoint { get; private protected set; }
-    }
-
-    public class FieldNew : FieldAbstract
-    {
-        private List<ViewportNew> Viewports { get; set; } = new List<ViewportNew>();
-
-        public ViewportNew AddViewport()
-        {
-            ViewportNew vpNew = new ViewportNew(new Point2d(0, 0));
-
-            Viewports.Add(vpNew);
-
-            return vpNew;
-        }
-
-        public void ChangeStartPoint(int indexListVP, Point2d newStartPoint)
-        {
-            FieldNew vpFromList = (Viewports[indexListVP] as FieldAbstract) as FieldNew;
-
-            vpFromList.StartPoint = newStartPoint;
-        }
-    }
-
-    public class ViewportNew : FieldAbstract
-    {
-        public ViewportNew(Point2d StartPoint)
-        {
-            this.StartPoint = StartPoint;
-        }
-    }
-
-
     /// <summary>
     /// Создать массив Полей
     /// </summary>
@@ -159,17 +123,6 @@ namespace AutoCAD_2022_Plugin1
         }
     }
 
-
-    public class TestingField
-    {
-        public Point2d StartPoint { get; private  set; }
-
-
-
-    }
-
-
-
     /// <summary>
     /// Класс содержащий в себе область объектов в видовых экранах, относящихся к определенному листу
     /// </summary>
@@ -211,13 +164,14 @@ namespace AutoCAD_2022_Plugin1
             // Добавляем стартовую точку
             if (StateInModel == State.NoExist)
             {
-                StartPoint = FieldList.CurrentStartPoint;
-
-                StartPoint = new Point2d(StartPoint.X - DownScaleSizeLayout.Width * 0.5, StartPoint.Y);
+                StartPoint = new Point2d(FieldList.CurrentStartPoint.X - DownScaleSizeLayout.Width * 0.5,
+                                         FieldList.CurrentStartPoint.Y);
             }
 
+            DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
+
             // Добавляем параметры видового экрана
-            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, StartPoint, NameLayout);
+            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout);
             Viewports.Add(viewport);
 
             return viewport;
@@ -291,13 +245,13 @@ namespace AutoCAD_2022_Plugin1
         // Общие параметры
         public Point2d CenterPoint { get; private set; }
         public State StateInModel { get; set; } = State.NoExist;
-        public Point2d StartDrawPointVP { get; set; }
+        public DistributionViewportOnField StartPoint { get; set; }
 
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, Point2d StartDrawPointVP, string NameLayout)
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
         {
             this.AnnotationScaleViewport = AnnotationScaleViewport;
             this.ObjectsIDs = ObjectsIDs;
-            this.StartDrawPointVP = StartDrawPointVP;
+            this.StartPoint = StartDrawPointVP;
             this.NameLayout = NameLayout;
             this.Id = new Identificator();
 
@@ -313,7 +267,7 @@ namespace AutoCAD_2022_Plugin1
         /// <returns></returns>
         public object Draw()
         {
-            ContourObjects = DrawRectangle(StartDrawPointVP, SizeObjectsWithScaling, FieldList.ColorIndexForViewport);
+            ContourObjects = DrawRectangle(StartPoint.ToPoint2d(), SizeObjectsWithScaling, FieldList.ColorIndexForViewport);
             SetLayer(ContourObjects, NameLayout);
             StateInModel = State.Exist;
             return null;
@@ -334,5 +288,21 @@ namespace AutoCAD_2022_Plugin1
     {
         public static int ID { get; private set; } = 0;
         public Identificator() => ID++;
+    }
+
+    public class DistributionViewportOnField
+    {
+        public Point2d StartPoint { get; set; }
+        private Point2d PointDrawing { get; set; }
+        public Point2d ToPoint2d() => PointDrawing;
+
+        public DistributionViewportOnField(Point2d StartPoint)
+        {
+            this.StartPoint = StartPoint;
+        }
+
+
+
+
     }
 }

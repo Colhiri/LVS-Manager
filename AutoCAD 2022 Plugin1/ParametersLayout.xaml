@@ -18,13 +18,13 @@
             </StackPanel>
         </ComboBox>
         
-        <TextBlock Margin="2">Выберите плоттер для будущего листа</TextBlock>
+        <TextBlock Margin="2">Выберите плоттер для будущего макета</TextBlock>
         <ComboBox Name="Plotters" 
                   SelectedItem="{Binding Path=PlotterName}"
                   IsSynchronizedWithCurrentItem="True" SelectionChanged="Plotters_SelectionChanged">
         </ComboBox>
         
-        <TextBlock Margin="2">Выберите формат будущего листа</TextBlock>
+        <TextBlock Margin="2">Выберите формат будущего макета</TextBlock>
         <ComboBox Name="Formats" 
                   SelectedItem="{Binding Path=LayoutFormat}"
                   IsSynchronizedWithCurrentItem="True">
@@ -35,7 +35,7 @@
                   SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
                   IsSynchronizedWithCurrentItem="True">
             <StackPanel>
-                <TextBlock Text="Новый лист: " VerticalAlignment="Center"/>
+                <TextBlock Text="Новый масштаб: " VerticalAlignment="Center"/>
                 <TextBox Name="ScaleTextBox" MinWidth="100"></TextBox>
             </StackPanel>
         </ComboBox>
