@@ -615,6 +615,8 @@ namespace AutoCAD_2022_Plugin1
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
                 }
                 acTrans.Commit();
+
+                BlockTableRecord record = acTrans.GetObject(polylineId, OpenMode.ForRead) as BlockTableRecord;
             }
             return polylineId;
         }

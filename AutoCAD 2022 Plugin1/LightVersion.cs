@@ -66,8 +66,12 @@ namespace LightProgram
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK) return;
-            ObjectIdCollection objectIds = new ObjectIdCollection(select.Value.GetObjectIds());
+            if (select.Status != PromptStatus.OK)
+            {
+                Application.ShowAlertDialog("Выберите объекты");
+                select = AcEditor.GetSelection();
+            }
+            ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
 
             string resultNameLayout = tempData.Name;
             string resultPlotter = tempData.PlotterName;
@@ -77,7 +81,7 @@ namespace LightProgram
             // Добавлем новую филду
             Field field = FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter) as Field;
             if (field == null) throw new ArgumentNullException();
-            ViewportInField viewport = field.AddViewport(resultScale, objectIds);
+            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs);
             //viewport.ChangeStartPoint(new Point2d(0, 0));
 
             if (field.StateInModel == State.NoExist) 
@@ -99,14 +103,20 @@ namespace LightProgram
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
             // Получаем выбранные объекты
-            PromptSelectionResult select = AcEditor.SelectImplied();
+            PromptEntityResult select = AcEditor.GetEntity("Выберите полилинию");
             if (select.Status != PromptStatus.OK)
             {
                 Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSelection();
+                select = AcEditor.GetSe();
 
             }
             ObjectIdCollection objectIDs = new ObjectIdCollection(select.Value.GetObjectIds());
+
+            // Получаем параметры выбранных объектов
+            string NameLayoutObjects;
+            string PlotterNameObjects;
+            string LayoutFormatObjects;
+            string AnnotationScaleObjects;
 
             // Создаем форму
             ManageData manageData = new ManageData();
