@@ -44,7 +44,12 @@ namespace AutoCAD_2022_Plugin1
         public bool Contains(string NameField) => Fields.Select(x => x.NameLayout).Contains(NameField);
         public string GetPlotter(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
         public string GetFormat(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
+        public string GetNameFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().NameLayout;
+        public string GetPlotterFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
+        public string GetFormatFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
+
         public List<string> GetNames() => Fields.Select(x => x.NameLayout).ToList();
+        public List<ObjectId> GetObjectsID() => Fields.Select(x => x.ContourField).ToList();
 
         public Field UpdateFieldName(string oldNameLayout, string newNameLayout)
         {

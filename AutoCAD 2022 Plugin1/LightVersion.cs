@@ -8,6 +8,8 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
+using System.Windows.Documents;
+using System.Collections.Generic;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -107,17 +109,15 @@ namespace LightProgram
             if (select.Status != PromptStatus.OK)
             {
                 Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSe();
-
             }
-            ObjectIdCollection objectIDs = new ObjectIdCollection(select.Value.GetObjectIds());
-
+            ObjectId objectIDs = select.ObjectId;
+            // Находим этот объект по полилинии
+            Field field = 
             // Получаем параметры выбранных объектов
             string NameLayoutObjects;
             string PlotterNameObjects;
             string LayoutFormatObjects;
             string AnnotationScaleObjects;
-
             // Создаем форму
             ManageData manageData = new ManageData();
 
