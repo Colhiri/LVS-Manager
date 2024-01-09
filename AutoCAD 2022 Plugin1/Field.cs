@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
-
 namespace AutoCAD_2022_Plugin1
 {
     /// <summary>
@@ -33,51 +32,29 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class FieldList
     {
+        // Общие параметры
         private List<Field> Fields { get; set; } = new List<Field>();
         public string CurrentLayout { get; private set; }
         public Point2d StartPoint { get; set; }
         public static Point2d CurrentStartPoint { get; private set; }
-        public static int ColorIndexForField {  get; set; }
-        public static int ColorIndexForViewport {  get; set; }
-
-        // Свойства для Fields
+        public static int ColorIndexForField { get; set; }
+        public static int ColorIndexForViewport { get; set; }
+        // Свойства для Fields через Name или ObjectID
         public bool Contains(string NameField) => Fields.Select(x => x.NameLayout).Contains(NameField);
+        public bool Contains(ObjectId id) => Fields.Select(x => x.ContourField).Contains(id);
         public string GetPlotter(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
+        public string GetPlotter(ObjectId id) => Fields.Where(x => x.ContourField == id).First().PlotterName;
         public string GetFormat(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
+        public string GetFormat(ObjectId id) => Fields.Where(x => x.ContourField == id).First().LayoutFormat;
         public string GetNameFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().NameLayout;
+        public string GetNameFromObjectId(ObjectId id) => Fields.Where(x => x.ContourField == id).First().NameLayout;
         public string GetPlotterFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().PlotterName;
+        public string GetPlotterFromObjectId(ObjectId id) => Fields.Where(x => x.ContourField == id).First().PlotterName;
         public string GetFormatFromObjectId(string NameField) => Fields.Where(x => x.NameLayout == NameField).First().LayoutFormat;
-
+        public string GetFormatFromObjectId(ObjectId id) => Fields.Where(x => x.ContourField == id).First().LayoutFormat;
+        public Field GetField(string NameField) => Fields.Where(x => x.NameLayout == NameField).First();
+        public Field GetField(ObjectId id) => Fields.Where(x => x.ContourField == id).First();
         public List<string> GetNames() => Fields.Select(x => x.NameLayout).ToList();
-        public List<ObjectId> GetObjectsID() => Fields.Select(x => x.ContourField).ToList();
-
-        public Field UpdateFieldName(string oldNameLayout, string newNameLayout)
-        {
-            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(oldNameLayout))
-                throw new System.Exception($"Layout with name - {oldNameLayout} does not exists.");
-            Field CurrentField = GetField(oldNameLayout);
-            CurrentField.NameLayout = newNameLayout;
-            return CurrentField;
-        }
-
-        public Field UpdateFieldPlotter(string oldPlotterLayout, string newPlotterLayout)
-        {
-            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(oldPlotterLayout))
-                throw new System.Exception($"Layout with name - {oldPlotterLayout} does not exists.");
-            Field CurrentField = GetField(oldPlotterLayout);
-            CurrentField.PlotterName = newPlotterLayout;
-            return CurrentField;
-        }
-
-        public Field UpdateFieldFormat(string oldFormatLayout, string newFormatLayout)
-        {
-            if (Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(oldFormatLayout))
-                throw new System.Exception($"Layout with name - {oldFormatLayout} does not exists.");
-            Field CurrentField = GetField(oldFormatLayout);
-            CurrentField.LayoutFormat = newFormatLayout;
-            CurrentField.UpdatePaperSize();
-            return CurrentField;
-        }
 
         /// <summary>
         /// Пересчитать стартовые точки, чтобы не было пересечения между макетами и видовыми экранами
@@ -102,7 +79,6 @@ namespace AutoCAD_2022_Plugin1
                 Size sizeLayout = GetSizePaper(Fields[i].LayoutFormat, Fields[i].PlotterName);
                 newPlusX = newPlusX + sizeLayout.Width * 0.5 + sizeLayout.Width;
             }
-
             return new Point2d(StartPoint.X + newPlusX, StartPoint.Y);
         }
 
@@ -112,19 +88,14 @@ namespace AutoCAD_2022_Plugin1
             {   
                 Fields.Add(new Field(nameLayout, LayoutFormat, PlotterName));
                 CurrentStartPoint = IncreaseStart();
+                CurrentLayout = nameLayout;
             }
             return GetField(nameLayout);
         }
 
         public void DeleteField(string nameLayout)
         {
-            Fields.Remove(Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)]);
-        }
-
-        private Field GetField(string nameLayout)
-        {
-            CurrentLayout = nameLayout;
-            return Fields[Fields.Select(x => x.NameLayout).ToList().IndexOf(nameLayout)];
+            Fields.Remove(Fields.Where(x => x.NameLayout == nameLayout).First());
         }
     }
 
@@ -135,20 +106,31 @@ namespace AutoCAD_2022_Plugin1
     {
         public Identificator Id { get; private set; }
         public ObjectId ContourField { get; private set; }
-
         // Параметры размеров
         public static string DownScale { get; set; } = "1:1";
-        public string NameLayout { get; set; }
-        public string LayoutFormat { get; set; }
-        public string PlotterName { get; set; }
-        public Size OriginalSizeLayout { get; set; }
-        public Size DownScaleSizeLayout { get; set; }
-
+        public string NameLayout { get; private set; }
+        public string LayoutFormat { get; private set; }
+        public string PlotterName { get; private set; }
+        public Size OriginalSizeLayout { get; private set; }
+        public Size DownScaleSizeLayout { get; private set; }
         // Общие параметры
         public int CountViewport => Viewports.Count;
-        public State StateInModel { get; set; } = State.NoExist;
+        public State StateInModel { get; private set; } = State.NoExist;
         public Point2d StartPoint { get; private set; }
         private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
+        // Свойства для Field
+        public ViewportInField GetViewport(Identificator Id) => Viewports.Where(x => x.Id == Id).First();
+        public ViewportInField GetViewport(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First();
+        public string GetViewportScale(Identificator Id) => Viewports.Where(x => x.Id == Id).First().AnnotationScaleViewport;
+        public string GetViewportScale(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First().AnnotationScaleViewport;
+        public void DeleteViewport(Identificator Id) => Viewports.Remove(Viewports.Where(x => x.Id == Id).First());
+        public void SetFieldName(Field FieldForEdit, string newNameLayout) => FieldForEdit.NameLayout = newNameLayout;
+        public void SetFieldPlotter(Field FieldForEdit, string newPlotterLayout) => FieldForEdit.PlotterName = newPlotterLayout;
+        public void SetFieldFormat(Field FieldForEdit, string newFormatLayout)
+        {
+            FieldForEdit.LayoutFormat = newFormatLayout;
+            FieldForEdit.UpdatePaperSize();
+        }
 
         public Field(string NameLayout, string LayoutFormat, string PlotterName)
         {
@@ -172,39 +154,16 @@ namespace AutoCAD_2022_Plugin1
                 StartPoint = new Point2d(FieldList.CurrentStartPoint.X - DownScaleSizeLayout.Width * 0.5,
                                          FieldList.CurrentStartPoint.Y);
             }
-
             DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
-
             // Добавляем параметры видового экрана
             var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout);
             Viewports.Add(viewport);
-
             return viewport;
         }
 
         public void UpdateStartPoint()
         {
 
-        }
-
-        public void DeleteViewport(Identificator Id)
-        {
-            Viewports.Remove(Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)]);
-        }
-
-        public ViewportInField UpdateViewport(Identificator Id)
-        {
-            return Viewports[Viewports.Select(x => x.Id).ToList().IndexOf(Id)];
-        }
-
-        public ViewportInField UpdateScaleVP(Identificator Id, string NewScaleVP)
-        {
-            ViewportInField currentVP = UpdateViewport(Id);
-            if (currentVP == null)
-                throw new System.Exception($"Viewport with ID - {Id} does not exists.");
-            currentVP.AnnotationScaleViewport = NewScaleVP;
-            currentVP.UpdateSizeVP();
-            return currentVP;
         }
 
         public void UpdatePaperSize()
@@ -228,8 +187,6 @@ namespace AutoCAD_2022_Plugin1
         }
     }
 
-
-
     /// <summary>
     /// Класс содержащий в себе информацию об отдельном видовом экране на макете
     /// </summary>
@@ -239,18 +196,21 @@ namespace AutoCAD_2022_Plugin1
         public Identificator Id { get; private set; }
         public ObjectId ContourObjects { get; private set; }
         public ObjectIdCollection ObjectsIDs { get; private set; }
-        public string NameLayout { get; set; }
-
+        public string NameLayout { get; private set; }
         // Параметры размеров
-        public string AnnotationScaleViewport { get; set; }
-        public double CustomScaleViewport { get; set; }
+        public string AnnotationScaleViewport { get; private set; }
+        public double CustomScaleViewport { get; private set; }
         public Size SizeObjectsWithoutScale { get; private set; }
         public Size SizeObjectsWithScaling { get; private set; }
-
         // Общие параметры
         public Point2d CenterPoint { get; private set; }
-        public State StateInModel { get; set; } = State.NoExist;
-        public DistributionViewportOnField StartPoint { get; set; }
+        public State StateInModel { get; private set; } = State.NoExist;
+        public DistributionViewportOnField StartPoint { get; private set; }
+        public void SetScaleVP(ViewportInField VPforEdit, string NewScaleVP)
+        {
+            VPforEdit.AnnotationScaleViewport = NewScaleVP;
+            VPforEdit.UpdateSizeVP();
+        }
 
         public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
         {
@@ -305,9 +265,5 @@ namespace AutoCAD_2022_Plugin1
         {
             this.StartPoint = StartPoint;
         }
-
-
-
-
     }
 }

@@ -35,7 +35,6 @@ namespace LightProgram
          * б) откроется менеджмент - поменять все как нужно
          * в) перерисовать все исходя из новых параметров --- НУЖЕН КЛАСС ПЕРЕОТРИСОВКИ И ПЕРЕРАСПРЕДЕЛЕНИЯ ЗНАЧЕНИЙ
          */
-
         public static LocationDraw StartLocationDrawing { get; private set; } = LocationDraw.TopLeft;
 
         /// <summary>
@@ -110,10 +109,21 @@ namespace LightProgram
             {
                 Application.ShowAlertDialog("Выберите объекты");
             }
-            ObjectId objectIDs = select.ObjectId;
-            // Находим этот объект по полилинии
-            Field field = 
+            ObjectId objectID = select.ObjectId;
             // Получаем параметры выбранных объектов
+
+            // Подумай над тем как лучше реализовать свойства массивов в публичном или приватном модификаторе.
+            // Так ли важно их скрывать, если они все равно все изменяются
+
+            foreach (string NameField in FL.GetNames())
+            {
+                Field field = FL.GetField(NameField);
+                if (field.ContourField == objectID)
+                {
+                    field.Get
+                }
+
+            }
             string NameLayoutObjects;
             string PlotterNameObjects;
             string LayoutFormatObjects;
