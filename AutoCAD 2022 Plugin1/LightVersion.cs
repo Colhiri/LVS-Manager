@@ -10,6 +10,7 @@ using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
 using System.Windows.Documents;
 using System.Collections.Generic;
+using System.Management.Instrumentation;
 
 [assembly: CommandClass(typeof(LightProgram.LightVersion))]
 
@@ -104,10 +105,11 @@ namespace LightProgram
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
             // Получаем выбранные объекты
-            PromptEntityResult select = AcEditor.GetEntity("Выберите полилинию");
+            PromptEntityResult select = AcEditor.GetEntity("Выберите полилинию макета или видового экрана");
             if (select.Status != PromptStatus.OK)
             {
-                Application.ShowAlertDialog("Выберите объекты");
+                Application.ShowAlertDialog("Объекты не выбраны. Заново.");
+                return;
             }
             ObjectId objectID = select.ObjectId;
             // Получаем параметры выбранных объектов
@@ -115,21 +117,58 @@ namespace LightProgram
             // Подумай над тем как лучше реализовать свойства массивов в публичном или приватном модификаторе.
             // Так ли важно их скрывать, если они все равно все изменяются
 
+            string NameLayoutObjects = null;
+            string PlotterNameObjects = null;
+            string LayoutFormatObjects = null;
+            string AnnotationScaleObjects = null;
+            WorkObject TypeWorkObject = WorkObject.None;
+
             foreach (string NameField in FL.GetNames())
             {
                 Field field = FL.GetField(NameField);
                 if (field.ContourField == objectID)
                 {
-                    field.Get
+                    NameLayoutObjects = field.NameLayout;
+                    PlotterNameObjects = field.PlotterName;
+                    LayoutFormatObjects = field.LayoutFormat;
+                    TypeWorkObject = WorkObject.Field;
+                    break;
                 }
+                else
+                {
+                    foreach (Identificator id in field.ViewportIdentificators())
+                    {
+                        ViewportInField vp = field.GetViewport(id);
 
+                        if (vp.ContourObjects == objectID)
+                        {
+                            NameLayoutObjects = field.NameLayout;
+                            PlotterNameObjects = field.PlotterName;
+                            LayoutFormatObjects = field.LayoutFormat;
+                            AnnotationScaleObjects = vp.AnnotationScaleViewport;
+                            TypeWorkObject = WorkObject.Viewport;
+                            break;
+                        }
+                    }
+                }
             }
-            string NameLayoutObjects;
-            string PlotterNameObjects;
-            string LayoutFormatObjects;
-            string AnnotationScaleObjects;
+
+            // Проверяем что можно работать с выбранным объектом
+            if (TypeWorkObject == WorkObject.None)
+            {
+                Application.ShowAlertDialog("Выбран неправильный объект. Заново.");
+                return;
+            }
+
             // Создаем форму
             ManageData manageData = new ManageData();
+            manageData.Name = NameLayoutObjects;
+            manageData.LayoutFormat = LayoutFormatObjects;
+            manageData.PlotterName = PlotterNameObjects;
+            manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
+
+            ManageLayoutViewport window = new ManageLayoutViewport(manageData);
+            if (Application.ShowModalWindow(window) != true) return;
 
 
 

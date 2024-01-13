@@ -35,25 +35,30 @@ namespace AutoCAD_2022_Plugin1
 
         private void btnDone_Click(object sender, RoutedEventArgs e)
         {
+            // Проверяем имя на соответствие
+            tempData.Name = CheckNameForStackPanel();
+            tempData.AnnotationScaleObjectsVP = CheckScaleForStackPanel();
+
             if (tempData.IsValidName && tempData.IsValidScale)
             {
-                // Проверяем имя на соответствие
-                tempData.Name = CheckStackPanel();
-                if (tempData.AnnotationScaleObjectsVP == "System.Windows.Controls.StackPanel")
-                    tempData.AnnotationScaleObjectsVP = ScaleTextBox.Text;
-                else
-                    tempData.AnnotationScaleObjectsVP = Scales.SelectedItem.ToString();
-
                 this.DialogResult = true;
                 this.Close();
             }
         }
 
-        private string CheckStackPanel()
+        private string CheckNameForStackPanel()
         {
             // Проверяем выбранное значение, чтобы там не было StackPanel
             string currentValue = NamesLayoutComboBox.SelectedItem.ToString();
             if (currentValue == "System.Windows.Controls.StackPanel") currentValue = NamesLayoutTextBox.Text;
+            return currentValue;
+        }
+
+        private string CheckScaleForStackPanel()
+        {
+            // Проверяем выбранное значение, чтобы там не было StackPanel
+            string currentValue = Scales.SelectedItem.ToString();
+            if (currentValue == "System.Windows.Controls.StackPanel") currentValue = ScaleTextBox.Text;
             return currentValue;
         }
 
@@ -70,7 +75,7 @@ namespace AutoCAD_2022_Plugin1
 
         private void NamesLayout_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (FL.Contains(CheckStackPanel()))
+            if (FL.Contains(CheckNameForStackPanel()))
             {
                 Plotters.SelectedValue = FL.GetPlotter(NamesLayoutComboBox.SelectedItem.ToString());
                 Formats.SelectedValue = FL.GetFormat(NamesLayoutComboBox.SelectedItem.ToString());

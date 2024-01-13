@@ -6,86 +6,111 @@
              xmlns:local="clr-namespace:AutoCAD_2022_Plugin1"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight">
-    
-    <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100">
-        <TabItem Name="Layout">
-            <TabItem.Header>
-                <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Макет</TextBlock>
-            </TabItem.Header>
-            <TabItem.Content>
-                <StackPanel>
-                    <TextBlock Margin="2">Изменить имя</TextBlock>
-                    <TextBox Name="NameLayout" Text="{Binding Path=Name}"></TextBox>
+    <StackPanel>
+        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100">
+            <TabItem Name="Layout">
+                <TabItem.Header>
+                    <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Макет</TextBlock>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <StackPanel>
 
-                    <TextBlock Margin="2">Изменить плоттер</TextBlock>
-                    <ComboBox Name="Plotters" 
-                              SelectedItem="{Binding Path=PlotterName}"
-                              IsSynchronizedWithCurrentItem="True" SelectionChanged="Plotters_SelectionChanged">
-                    </ComboBox>
+                        <TextBlock Margin="2">Поменять изменяемый макет</TextBlock>
+                        <ComboBox Name="Layouts" Margin="2" 
+                                  SelectedItem="{Binding Path=Name}"
+                                  IsSynchronizedWithCurrentItem="True"
+                                  SelectionChanged="Layouts_SelectionChanged">
+                        </ComboBox>
 
-                    <TextBlock Margin="2">Изменить формат макета</TextBlock>
-                    <ComboBox Name="Formats" 
-                              SelectedItem="{Binding Path=LayoutFormat}"
-                              IsSynchronizedWithCurrentItem="True">
-                    </ComboBox>
+                        <TextBlock Margin="2">Изменить имя</TextBlock>
+                        <TextBox Name="NameLayout" Text="{Binding Path=Name}"></TextBox>
 
-                    <StackPanel Orientation="Horizontal">
-                        <Button Name="btnDoneLayout" Margin="2"
-                                Click="btnDoneLayout_Click">
-                            Применить
-                        </Button>
+                        <TextBlock Margin="2">Изменить плоттер</TextBlock>
+                        <ComboBox Name="Plotters" 
+                                  SelectedItem="{Binding Path=PlotterName}"
+                                  IsSynchronizedWithCurrentItem="True" SelectionChanged="Plotters_SelectionChanged">
+                        </ComboBox>
 
-                        <Button Name="btnDeleteLayout" Margin="2"
-                                Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"
-                                Click="btnDeleteLayout_Click">
-                            Удалить
-                        </Button>
-                    </StackPanel>
-                    
-                </StackPanel>
-            </TabItem.Content>
-        </TabItem>
+                        <TextBlock Margin="2">Изменить формат макета</TextBlock>
+                        <ComboBox Name="Formats" 
+                                  SelectedItem="{Binding Path=LayoutFormat}"
+                                  IsSynchronizedWithCurrentItem="True">
+                        </ComboBox>
 
-        <TabItem Name="Viewport">
-            <TabItem.Header>
-                <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Видовой экран</TextBlock>
-            </TabItem.Header>
-            <TabItem.Content>
-                <StackPanel>
-                    <TextBlock Margin="2">Изменить аннотационный масштаб</TextBlock>
-                    <ComboBox Name="Scales" 
-                              SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
-                              IsSynchronizedWithCurrentItem="True">
-                        <StackPanel>
-                            <TextBlock Text="Новый масштаб: " VerticalAlignment="Center"/>
-                            <TextBox Name="ScaleTextBox" MinWidth="100"></TextBox>
+                        <StackPanel Orientation="Horizontal">
+                            <Button Name="btnDoneLayout" Margin="2"
+                                    Click="btnDoneLayout_Click">
+                                Применить
+                            </Button>
+
+                            <Button Name="btnDeleteLayout" Margin="2"
+                                    Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
+                                    Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"
+                                    Click="btnDeleteLayout_Click">
+                                Удалить
+                            </Button>
                         </StackPanel>
-                    </ComboBox>
-
-                    <StackPanel Orientation="Horizontal">
-                        <Button Name="btnZoomViewport" Margin="2"
-                                Height="{Binding ElementName=btnDone, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDone, Path=ActualWidth}"
-                                Click="btnZoomViewport_Click">
-                            Навести
-                        </Button>
-
-                        <Button Name="btnDoneViewport" Margin="2"
-                                Click="btnDoneViewport_Click">
-                            Применить
-                        </Button>
-
-                        <Button Name="btnDeleteViewport" Margin="2"
-                                Height="{Binding ElementName=btnDone, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDone, Path=ActualWidth}"
-                                Click="btnDeleteViewport_Click">
-                            Удалить
-                        </Button>
+                        
                     </StackPanel>
+                </TabItem.Content>
+            </TabItem>
 
-                </StackPanel>
-            </TabItem.Content>
-        </TabItem>
-    </TabControl>
+            <TabItem Name="Viewport">
+                <TabItem.Header>
+                    <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Видовой экран</TextBlock>
+                </TabItem.Header>
+                <TabItem.Content>
+                    <StackPanel>
+
+                        <TextBlock Margin="2">Выбрать видовой экран в макете</TextBlock>
+                        <ComboBox Name="ViewportsInField" 
+                                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
+                                  IsSynchronizedWithCurrentItem="True"
+                                  SelectionChanged="ViewportsInField_SelectionChanged">
+                        </ComboBox>
+
+                        <TextBlock Margin="2">Изменить аннотационный масштаб</TextBlock>
+                        <ComboBox Name="Scales" 
+                                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
+                                  IsSynchronizedWithCurrentItem="True">
+                            <StackPanel>
+                                <TextBlock Text="Новый масштаб: " VerticalAlignment="Center"/>
+                                <TextBox Name="ScaleTextBox" MinWidth="100"></TextBox>
+                            </StackPanel>
+                        </ComboBox>
+
+                        <StackPanel Orientation="Horizontal">
+                            <Button Name="btnZoomViewport" Margin="2"
+                                    Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
+                                    Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"
+                                    Click="btnZoomViewport_Click">
+                                Навестись
+                            </Button>
+
+                            <Button Name="btnDoneViewport" Margin="2"
+                                    Click="btnDoneViewport_Click">
+                                Применить
+                            </Button>
+
+                            <Button Name="btnDeleteViewport" Margin="2"
+                                    Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
+                                    Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"
+                                    Click="btnDeleteViewport_Click">
+                                Удалить
+                            </Button>
+                        </StackPanel>
+
+                    </StackPanel>
+                </TabItem.Content>
+            </TabItem>
+        </TabControl>
+
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Margin="2" Name="btn_Cancel" Click="btn_Cancel_Click" >
+                Отмена
+            </Button>
+
+        </StackPanel>
+        
+    </StackPanel>
 </Window>

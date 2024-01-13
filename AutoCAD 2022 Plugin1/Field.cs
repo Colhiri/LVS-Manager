@@ -27,6 +27,13 @@ namespace AutoCAD_2022_Plugin1
         Custom
     }
 
+    public enum WorkObject
+    {
+        Field,
+        Viewport,
+        None
+    }
+
     /// <summary>
     /// Создать массив Полей
     /// </summary>
@@ -55,6 +62,9 @@ namespace AutoCAD_2022_Plugin1
         public Field GetField(string NameField) => Fields.Where(x => x.NameLayout == NameField).First();
         public Field GetField(ObjectId id) => Fields.Where(x => x.ContourField == id).First();
         public List<string> GetNames() => Fields.Select(x => x.NameLayout).ToList();
+        public void DeleteField(string nameLayout) => Fields.Remove(Fields.Where(x => x.NameLayout == nameLayout).First());
+        public void DeleteField(ObjectId id) => Fields.Remove(Fields.Where(x => x.ContourField == id).First());
+
 
         /// <summary>
         /// Пересчитать стартовые точки, чтобы не было пересечения между макетами и видовыми экранами
@@ -92,11 +102,6 @@ namespace AutoCAD_2022_Plugin1
             }
             return GetField(nameLayout);
         }
-
-        public void DeleteField(string nameLayout)
-        {
-            Fields.Remove(Fields.Where(x => x.NameLayout == nameLayout).First());
-        }
     }
 
     /// <summary>
@@ -121,9 +126,14 @@ namespace AutoCAD_2022_Plugin1
         // Свойства для Field
         public ViewportInField GetViewport(Identificator Id) => Viewports.Where(x => x.Id == Id).First();
         public ViewportInField GetViewport(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First();
+        public ViewportInField GetViewport(string Id) => Viewports.Where(x => x.Id.ToString() == Id).First();
+        public List<Identificator> ViewportIdentificators() => Viewports.Select(x => x.Id).ToList();
         public string GetViewportScale(Identificator Id) => Viewports.Where(x => x.Id == Id).First().AnnotationScaleViewport;
         public string GetViewportScale(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First().AnnotationScaleViewport;
+        public string GetViewportScale(string Id) => Viewports.Where(x => x.Id.ToString() == Id).First().AnnotationScaleViewport;
         public void DeleteViewport(Identificator Id) => Viewports.Remove(Viewports.Where(x => x.Id == Id).First());
+        public void DeleteViewport(ObjectId Id) => Viewports.Remove(Viewports.Where(x => x.ContourObjects == Id).First());
+        public void DeleteViewport(string Id) => Viewports.Remove(Viewports.Where(x => x.Id.ToString() == Id).First());
         public void SetFieldName(Field FieldForEdit, string newNameLayout) => FieldForEdit.NameLayout = newNameLayout;
         public void SetFieldPlotter(Field FieldForEdit, string newPlotterLayout) => FieldForEdit.PlotterName = newPlotterLayout;
         public void SetFieldFormat(Field FieldForEdit, string newFormatLayout)
@@ -251,15 +261,21 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class Identificator
     {
-        public static int ID { get; private set; } = 0;
-        public Identificator() => ID++;
+        private static int _ID { get; set; } = 0;
+        private int ID { get; set; }
+        public override string ToString() => ID.ToString();
+        public Identificator()
+        {
+            ID = _ID;
+            _ID++;
+        }
     }
 
     public class DistributionViewportOnField
     {
         public Point2d StartPoint { get; set; }
         private Point2d PointDrawing { get; set; }
-        public Point2d ToPoint2d() => PointDrawing;
+        public Point2d ToPoint2d() => StartPoint;
 
         public DistributionViewportOnField(Point2d StartPoint)
         {

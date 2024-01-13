@@ -615,8 +615,6 @@ namespace AutoCAD_2022_Plugin1
                     acTrans.AddNewlyCreatedDBObject(acPoly, true);
                 }
                 acTrans.Commit();
-
-                BlockTableRecord record = acTrans.GetObject(polylineId, OpenMode.ForRead) as BlockTableRecord;
             }
             return polylineId;
         }
@@ -765,8 +763,8 @@ namespace AutoCAD_2022_Plugin1
                 view.CenterPoint = Point3dTo2d(CheckCenterModel(objectsIDs));
 
                 AcEditor.SetCurrentView(view);
+                AcEditor.UpdateScreen();
             }
-
         }
     }
 }
