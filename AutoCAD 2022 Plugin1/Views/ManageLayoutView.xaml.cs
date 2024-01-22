@@ -1,18 +1,6 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 
@@ -23,9 +11,9 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public partial class ManageLayoutViewport : Window
     {
-        private ManageData manageData;
+        private ManageLayoutVM manageData;
 
-        public ManageLayoutViewport(ManageData manageData)
+        public ManageLayoutViewport(ManageLayoutVM manageData)
         {
             InitializeComponent();
             this.manageData = manageData;

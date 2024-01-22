@@ -3,18 +3,12 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
-using System;
 using System.Collections.Generic;
-using System.Collections.Specialized;
-using System.Linq;
-using System.Resources;
-using System.Runtime.InteropServices;
-using static Autodesk.AutoCAD.Windows.Window;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 
-[assembly: CommandClass(typeof(AutoCAD_2022_Plugin1.Commands))]
+[assembly: CommandClass(typeof(AutoCAD_2022_Plugin1.NoUseCommands))]
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -60,7 +54,7 @@ namespace AutoCAD_2022_Plugin1
      * 
     */
 
-    public class Commands
+    public class NoUseCommands
     {
 
         /// <summary>

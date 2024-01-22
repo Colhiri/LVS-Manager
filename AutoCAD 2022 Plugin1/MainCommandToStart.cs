@@ -8,15 +8,12 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
-using System.Windows.Documents;
-using System.Collections.Generic;
-using System.Management.Instrumentation;
 
-[assembly: CommandClass(typeof(LightProgram.LightVersion))]
+[assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
 namespace LightProgram
 {
-    public class LightVersion
+    public class MainCommandToStart
     {
         /*
          * Конфиг:
@@ -161,7 +158,7 @@ namespace LightProgram
             }
 
             // Создаем форму
-            ManageData manageData = new ManageData();
+            ManageLayoutVM manageData = new ManageLayoutVM();
             manageData.Name = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;

@@ -1,31 +1,20 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
-using System.Collections.Generic;
 using System.Linq;
-
 namespace AutoCAD_2022_Plugin1
 {
-    /// <summary>
-    /// Данные для распределения
-    /// </summary>
-    public class LayoutData
+    public class ManageLayoutVM
     {
         private string _Name;
-        private string _Scale;
-        public string Name 
+        public string Name
         {
             get { return _Name; }
-            set { _Name = value.Trim(); } 
+            set { _Name = value.Trim(); }
         }
         public string PlotterName { get; set; }
         public string LayoutFormat { get; set; }
-        public string AnnotationScaleObjectsVP
+        public bool IsValidName
         {
-            get { return _Scale; }
-            set { _Scale = value.Trim(); }
-        }
-        public bool IsValidName 
-        {
-            get 
+            get
             {
                 if (string.IsNullOrEmpty(Name)) return false;
                 try
@@ -40,6 +29,12 @@ namespace AutoCAD_2022_Plugin1
             }
         }
 
+        private string _Scale;
+        public string AnnotationScaleObjectsVP
+        {
+            get { return _Scale; }
+            set { _Scale = value.Trim(); }
+        }
         public bool IsValidScale
         {
             get
