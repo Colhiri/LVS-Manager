@@ -1,59 +1,151 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using System.Linq;
+﻿using AutoCAD_2022_Plugin1.Models;
+using System.Collections.ObjectModel;
+using System.Windows;
 
-namespace AutoCAD_2022_Plugin1
+namespace AutoCAD_2022_Plugin1.ViewModels
 {
-    /// <summary>
-    /// Данные для распределения
-    /// </summary>
-    /// 
-    public class LayoutData
+    public class CreateLayoutVM : MainVM
     {
-        private string _Name;
-        private string _Scale;
-        public string Name 
-        {
-            get { return _Name; }
-            set { _Name = value.Trim(); } 
-        }
-        public string PlotterName { get; set; }
-        public string LayoutFormat { get; set; }
-        public string AnnotationScaleObjectsVP
-        {
-            get { return _Scale; }
-            set { _Scale = value.Trim(); }
-        }
-        public bool IsValidName 
-        {
-            get 
-            {
-                if (string.IsNullOrEmpty(Name)) return false;
-                try
-                {
-                    SymbolUtilityServices.ValidateSymbolName(Name, false);
-                }
-                catch
-                {
-                    return false;
-                }
-                return true;
-            }
-        }
+        private CreateLayoutModel model = new CreateLayoutModel();
+        public CreateLayoutVM(Window window) : base(window) { }
 
-        public bool IsValidScale
+        /// <summary>
+        /// Доступность Button "Применить"
+        /// </summary>
+        private bool _DoneButtonIsEnabled;
+        public bool DoneButtonIsEnabled
         {
             get
             {
-                if (string.IsNullOrEmpty(AnnotationScaleObjectsVP)) return false;
-                try
-                {
-                    int[] parts = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
-                }
-                catch
-                {
-                    return false;
-                }
-                return true;
+                _DoneButtonIsEnabled = model.IsValidName(_Name) && model.IsValidScale(_AnnotationScaleObjectsVP);
+                return _DoneButtonIsEnabled;
+            }
+        }
+
+        /// <summary>
+        /// Доступность ComboBox выбора плоттеров
+        /// </summary>
+        private bool _PlottersIsEnabled;
+        public bool PlottersIsEnabled
+        {
+            get
+            {
+                _PlottersIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                return _PlottersIsEnabled;
+            }
+        }
+
+        /// <summary>
+        /// Доступность ComboBox выбора плоттеров
+        /// </summary>
+        private bool _FormatsIsEnabled;
+        public bool FormatsIsEnabled
+        {
+            get
+            {
+                _FormatsIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                return _FormatsIsEnabled;
+            }
+        }
+
+        private ObservableCollection<string> _Names;
+        public ObservableCollection<string> Names
+        {
+            get
+            {
+                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                return _Names;
+            }
+        }
+        private string _Name;
+        public string Name
+        {
+            get
+            {
+                return _Name;
+            }
+            set
+            {
+                _Name = value;
+                OnPropertyChanged(nameof(Plotters));
+                OnPropertyChanged(nameof(PlotterName));
+
+                OnPropertyChanged(nameof(Formats));
+                OnPropertyChanged(nameof(LayoutFormat));
+
+                OnPropertyChanged(nameof(Scales));
+                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+
+                OnPropertyChanged(nameof(DoneButtonIsEnabled));
+                OnPropertyChanged(nameof(FormatsIsEnabled));
+                OnPropertyChanged(nameof(PlottersIsEnabled));
+            }
+        }
+
+        private ObservableCollection<string> _Plotters;
+        public ObservableCollection<string> Plotters
+        {
+            get
+            {
+                _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
+                return _Plotters;
+            }
+        }
+        private string _PlotterName;
+        public string PlotterName
+        {
+            get
+            {
+                return _PlotterName;
+            }
+            set 
+            {
+                _PlotterName = value;
+                OnPropertyChanged(nameof(Formats));
+            }
+        }
+
+        private ObservableCollection<string> _Formats;
+        public ObservableCollection<string> Formats
+        {
+            get
+            {
+                _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                return _Formats;
+            }
+        }
+        private string _LayoutFormat;
+        public string LayoutFormat
+        {
+            get
+            {
+                return _LayoutFormat;
+            }
+            set
+            {
+                _LayoutFormat = value;
+            }
+        }
+
+        private ObservableCollection<string> _Scales;
+        public ObservableCollection<string> Scales
+        {
+            get
+            {
+                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
+                return _Scales;
+            }
+        }
+        private string _AnnotationScaleObjectsVP;
+        public string AnnotationScaleObjectsVP
+        {
+            get
+            {
+                return _AnnotationScaleObjectsVP;
+            }
+            set
+            {
+                _AnnotationScaleObjectsVP = value;
             }
         }
     }

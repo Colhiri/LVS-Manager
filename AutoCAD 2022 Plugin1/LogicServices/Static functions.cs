@@ -10,7 +10,7 @@ using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
 {
-    public static class Working_functions
+    public class Working_functions
     {
         private static Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
         private static Database AcDatabase = AcDocument.Database;

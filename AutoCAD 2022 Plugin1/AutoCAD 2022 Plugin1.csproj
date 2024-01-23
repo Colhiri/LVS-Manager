@@ -86,6 +86,11 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\ManageLayoutModel.cs" />
+    <Compile Include="Models\MainModel.cs" />
+    <Compile Include="Models\CreateLayoutModel.cs" />
+    <Compile Include="Services\RelayCommand.cs" />
+    <Compile Include="ViewModels\MainVM.cs" />
     <Compile Include="ViewModels\ManageLayoutVM.cs" />
     <Compile Include="LogicServices\Size.cs" />
     <Compile Include="NoUse\NoUseCommands.cs" />
@@ -121,9 +126,7 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -4,7 +4,7 @@ using System;
 
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
-namespace AutoCAD_2022_Plugin1
+namespace AutoCAD_2022_Plugin1.Services
 {
     public class Initialization : IExtensionApplication
     {

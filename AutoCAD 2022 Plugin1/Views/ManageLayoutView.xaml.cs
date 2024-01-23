@@ -1,32 +1,24 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using AutoCAD_2022_Plugin1.ViewModels;
 using System.Windows;
-using System.Windows.Controls;
-using static AutoCAD_2022_Plugin1.Working_functions;
 
 
-namespace AutoCAD_2022_Plugin1
+namespace AutoCAD_2022_Plugin1.Views
 {
     /// <summary>
-    /// Interaction logic for ManageLayoutViewport.xaml
+    /// Interaction logic for ManageLayoutView.xaml
     /// </summary>
-    public partial class ManageLayoutViewport : Window
+    public partial class ManageLayoutView : Window
     {
-        private ManageLayoutVM manageData;
-
-        public ManageLayoutViewport(ManageLayoutVM manageData)
+        public ManageLayoutView()
         {
             InitializeComponent();
-            this.manageData = manageData;
-            this.DataContext = manageData;
         }
 
+        /*
         private void btnDoneLayout_Click(object sender, RoutedEventArgs e)
         {
-            if (manageData.IsValidName)
-            {
                 this.DialogResult = true;
                 this.Close();
-            }
         }
 
         private void btnDoneViewport_Click(object sender, RoutedEventArgs e)
@@ -81,5 +73,7 @@ namespace AutoCAD_2022_Plugin1
         {
 
         }
+
+        */
     }
 }

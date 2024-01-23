@@ -8,6 +8,8 @@ using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
+using AutoCAD_2022_Plugin1.ViewModels;
+using AutoCAD_2022_Plugin1.Views;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -58,9 +60,13 @@ namespace LightProgram
             FL.StartPoint = new Point2d(0.0, 0.0);
             string plotterNameFromConfig = "Нет";
 
-            LayoutData tempData = new LayoutData();
+            /// Особая инициализация формы из клиентского кода 
+            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
+            CreateLayoutView window = new CreateLayoutView();
+            CreateLayoutVM tempData = new CreateLayoutVM(window);
+            window.DataContext = tempData;
+
             tempData.PlotterName = plotterNameFromConfig;
-            ParametersLayout window = new ParametersLayout(tempData);
             if (Application.ShowModalWindow(window) != true) return;
 
             // Получаем выбранные объекты
@@ -157,14 +163,14 @@ namespace LightProgram
                 return;
             }
 
-            // Создаем форму
-            ManageLayoutVM manageData = new ManageLayoutVM();
+            /// Особая инициализация формы из клиентского кода 
+            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
+            ManageLayoutView window = new ManageLayoutView();
+            ManageLayoutVM manageData = new ManageLayoutVM(window);
             manageData.Name = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;
             manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
-
-            ManageLayoutViewport window = new ManageLayoutViewport(manageData);
             if (Application.ShowModalWindow(window) != true) return;
 
 
