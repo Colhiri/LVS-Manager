@@ -5,11 +5,11 @@ using System.Windows;
 namespace AutoCAD_2022_Plugin1.Views
 {
     /// <summary>
-    /// Interaction logic for ManageLayoutView.xaml
+    /// Interaction logic for ManageLayoutViewportView.xaml
     /// </summary>
-    public partial class ManageLayoutView : Window
+    public partial class ManageLayoutViewportView : Window
     {
-        public ManageLayoutView()
+        public ManageLayoutViewportView()
         {
             InitializeComponent();
         }

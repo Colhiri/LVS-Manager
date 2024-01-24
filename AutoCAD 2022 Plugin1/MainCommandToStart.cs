@@ -10,6 +10,7 @@ using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
 using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
+using AutoCAD_2022_Plugin1.Views.ManageViews;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -73,8 +74,8 @@ namespace LightProgram
             PromptSelectionResult select = AcEditor.SelectImplied();
             if (select.Status != PromptStatus.OK)
             {
-                Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSelection();
+                Application.ShowAlertDialog("Объекты не выбраны! Заново!");
+                // select = AcEditor.GetSelection();
             }
             ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
 
@@ -166,7 +167,7 @@ namespace LightProgram
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
             ManageLayoutView window = new ManageLayoutView();
-            ManageLayoutVM manageData = new ManageLayoutVM(window);
+            ManageLayoutViewportVM manageData = new ManageLayoutViewportVM(window);
             manageData.Name = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;

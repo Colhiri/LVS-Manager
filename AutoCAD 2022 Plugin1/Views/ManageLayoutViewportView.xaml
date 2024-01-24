@@ -1,9 +1,9 @@
-﻿<Window x:Class="AutoCAD_2022_Plugin1.Views.ManageLayoutView"
+﻿<Window x:Class="AutoCAD_2022_Plugin1.Views.ManageLayoutViewportView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:local="clr-namespace:AutoCAD_2022_Plugin1.ViewModels" DataContext=""
+             xmlns:local="clr-namespace:AutoCAD_2022_Plugin1.ViewModels" 
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight" Title="ManageLayout">
     <StackPanel>
@@ -69,7 +69,6 @@
                     <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Видовой экран</TextBlock>
                 </TabItem.Header>
                 <TabItem.Content>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"  MinWidth="150"></ColumnDefinition>
@@ -90,13 +89,9 @@
                         </ComboBox>
 
                         <TextBlock Margin="2"  Grid.Row="1" Grid.Column="0">Изменить аннотационный масштаб</TextBlock>
-                        <ComboBox Name="Scales"  Grid.Row="1" Grid.Column="1"  Grid.ColumnSpan="2" Margin="2"
-                                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}"
-                                  IsSynchronizedWithCurrentItem="True">
-                            <StackPanel>
-                                <TextBlock Text="Новый масштаб: " VerticalAlignment="Center"/>
-                                <TextBox Name="ScaleTextBox" MinWidth="100"></TextBox>
-                            </StackPanel>
+                        <ComboBox Name="Scales"  Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                  Text="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
+                                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Scales}">
                         </ComboBox>
 
                         <Button Name="btnZoomViewport" Margin="2" Grid.Row="2" Grid.Column="0"
@@ -114,7 +109,6 @@
                                 Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}">
                             Удалить
                         </Button>
-
                     </Grid>
                 </TabItem.Content>
             </TabItem>

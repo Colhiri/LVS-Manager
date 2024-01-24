@@ -4,8 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
-             xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
-             d:DataContext="{d:DesignInstance Type=viewmodels:CreateLayoutVM}"
+             xmlns:local="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" 
              SizeToContent="WidthAndHeight" Title="CreateLayout">
@@ -24,7 +23,6 @@
 
         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Введите имя листа или выберите созданный</TextBlock>
         <ComboBox Name="NamesLayoutComboBox" Margin="2" Grid.Row="0" Grid.Column="1"
-                  SelectedItem="{Binding Path=Name, UpdateSourceTrigger=PropertyChanged}"
                   Text="{Binding Path=Name, UpdateSourceTrigger=PropertyChanged}"
                   ItemsSource="{Binding Path=Names}"
                   IsSynchronizedWithCurrentItem="True" IsEditable="True">
@@ -46,7 +44,7 @@
 
         <TextBlock Margin="2" Grid.Row="3" Grid.Column="0">Выберите масштаб выбранных объектов на видовом экране</TextBlock>
         <ComboBox Name="Scales"  Grid.Row="3" Grid.Column="1"
-                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
+                  Text="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
                   IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Scales}">
         </ComboBox>
         

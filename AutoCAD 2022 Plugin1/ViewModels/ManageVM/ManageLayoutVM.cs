@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Windows;
 
-namespace AutoCAD_2022_Plugin1.ViewModels
+namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageLayoutVM : MainVM
     {
@@ -10,13 +10,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         private string _Name;
         public string Name
         {
-            get 
-            { 
-                return _Name; 
-            }
-            set 
+            get
             {
-                _Name = value.Trim(); 
+                return _Name;
+            }
+            set
+            {
+                _Name = value.Trim();
             }
         }
 
@@ -34,7 +34,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
         }
         private string _PlotterName;
-        public string PlotterName 
+        public string PlotterName
         {
             get
             {
@@ -59,7 +59,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
         }
         private string _LayoutFormat;
-        public string LayoutFormat 
+        public string LayoutFormat
         {
             get
             {
@@ -68,32 +68,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             set
             {
                 _LayoutFormat = value;
-            }
-        }
-
-        private ObservableCollection<string> _Scales;
-        public ObservableCollection<string> Scales
-        {
-            get
-            {
-                return _Scales;
-            }
-            set
-            {
-                _Scales = value;
-            }
-        }
-        private string _AnnotationScaleObjectsVP;
-
-        public string AnnotationScaleObjectsVP
-        {
-            get 
-            {
-                return _AnnotationScaleObjectsVP; 
-            }
-            set 
-            {
-                _AnnotationScaleObjectsVP = value.Trim(); 
             }
         }
     }
