@@ -4,7 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors" 
-             xmlns:local="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
+             xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
+             d:DataContext="{d:DesignInstance Type=viewmodels:CreateLayoutVM}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" 
              SizeToContent="WidthAndHeight" Title="CreateLayout">

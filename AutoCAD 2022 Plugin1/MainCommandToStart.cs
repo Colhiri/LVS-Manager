@@ -1,16 +1,15 @@
-﻿using Autodesk.AutoCAD.ApplicationServices;
-using Autodesk.AutoCAD.DatabaseServices;
-using Autodesk.AutoCAD.EditorInput;
-using Autodesk.AutoCAD.Geometry;
-using Autodesk.AutoCAD.Runtime;
-using System;
+﻿using System;
 using static AutoCAD_2022_Plugin1.Working_functions;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
 using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
-using AutoCAD_2022_Plugin1.Views.ManageViews;
+using Autodesk.AutoCAD.Runtime;
+using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.EditorInput;
+using Autodesk.AutoCAD.Geometry;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -166,15 +165,15 @@ namespace LightProgram
 
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            ManageLayoutView window = new ManageLayoutView();
+            ManageLayoutViewportView window = new ManageLayoutViewportView();
             ManageLayoutViewportVM manageData = new ManageLayoutViewportVM(window);
+            window.DataContext = manageData;
+
             manageData.Name = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;
             manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
             if (Application.ShowModalWindow(window) != true) return;
-
-
 
 
         }
