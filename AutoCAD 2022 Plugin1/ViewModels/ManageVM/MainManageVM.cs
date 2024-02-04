@@ -1,40 +1,44 @@
-﻿using System.Collections.ObjectModel;
-using System.Security.AccessControl;
+﻿using AutoCAD_2022_Plugin1.Views.ManageViews;
+using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class MainManageVM : MainVM
     {
-        public MainManageVM(Window window) : base(window) { }
+        private ManageLayoutView WindowManageLayout;
+        private ManageViewportView WindowManageViewport;
+        public ManageLayoutVM ManageLayout { get; private set; }
+        public ManageVIewportVM ManageVIewport { get; private set; }
+        public ObservableCollection<DummyViewModel> tabs { get; set; }
 
 
-        private ObservableCollection<Window> windows = new ObservableCollection<Window>() { };
-
-        private string _ActiveTab;
-        public string ActiveTab
+        public MainManageVM(Window window) : base(window) 
         {
-            get
-            {
-                return _ActiveTab;
-            }
-            set
-            {
-                _ActiveTab = value;
-            }
+            WindowManageLayout = new ManageLayoutView();
+            WindowManageViewport = new ManageViewportView();
+            ManageLayout = new ManageLayoutVM(window);
+            ManageVIewport = new ManageVIewportVM(window);
+
+
+            tabs = new ObservableCollection<DummyViewModel>();
+            tabs.Add(new DummyViewModel("Макет", ManageLayout, WindowManageLayout));
+            tabs.Add(new DummyViewModel("Видовой экран", ManageVIewport, WindowManageViewport));
         }
+    }
 
-        private Window _ActiveWindow;
-        public Window ActiveWindow
+    public class DummyViewModel
+    {
+        public string Header { get; set; }
+        public MainVM VM { get; set; }
+        public UserControl UserControlView { get; set; }
+
+        public DummyViewModel(string Header, MainVM VM, UserControl UserControlView)
         {
-            get
-            {
-                return _ActiveWindow;
-            }
-            set
-            {
-                _ActiveWindow = value;
-            }
+            this.Header = Header;
+            this.VM = VM;
+            this.UserControlView = UserControlView;
         }
     }
 }
