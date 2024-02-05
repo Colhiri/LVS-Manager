@@ -13,7 +13,7 @@
             <DataTemplate x:Key="ManageLayout" DataType="{x:Type viewmodels:ManageLayoutVM}">
                 <views:ManageLayoutView/>
             </DataTemplate>
-            <DataTemplate x:Key="Template2" DataType="{x:Type viewmodels:ManageVIewportVM}">
+            <DataTemplate x:Key="ManageViewport" DataType="{x:Type viewmodels:ManageVIewportVM}">
                 <views:ManageViewportView/>
             </DataTemplate>
         </ResourceDictionary>
@@ -29,8 +29,21 @@
         <!--         <views:ManageViewportView/>                                                                          -->
         <!--     </TabItem>                                                                                               -->
         <!-- </TabControl>                                                                                                -->
+        <!--  ItemsSource="{Binding tabs}"-->
+        <TabControl>
+            <TabItem>
+                <TabItem.Header>First</TabItem.Header>
+                <TabItem.Content>
+                    <StaticResource ResourceKey="ManageLayout"/>
+                </TabItem.Content>
+            </TabItem>
 
-        <TabControl ItemsSource="{Binding tabs}" ContentTemplate="{StaticResource ManageLayout}">
+            <TabItem>
+                <TabItem.Header>Second</TabItem.Header>
+                <TabItem.Content>
+                    <StaticResource ResourceKey="ManageViewport"/>
+                </TabItem.Content>
+            </TabItem>
         </TabControl>
         
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

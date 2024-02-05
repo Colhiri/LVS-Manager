@@ -110,6 +110,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (PlotterName == null) return null;
                 _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
                 return _Formats;
             }

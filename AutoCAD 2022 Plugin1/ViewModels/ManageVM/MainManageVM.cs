@@ -22,6 +22,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             ManageVIewport = new ManageVIewportVM(window);
 
 
+
+
             tabs = new ObservableCollection<DummyViewModel>();
             tabs.Add(new DummyViewModel("Макет", ManageLayout, WindowManageLayout));
             tabs.Add(new DummyViewModel("Видовой экран", ManageVIewport, WindowManageViewport));

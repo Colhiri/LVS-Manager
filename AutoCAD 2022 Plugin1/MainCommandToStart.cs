@@ -169,6 +169,7 @@ namespace LightProgram
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
             MainManageWindow window = new MainManageWindow();
             MainManageVM manageData = new MainManageVM(window);
+            window.DataContext = manageData;
             //manageData.Name = NameLayoutObjects;
             //manageData.LayoutFormat = LayoutFormatObjects;
             //manageData.PlotterName = PlotterNameObjects;
