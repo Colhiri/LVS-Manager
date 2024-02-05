@@ -11,6 +11,7 @@ using Field = AutoCAD_2022_Plugin1.Field;
 using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
 using AutoCAD_2022_Plugin1.Views.ManageViews;
+using AutoCAD_2022_Plugin1.ViewModels.ManageVM;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -166,16 +167,22 @@ namespace LightProgram
 
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            ManageLayoutView window = new ManageLayoutView();
-            ManageLayoutViewportVM manageData = new ManageLayoutViewportVM(window);
-            manageData.Name = NameLayoutObjects;
-            manageData.LayoutFormat = LayoutFormatObjects;
-            manageData.PlotterName = PlotterNameObjects;
-            manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
+            MainManageWindow window = new MainManageWindow();
+            MainManageVM manageData = new MainManageVM(window);
+            window.DataContext = manageData;
+            // manageData.Name = NameLayoutObjects;
+            // manageData.LayoutFormat = LayoutFormatObjects;
+            // manageData.PlotterName = PlotterNameObjects;
+            // manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
+
+            manageData.WindowManageLayout = new ManageLayoutView();
+            manageData.WindowManageViewport = new ManageViewportView();
+            ManageLayoutVM ManageLayout = new ManageLayoutVM(window, manageData.WindowManageLayout);
+            ManageVIewportVM ManageVIewport = new ManageVIewportVM(window, manageData.WindowManageViewport);
+            manageData.WindowManageLayout.DataContext = ManageLayout;
+            manageData.WindowManageViewport.DataContext = ManageVIewport;
+
             if (Application.ShowModalWindow(window) != true) return;
-
-
-
 
         }
 
