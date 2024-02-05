@@ -99,6 +99,7 @@
     <Compile Include="ViewModels\ManageVM\ManageVIewportVM.cs" />
     <Compile Include="ViewModels\ManageVM\ManageLayoutVM.cs" />
     <Compile Include="ViewModels\ManageVM\MainManageVM.cs" />
+    <Compile Include="ViewModels\ManageVM\ViewTemplateSelector.cs" />
     <Compile Include="Views\CreateLayoutView.xaml.cs">
       <DependentUpon>CreateLayoutView.xaml</DependentUpon>
     </Compile>

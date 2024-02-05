@@ -1,16 +1,18 @@
-﻿using System.Windows.Controls;
+﻿using System.Collections.ObjectModel;
+using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class MainManageVM : MainVM
     {
+        public ObservableCollection<DummyViewModel> tabs { get; set; }
+
         public MainManageVM()
         {
-            // tabs = new ObservableCollection<DummyViewModel>();
-            // tabs.Add(new DummyViewModel("Макет", new ManageLayoutVM()));
-            // tabs.Add(new DummyViewModel("Видовой экран", new ManageVIewportVM()));
+            tabs = new ObservableCollection<DummyViewModel>();
+            tabs.Add(new DummyViewModel("Макет", new ManageLayoutVM()));
+            tabs.Add(new DummyViewModel("Видовой экран", new ManageVIewportVM()));
         }
-        // public ObservableCollection<DummyViewModel> tabs { get; set; }
     }
 
     public class DummyViewModel

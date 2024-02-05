@@ -1,10 +1,6 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Windows;
-using System.Windows.Controls;
-using System.Xml.Linq;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
