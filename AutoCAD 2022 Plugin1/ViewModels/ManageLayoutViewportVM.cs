@@ -3,6 +3,7 @@ using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels
 {
@@ -28,6 +29,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
             set
             {
+                // string HeaderText = ((TabControl)value).Header.Text
                 _ActiveTab = value;
             }
         }
@@ -227,6 +229,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
                     _ViewportToDelete.Add(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
@@ -255,6 +258,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
                     _ViewportToDelete.Remove(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
 
         private RelayCommand _CancelDeleteCommand;
