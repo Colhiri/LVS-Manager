@@ -3,11 +3,76 @@ using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
-    public partial class ManageLayoutViewportVM
+    public class ManageLayoutViewportVM : MainVM
     {
+        public ManageLayoutViewportVM(Window window) : base(window) { }
+
+        #region Properties
+        /// <summary>
+        /// Static model functions to iteration with Autocad
+        /// </summary>
+        private CreateLayoutModel model = new CreateLayoutModel();
+
+        /// <summary>
+        /// Активная вкладка для реализации команд
+        /// </summary>
+        private string _ActiveTab;
+        public string ActiveTab
+        {
+            get
+            {
+                return _ActiveTab;
+            }
+            set
+            {
+                // string HeaderText = ((TabControl)value).Header.Text
+                _ActiveTab = value;
+            }
+        }
+
+        /// <summary>
+        /// Формирует список листов для удаления после закрытия окна
+        /// </summary>
+        private ObservableCollection<string> _LayoutToDelete;
+        public ObservableCollection<string> LayoutToDelete
+        {
+            get
+            {
+                _LayoutToDelete = new ObservableCollection<string>();
+                return _LayoutToDelete;
+            }
+            private set { }
+        }
+
+        /// <summary>
+        /// Формирует список видовых экранов для удаления после закрытия окна
+        /// </summary>
+        private ObservableCollection<string> _ViewportToDelete;
+        public ObservableCollection<string> ViewportToDelete
+        {
+            get
+            {
+                _ViewportToDelete = new ObservableCollection<string>();
+                return _ViewportToDelete;
+            }
+            private set { }
+        }
+
+        /// <summary>
+        /// Проверка редактирования некоторых частей View
+        /// </summary>
+        public bool EnabledFormsParamatersLayout
+        {
+            get
+            {
+                return !LayoutToDelete.Contains(Name);
+            }
+        }
+
         /// Взаимодействие с именами макетов
         private ObservableCollection<string> _NamesLayouts;
         public ObservableCollection<string> NamesLayouts
@@ -114,6 +179,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     _ViewportToDelete.Add(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
@@ -142,6 +208,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     _ViewportToDelete.Remove(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
 
         private RelayCommand _CancelDeleteCommand;
