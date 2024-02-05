@@ -1,4 +1,6 @@
-﻿using System.Windows;
+﻿using AutoCAD_2022_Plugin1.ViewModels.ManageVM;
+using System.Reflection;
+using System.Windows;
 
 namespace AutoCAD_2022_Plugin1.Views.ManageViews
 {
@@ -7,9 +9,23 @@ namespace AutoCAD_2022_Plugin1.Views.ManageViews
     /// </summary>
     public partial class MainManageWindow : Window
     {
-        public MainManageWindow()
+        private MainManageVM _Data;
+        public MainManageWindow(MainManageVM _Data)
         {
             InitializeComponent();
+            this.DataContext = _Data;
+        }
+
+        public void DoneCommand(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = true;
+            this.Close();
+        }
+
+        public void CancelCommand(object sender, RoutedEventArgs e)
+        {
+            this.DialogResult = false;
+            this.Close();
         }
     }
 }

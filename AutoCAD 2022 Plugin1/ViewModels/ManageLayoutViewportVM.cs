@@ -5,8 +5,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
 {
     public class ManageLayoutViewportVM : MainVM
     {
-        public ManageLayoutViewportVM(Window window) : base(window) { }
-
         private string _Name;
         public string Name
         {

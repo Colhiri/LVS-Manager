@@ -10,19 +10,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageVIewportVM : MainVM
     {
-        /// <summary>
-        /// TEST
-        /// TEST
-        /// TEST
-        /// TEST
-        /// </summary>
-        string Name = Working_functions.FL.GetNames()[0];
-
-        private UserControl userControl;
-        public ManageVIewportVM(Window window) : base(window) { }
-        public ManageVIewportVM(Window window, UserControl userControl) : base(window)
+        public ManageVIewportVM()
         {
-            this.userControl = userControl;
         }
 
         /// <summary>
@@ -36,7 +25,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _ViewportToDelete = new ObservableCollection<string>();
                 return _ViewportToDelete;
             }
-            private set { }
+            set { }
         }
 
         /// Взаимодействие видовых экранов
@@ -45,8 +34,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                string[] viewportsID = CreateLayoutModel.FL.GetField(Name).ViewportIdentificators().Select(x => x.ToString()).ToArray();
-                _Viewports = new ObservableCollection<string>(viewportsID);
+                /// <summary>
+                /// TEST
+                /// TEST
+                /// TEST
+                /// TEST
+                /// </summary>
+                //string Name = Working_functions.FL.GetNames()[0];
+                //string[] viewportsID = CreateLayoutModel.FL.GetField(Name).ViewportIdentificators().Select(x => x.ToString()).ToArray();
+                _Viewports = new ObservableCollection<string>(new string[] { "1", "2"});
                 return _Viewports;
             }
         }
@@ -119,7 +115,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 return _CancelDeleteCommand;
             }
         }
-
+        
+        private void ZoomTest()
+        {
+            //if (ViewportName != null)
+            //{
+            //    string Name = Working_functions.FL.GetNames()[0];
+            //    var objectsID = CreateLayoutModel.FL.GetField(Name).GetViewport(ViewportName).ObjectsIDs;
+            //}
+        }
         /// <summary>
         /// Приблизить на объекты в видовом экране
         /// </summary>
@@ -130,9 +134,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             {
                 if (_ZoomCommand == null)
                 {
-                    if (ViewportName == null) return null;
-                    var objectsID = CreateLayoutModel.FL.GetField(Name).GetViewport(ViewportName).ObjectsIDs;
-                    _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
+                    _ZoomCommand = new RelayCommand(o => ZoomTest(), null);
                 }
                 return _ZoomCommand;
             }

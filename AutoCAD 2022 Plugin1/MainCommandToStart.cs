@@ -64,11 +64,10 @@ namespace LightProgram
 
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            CreateLayoutView window = new CreateLayoutView();
-            CreateLayoutVM tempData = new CreateLayoutVM(window);
-            window.DataContext = tempData;
-
+            CreateLayoutVM tempData = new CreateLayoutVM();
             tempData.PlotterName = plotterNameFromConfig;
+            CreateLayoutView window = new CreateLayoutView(tempData);
+
             if (Application.ShowModalWindow(window) != true) return;
 
             // Получаем выбранные объекты
@@ -76,7 +75,7 @@ namespace LightProgram
             if (select.Status != PromptStatus.OK)
             {
                 Application.ShowAlertDialog("Объекты не выбраны! Заново!");
-                // select = AcEditor.GetSelection();
+                return;
             }
             ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
 
@@ -167,21 +166,12 @@ namespace LightProgram
 
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            MainManageWindow window = new MainManageWindow();
-            MainManageVM manageData = new MainManageVM(window);
-            window.DataContext = manageData;
+            MainManageVM manageData = new MainManageVM();
             // manageData.Name = NameLayoutObjects;
             // manageData.LayoutFormat = LayoutFormatObjects;
             // manageData.PlotterName = PlotterNameObjects;
             // manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
-
-            manageData.WindowManageLayout = new ManageLayoutView();
-            manageData.WindowManageViewport = new ManageViewportView();
-            ManageLayoutVM ManageLayout = new ManageLayoutVM(window, manageData.WindowManageLayout);
-            ManageVIewportVM ManageVIewport = new ManageVIewportVM(window, manageData.WindowManageViewport);
-            manageData.WindowManageLayout.DataContext = ManageLayout;
-            manageData.WindowManageViewport.DataContext = ManageVIewport;
-
+            MainManageWindow window = new MainManageWindow(manageData);
             if (Application.ShowModalWindow(window) != true) return;
 
         }

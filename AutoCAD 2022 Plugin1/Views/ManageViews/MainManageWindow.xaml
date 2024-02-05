@@ -9,29 +9,15 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <StackPanel>
-        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100" SelectedValue="{Binding Path=ActiveTab}">
-            <TabItem>
-                <TabItem.Header>Макет</TabItem.Header>
-                <TabItem.Content>
-                    <views:ManageLayoutView/>
-                </TabItem.Content>
-            </TabItem>
-
-            <TabItem>
-                <TabItem.Header>Видовой экран</TabItem.Header>
-                <TabItem.Content>
-                    <views:ManageViewportView/>
-                </TabItem.Content>
-            </TabItem>
+        <TabControl Margin="2" MinHeight="50" MinWidth="100">
+            <views:ManageLayoutView DataContext="{x:Type viewmodels:ManageLayoutVM}"/>
+            <views:ManageViewportView DataContext="{x:Type viewmodels:ManageVIewportVM}"/>
         </TabControl>
-        
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
 
-            <Viewbox></Viewbox>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Margin="2" Name="btn_Cancel" IsDefault="True" 
+                    Click="CancelCommand"  Content="Отмена"/>
             
-            <Button Margin="2" Name="btn_Cancel">
-                Отмена
-            </Button>
         </StackPanel>
 
     </StackPanel>

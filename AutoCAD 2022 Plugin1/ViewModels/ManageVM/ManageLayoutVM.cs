@@ -1,18 +1,14 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
+using System;
 using System.Collections.ObjectModel;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageLayoutVM : MainVM
     {
-        private UserControl userControl;
-        public ManageLayoutVM(Window window) : base(window) { }
-        public ManageLayoutVM(Window window, UserControl userControl) : base(window)
+        public ManageLayoutVM()
         {
-            this.userControl = userControl;
         }
 
         #region Properties
@@ -32,7 +28,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _LayoutToDelete = new ObservableCollection<string>();
                 return _LayoutToDelete;
             }
-            private set { }
+            set { }
         }
 
         /// <summary>
@@ -83,7 +79,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             set
             {
                 _EditName = value.Trim();
-                if (_EditName != _Name)
+                if (EditName != Name)
                 {
                     OnPropertyChanged(nameof(Name));
                     OnPropertyChanged(nameof(NamesLayouts));
@@ -173,6 +169,23 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                     _CancelDeleteCommand = new RelayCommand(o => RemoveDelete(), null);
                 }
                 return _CancelDeleteCommand;
+            }
+        }
+
+        /// <summary>
+        /// Убрать макета или видовой экран из списка на удаление
+        /// </summary>
+        private void Apply() { }
+        private RelayCommand _ApplyCommand;
+        public RelayCommand ApplyCommand
+        {
+            get
+            {
+                if (_ApplyCommand == null)
+                {
+                    _ApplyCommand = new RelayCommand(o => Apply(), null);
+                }
+                return _ApplyCommand;
             }
         }
         #endregion

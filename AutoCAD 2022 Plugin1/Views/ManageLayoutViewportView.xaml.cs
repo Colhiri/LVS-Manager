@@ -9,9 +9,11 @@ namespace AutoCAD_2022_Plugin1.Views
     /// </summary>
     public partial class ManageLayoutViewportView : Window
     {
-        public ManageLayoutViewportView()
+        private ManageLayoutViewportVM _Data;
+        public ManageLayoutViewportView(ManageLayoutViewportVM _Data)
         {
             InitializeComponent();
+            this.DataContext = _Data;
         }
     }
 }
