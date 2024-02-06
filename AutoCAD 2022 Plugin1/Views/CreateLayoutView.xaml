@@ -50,7 +50,7 @@
         </ComboBox>
         
         <!-- Применить -->
-        <Button Margin="2" Name="btnDone" Command="{Binding Path=DoneCommand}" 
+        <Button Margin="2" Name="btnDone" Click="DoneClose" 
                 Grid.Row="4" Grid.Column="0"
                 IsEnabled="{Binding Path=DoneButtonIsEnabled}">
             Применить
@@ -59,7 +59,7 @@
         <!-- Отменить -->
         <Button Margin="2" Name="btnCancel" Width="{Binding ElementName=btnDone, Path=ActualWidth}" 
                 Grid.Row="4" Grid.Column="1"
-                Command="{Binding Path=CancelCommand}">
+                Click="Cancel">
             Отмена
         </Button>
     </Grid>

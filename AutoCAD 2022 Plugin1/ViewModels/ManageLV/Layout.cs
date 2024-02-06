@@ -4,73 +4,10 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
 
-namespace AutoCAD_2022_Plugin1.ViewModels
+namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
-    public class ManageLayoutViewportVM : MainVM
+    public partial class ManageLayoutViewportVM
     {
-        public ManageLayoutViewportVM(Window window) : base(window) { }
-
-        #region Properties
-        /// <summary>
-        /// Static model functions to iteration with Autocad
-        /// </summary>
-        private CreateLayoutModel model = new CreateLayoutModel();
-
-        /// <summary>
-        /// Активная вкладка для реализации команд
-        /// </summary>
-        private string _ActiveTab;
-        public string ActiveTab
-        {
-            get
-            {
-                return _ActiveTab;
-            }
-            set
-            {
-                _ActiveTab = value;
-            }
-        }
-
-        /// <summary>
-        /// Формирует список листов для удаления после закрытия окна
-        /// </summary>
-        private ObservableCollection<string> _LayoutToDelete;
-        public ObservableCollection<string> LayoutToDelete
-        {
-            get
-            {
-                _LayoutToDelete = new ObservableCollection<string>();
-                return _LayoutToDelete;
-            }
-            private set { }
-        }
-
-        /// <summary>
-        /// Формирует список видовых экранов для удаления после закрытия окна
-        /// </summary>
-        private ObservableCollection<string> _ViewportToDelete;
-        public ObservableCollection<string> ViewportToDelete
-        {
-            get
-            {
-                _ViewportToDelete = new ObservableCollection<string>();
-                return _ViewportToDelete;
-            }
-            private set { }
-        }
-
-        /// <summary>
-        /// Проверка редактирования некоторых частей View
-        /// </summary>
-        public bool EnabledFormsParamatersLayout
-        {
-            get
-            {
-                return !LayoutToDelete.Contains(Name);
-            }
-        }
-
         /// Взаимодействие с именами макетов
         private ObservableCollection<string> _NamesLayouts;
         public ObservableCollection<string> NamesLayouts
@@ -163,56 +100,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
         }
 
-        /// Взаимодействие видовых экранов
-        private ObservableCollection<string> _Viewports;
-        public ObservableCollection<string> Viewports
-        {
-            get
-            {
-                string[] viewportsID = CreateLayoutModel.FL.GetField(Name).ViewportIdentificators().Select(x => x.ToString()).ToArray();
-                _Viewports = new ObservableCollection<string>(viewportsID);
-                return _Viewports;
-            }
-        }
-        private string _Viewport;
-        public string Viewport
-        {
-            get
-            {
-                return _Viewport;
-            }
-            set
-            {
-                _Viewport = value;
-            }
-        }
-
-        /// Взаимодействие с мастабами видовых экранов
-        private ObservableCollection<string> _Scales;
-        public ObservableCollection<string> Scales
-        {
-            get
-            {
-                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
-                return _Scales;
-            }
-        }
-        private string _AnnotationScaleObjectsVP;
-        public string AnnotationScaleObjectsVP
-        {
-            get
-            {
-                return _AnnotationScaleObjectsVP;
-            }
-            set
-            {
-                _AnnotationScaleObjectsVP = value;
-            }
-        }
-
-        #endregion
-
-        #region Commands
         /// <summary>
         /// Добавление имени макета в список на удаление
         /// </summary>
@@ -270,22 +157,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
         }
 
-        /// <summary>
-        /// Приблизить на объекты в видовом экране
-        /// </summary>
-        private RelayCommand _ZoomCommand;
-        public RelayCommand ZoomCommand
-        {
-            get
-            {
-                if (_ZoomCommand == null)
-                {
-                    var objectsID = CreateLayoutModel.FL.GetField(Name).GetViewport(Viewport).ObjectsIDs;
-                    _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
-                }
-                return _ZoomCommand;
-            }
-        }
-        #endregion
+        
     }
 }

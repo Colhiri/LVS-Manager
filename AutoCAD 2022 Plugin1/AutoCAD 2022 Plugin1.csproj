@@ -94,11 +94,13 @@
     <Compile Include="Models\CreateLayoutModel.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
-    <Compile Include="ViewModels\ManageLayoutViewportVM.cs" />
+    <Compile Include="ViewModels\ManageLV\General.cs" />
+    <Compile Include="ViewModels\ManageLV\Layout.cs" />
     <Compile Include="LogicServices\Size.cs" />
     <Compile Include="NoUse\NoUseCommands.cs" />
     <Compile Include="Services\Initialization.cs" />
     <Compile Include="MainCommandToStart.cs" />
+    <Compile Include="ViewModels\ManageLV\Viewport.cs" />
     <Compile Include="Views\CreateLayoutView.xaml.cs">
       <DependentUpon>CreateLayoutView.xaml</DependentUpon>
     </Compile>
