@@ -114,6 +114,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     _ViewportToDelete.Add(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
@@ -142,6 +143,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     _ViewportToDelete.Remove(Name);
                     break;
             }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
         }
 
         private RelayCommand _CancelDeleteCommand;
