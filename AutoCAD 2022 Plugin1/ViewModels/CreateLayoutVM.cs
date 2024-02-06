@@ -7,7 +7,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
     public class CreateLayoutVM : MainVM
     {
         private CreateLayoutModel model = new CreateLayoutModel();
-        public CreateLayoutVM(Window window) : base(window) { }
 
         /// <summary>
         /// Доступность Button "Применить"

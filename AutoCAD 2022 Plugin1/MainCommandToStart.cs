@@ -10,6 +10,7 @@ using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
+using AutoCAD_2022_Plugin1.ViewModels.ManageLV;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -60,13 +61,12 @@ namespace LightProgram
             FL.StartPoint = new Point2d(0.0, 0.0);
             string plotterNameFromConfig = "Нет";
 
-            /// Особая инициализация формы из клиентского кода 
-            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            CreateLayoutView window = new CreateLayoutView();
-            CreateLayoutVM tempData = new CreateLayoutVM(window);
+            /// инициализация формы из клиентского кода 
+            CreateLayoutVM tempData = new CreateLayoutVM();
+            tempData.PlotterName = plotterNameFromConfig;
+            CreateLayoutView window = new CreateLayoutView(tempData);
             window.DataContext = tempData;
 
-            tempData.PlotterName = plotterNameFromConfig;
             if (Application.ShowModalWindow(window) != true) return;
 
             // Получаем выбранные объекты
@@ -163,18 +163,17 @@ namespace LightProgram
                 return;
             }
 
-            /// Особая инициализация формы из клиентского кода 
-            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            ManageLayoutViewportView window = new ManageLayoutViewportView();
-            ManageLayoutViewportVM manageData = new ManageLayoutViewportVM(window);
-            window.DataContext = manageData;
-
+            /// инициализация формы из клиентского кода 
+            ManageLayoutViewportVM manageData = new ManageLayoutViewportVM();
             manageData.Name = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;
             manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
-            if (Application.ShowModalWindow(window) != true) return;
 
+            ManageLayoutViewportView window = new ManageLayoutViewportView(manageData);
+            window.DataContext = manageData;
+            
+            if (Application.ShowModalWindow(window) != true) return;
 
         }
 

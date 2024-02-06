@@ -1,4 +1,4 @@
-﻿using AutoCAD_2022_Plugin1.ViewModels;
+﻿using AutoCAD_2022_Plugin1.ViewModels.ManageLV;
 using System.Windows;
 
 
@@ -9,71 +9,23 @@ namespace AutoCAD_2022_Plugin1.Views
     /// </summary>
     public partial class ManageLayoutViewportView : Window
     {
-        public ManageLayoutViewportView()
+        private ManageLayoutViewportVM _Data;
+        public ManageLayoutViewportView(ManageLayoutViewportVM _Data)
         {
             InitializeComponent();
+            this._Data = _Data;
+            this.DataContext = _Data;
         }
-
-        /*
-        private void btnDoneLayout_Click(object sender, RoutedEventArgs e)
+        public void DoneClose(object obj, RoutedEventArgs args)
         {
-                this.DialogResult = true;
-                this.Close();
+            this.DialogResult = true;
+            this.Close();
         }
 
-        private void btnDoneViewport_Click(object sender, RoutedEventArgs e)
-        {
-            manageData.AnnotationScaleObjectsVP = CheckScaleForStackPanel();
-        }
-
-        private void btnDeleteLayout_Click(object sender, RoutedEventArgs e)
-        {
-            FL.DeleteField(Layouts.SelectedItem.ToString());
-        }
-
-        private void btnDeleteViewport_Click(object sender, RoutedEventArgs e)
-        {
-            Field field = FL.GetField(Layouts.SelectedItem.ToString());
-            field.DeleteViewport(ViewportsInField.SelectedItem.ToString());
-        }
-
-        private void btnZoomViewport_Click(object sender, RoutedEventArgs e)
-        {
-            Field field = FL.GetField(Layouts.SelectedItem.ToString());
-            ViewportInField vp = field.GetViewport(ViewportsInField.SelectedItem.ToString());
-            ObjectIdCollection objectVP = vp.ObjectsIDs;
-            ZoomToObjects(objectVP);
-        }
-
-        private void btn_Cancel_Click(object sender, RoutedEventArgs e)
+        public void Cancel(object obj, RoutedEventArgs args)
         {
             this.DialogResult = false;
             this.Close();
         }
-
-        private string CheckScaleForStackPanel()
-        {
-            // Проверяем выбранное значение, чтобы там не было StackPanel
-            string currentValue = Scales.SelectedItem.ToString();
-            if (currentValue == "System.Windows.Controls.StackPanel") currentValue = ScaleTextBox.Text;
-            return currentValue;
-        }
-
-        private void Plotters_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        private void ViewportsInField_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            ViewportsInField.SelectedItem.ToString();
-        }
-
-        private void Layouts_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-
-        }
-
-        */
     }
 }

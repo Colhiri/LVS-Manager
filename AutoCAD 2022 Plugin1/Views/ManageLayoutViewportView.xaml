@@ -3,18 +3,14 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-             xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
+             xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels.ManageLV"
              d:DataContext="{d:DesignInstance Type=viewmodels:ManageLayoutViewportVM}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight" Title="ManageLayout">
     <StackPanel>
-        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100" SelectedValue="{Binding ActiveTab}">
-            <TabItem Name="Layout">
-                <TabItem.Header>
-                    <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Макет</TextBlock>
-                </TabItem.Header>
+        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100" SelectedItem="{Binding ActiveTab}">
+            <TabItem Name="Layout" Header="Макет">
                 <TabItem.Content>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"></ColumnDefinition>
@@ -71,10 +67,7 @@
                 </TabItem.Content>
             </TabItem>
 
-            <TabItem Name="Viewport">
-                <TabItem.Header>
-                    <TextBlock MinHeight="20" MinWidth="100" TextAlignment="Center">Видовой экран</TextBlock>
-                </TabItem.Header>
+            <TabItem Name="Viewport" Header="Видовой экран">
                 <TabItem.Content>
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -127,7 +120,7 @@
         </TabControl>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Margin="2" Name="btn_Cancel" Content="Отмена" Command="{Binding CancelCommand}"/>
+            <Button Margin="2" Name="btn_Cancel" Content="Отмена" Click="Cancel"/>
         </StackPanel>
     </StackPanel>
 </Window>

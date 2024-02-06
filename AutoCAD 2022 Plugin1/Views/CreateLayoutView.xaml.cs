@@ -8,9 +8,23 @@ namespace AutoCAD_2022_Plugin1.Views
     /// </summary>
     public partial class CreateLayoutView : Window
     {
-        public CreateLayoutView()
+        private CreateLayoutVM _Data;
+        public CreateLayoutView(CreateLayoutVM _Data)
         {
             InitializeComponent();
+            this._Data = _Data;
+            this.DataContext = _Data;
+        }
+        public void DoneClose(object obj, RoutedEventArgs args)
+        {
+            this.DialogResult = true;
+            this.Close();
+        }
+
+        public void Cancel(object obj, RoutedEventArgs args)
+        {
+            this.DialogResult = false;
+            this.Close();
         }
     }
 }
