@@ -89,9 +89,9 @@
     <Compile Include="Models\ManageLayoutModel.cs" />
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Models\CreateLayoutModel.cs" />
+    <Compile Include="Services\MyViewSelector.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
-    <Compile Include="ViewModels\ManageLayoutViewportVM.cs" />
     <Compile Include="LogicServices\Size.cs" />
     <Compile Include="NoUse\NoUseCommands.cs" />
     <Compile Include="Services\Initialization.cs" />
@@ -99,7 +99,6 @@
     <Compile Include="ViewModels\ManageVM\ManageVIewportVM.cs" />
     <Compile Include="ViewModels\ManageVM\ManageLayoutVM.cs" />
     <Compile Include="ViewModels\ManageVM\MainManageVM.cs" />
-    <Compile Include="ViewModels\ManageVM\ViewTemplateSelector.cs" />
     <Compile Include="Views\CreateLayoutView.xaml.cs">
       <DependentUpon>CreateLayoutView.xaml</DependentUpon>
     </Compile>
@@ -107,9 +106,6 @@
     <Compile Include="LogicServices\Static functions.cs" />
     <Compile Include="LogicServices\Field.cs" />
     <Compile Include="ViewModels\CreateLayoutVM.cs" />
-    <Compile Include="Views\ManageLayoutViewportView.xaml.cs">
-      <DependentUpon>ManageLayoutViewportView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="NoUse\WrapInfoScale.cs" />
     <Compile Include="Views\ManageViews\ManageViewportView.xaml.cs">
       <DependentUpon>ManageViewportView.xaml</DependentUpon>
@@ -131,10 +127,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Views\CreateLayoutView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\ManageLayoutViewportView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

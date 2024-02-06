@@ -9,6 +9,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
     {
         public ManageLayoutVM()
         {
+            _LayoutToDelete = new ObservableCollection<string>();
         }
 
         #region Properties
@@ -25,10 +26,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _LayoutToDelete = new ObservableCollection<string>();
                 return _LayoutToDelete;
             }
-            set { }
+            set
+            {
+                _LayoutToDelete = value;
+            }
         }
 
         /// <summary>

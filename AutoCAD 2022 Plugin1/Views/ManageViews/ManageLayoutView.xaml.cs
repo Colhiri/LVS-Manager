@@ -1,7 +1,4 @@
-﻿using AutoCAD_2022_Plugin1.ViewModels;
-using AutoCAD_2022_Plugin1.ViewModels.ManageVM;
-using System.Windows;
-using System.Windows.Controls;
+﻿using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.Views.ManageViews
 {

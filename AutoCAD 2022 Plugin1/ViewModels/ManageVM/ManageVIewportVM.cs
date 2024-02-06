@@ -6,10 +6,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageVIewportVM : MainVM
     {
-        public ManageVIewportVM()
-        {
-        }
-
         /// <summary>
         /// Формирует список видовых экранов для удаления после закрытия окна
         /// </summary>

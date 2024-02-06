@@ -7,62 +7,57 @@
              d:DataContext="{d:DesignInstance Type=viewmodels:ManageLayoutVM}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <TabItem>
-        <TabItem.Header>Макет</TabItem.Header>
-        <TabItem.Content>
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                    <ColumnDefinition Width="Auto"></ColumnDefinition>
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                    <RowDefinition Height="Auto"></RowDefinition>
-                </Grid.RowDefinitions>
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+            <ColumnDefinition Width="Auto"></ColumnDefinition>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
+        </Grid.RowDefinitions>
 
-                <!-- Main -->
-                <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Поменять макет</TextBlock>
-                <ComboBox Margin="2" Grid.Row="0" Grid.Column="1"
-                          ItemsSource="{Binding NamesLayouts}"
-                          SelectedItem="{Binding Name, Mode=TwoWay}"
-                          IsSynchronizedWithCurrentItem="True"></ComboBox>
+        <!-- Main -->
+        <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Поменять макет</TextBlock>
+        <ComboBox Margin="2" Grid.Row="0" Grid.Column="1"
+              ItemsSource="{Binding NamesLayouts}"
+              SelectedItem="{Binding Name, Mode=TwoWay}"
+              IsSynchronizedWithCurrentItem="True"></ComboBox>
 
-                <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя</TextBlock>
-                <TextBox Margin="2" Grid.Row="1" Grid.Column="1" IsEnabled="{Binding EnabledFormsParamatersLayout}"
-                         Text="{Binding EditName}"></TextBox>
+        <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя</TextBlock>
+        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" IsEnabled="{Binding EnabledFormsParamatersLayout}"
+             Text="{Binding EditName}"></TextBox>
 
-                <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить плоттер</TextBlock>
-                <ComboBox Margin="2" Grid.Row="2" Grid.Column="1"
-                          ItemsSource="{Binding Plotters}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
-                          SelectedItem="{Binding Path=PlotterName}"
-                          IsSynchronizedWithCurrentItem="True">
-                </ComboBox>
+        <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить плоттер</TextBlock>
+        <ComboBox Margin="2" Grid.Row="2" Grid.Column="1"
+              ItemsSource="{Binding Plotters}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
+              SelectedItem="{Binding Path=PlotterName}"
+              IsSynchronizedWithCurrentItem="True">
+        </ComboBox>
 
-                <TextBlock Margin="2" Grid.Row="3" Grid.Column="0">Изменить формат макета</TextBlock>
-                <ComboBox Margin="2" Grid.Row="3" Grid.Column="1"
-                          ItemsSource="{Binding Formats}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
-                          SelectedItem="{Binding Path=LayoutFormat}"
-                          IsSynchronizedWithCurrentItem="True">
-                </ComboBox>
+        <TextBlock Margin="2" Grid.Row="3" Grid.Column="0">Изменить формат макета</TextBlock>
+        <ComboBox Margin="2" Grid.Row="3" Grid.Column="1"
+              ItemsSource="{Binding Formats}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
+              SelectedItem="{Binding Path=LayoutFormat}"
+              IsSynchronizedWithCurrentItem="True">
+        </ComboBox>
 
-                <!-- Buttons -->
-                <Button Name="btnDoneLayout" Margin="2"
-                         Grid.Row="4" Grid.Column="0" Content="Применить" Command="{Binding ApplyCommand}"/>
+        <!-- Buttons -->
+        <Button Name="btnDoneLayout" Margin="2"
+             Grid.Row="4" Grid.Column="0" Content="Применить" Command="{Binding ApplyCommand}"/>
 
-                <Button Name="btnDeleteLayout" Margin="2"
-                        Grid.Row="4" Grid.Column="1" Content="Удалить" Command="{Binding DeleteCommand}"
-                        Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
-                        Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
+        <Button Name="btnDeleteLayout" Margin="2"
+            Grid.Row="4" Grid.Column="1" Content="Удалить" Command="{Binding DeleteCommand}"
+            Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
+            Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
 
-                <Button Name="btnCancelDeleteLayout" Margin="2"
-                        Grid.Row="4" Grid.Column="2" Content="Отменить удаление" Command="{Binding CancelDeleteCommand}"
-                        Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
-                        Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
-            </Grid>
-        </TabItem.Content>
-    </TabItem>
+        <Button Name="btnCancelDeleteLayout" Margin="2"
+            Grid.Row="4" Grid.Column="2" Content="Отменить удаление" Command="{Binding CancelDeleteCommand}"
+            Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
+            Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
+    </Grid>
 </UserControl>

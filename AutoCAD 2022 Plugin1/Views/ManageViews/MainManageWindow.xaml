@@ -5,21 +5,35 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels.ManageVM"
              xmlns:views="clr-namespace:AutoCAD_2022_Plugin1.Views.ManageViews"
+             xmlns:mainViewModels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
+             xmlns:services="clr-namespace:AutoCAD_2022_Plugin1.Services"
              d:DataContext="{d:DesignInstance Type=viewmodels:MainManageVM}"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
     <Window.Resources>
-        <viewmodels:ViewTemplateSelector x:Key="Selector"/>
+        <DataTemplate x:Key="CustomHeader">
+            <StackPanel>
+                <TextBlock Text="{Binding NameTab}"/>
+            </StackPanel>
+        </DataTemplate>
+        
+        <DataTemplate x:Key="LayoutTemplate">
+            <views:ManageLayoutView DataContext="{Binding ViewModelTab}"/>
+        </DataTemplate>
+        <DataTemplate x:Key="ViewportTemplate">
+            <views:ManageViewportView DataContext="{Binding ViewModelTab}"/>
+        </DataTemplate>
+
+        <services:MyViewSelector x:Key="Selector" 
+                                LayoutTemplate="{StaticResource LayoutTemplate}" 
+                                ViewportTemplate="{StaticResource ViewportTemplate}"/>
     </Window.Resources>
-    
+
     <StackPanel>
-        <TabControl Margin="2" MinHeight="50" MinWidth="100" ItemsSource="{Binding tabs}"
+        <TabControl Margin="2" MinHeight="50" MinWidth="100" 
+                    ItemsSource="{Binding Tabs}"
+                    ItemTemplate="{StaticResource CustomHeader}"
                     ContentTemplateSelector="{StaticResource Selector}">
-            <TabControl.ItemContainerStyle>
-                <Style TargetType="{x:Type TabItem}">
-                    <Setter Property="Header" Value="{Binding Header}"/>
-                </Style>
-            </TabControl.ItemContainerStyle>
         </TabControl>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

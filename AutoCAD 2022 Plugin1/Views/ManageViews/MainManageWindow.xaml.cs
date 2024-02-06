@@ -14,6 +14,7 @@ namespace AutoCAD_2022_Plugin1.Views.ManageViews
         {
             InitializeComponent();
             this.DataContext = _Data;
+            //TABCONT.ItemsSource = _Data.tabs;
         }
 
         public void DoneCommand(object sender, RoutedEventArgs e)

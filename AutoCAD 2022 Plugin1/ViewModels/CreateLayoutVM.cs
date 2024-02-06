@@ -1,7 +1,5 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
-using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace AutoCAD_2022_Plugin1.ViewModels
 {
