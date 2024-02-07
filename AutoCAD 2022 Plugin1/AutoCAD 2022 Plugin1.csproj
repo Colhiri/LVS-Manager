@@ -37,15 +37,15 @@
   <ItemGroup>
     <!-- Change the paths to the targeted AutoCAD libraries -->
     <Reference Include="AcCoreMgd">
-      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\accoremgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\accoremgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AcDbMgd">
-      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\acdbmgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\acdbmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AcMgd">
-      <HintPath>..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\acmgd.dll</HintPath>
+      <HintPath>..\..\..\..\..\..\..\Program Files\Autodesk\AutoCAD 2021\acmgd.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="CsvHelper, Version=30.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">

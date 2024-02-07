@@ -5,7 +5,6 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels.ManageVM"
              xmlns:views="clr-namespace:AutoCAD_2022_Plugin1.Views.ManageViews"
-             xmlns:mainViewModels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels"
              xmlns:services="clr-namespace:AutoCAD_2022_Plugin1.Services"
              d:DataContext="{d:DesignInstance Type=viewmodels:MainManageVM}"
              mc:Ignorable="d" 
@@ -33,7 +32,8 @@
         <TabControl Margin="2" MinHeight="50" MinWidth="100" 
                     ItemsSource="{Binding Tabs}"
                     ItemTemplate="{StaticResource CustomHeader}"
-                    ContentTemplateSelector="{StaticResource Selector}">
+                    ContentTemplateSelector="{StaticResource Selector}"
+                    IsEnabled="{Binding}">
         </TabControl>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">

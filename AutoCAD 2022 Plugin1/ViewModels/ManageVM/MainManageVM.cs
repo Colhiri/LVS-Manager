@@ -5,6 +5,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
     public class MainManageVM : MainVM
     {
         public ObservableCollection<DummyViewModel> Tabs { get; set; }
+        public bool EnabledForms
+        {
+            get
+            {
+                return true;
+            }
+        }
         public MainManageVM()
         {
             Tabs = new ObservableCollection<DummyViewModel>();
