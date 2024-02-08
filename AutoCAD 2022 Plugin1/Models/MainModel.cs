@@ -3,8 +3,10 @@ using System.Linq;
 
 namespace AutoCAD_2022_Plugin1.Models
 {
-    public class MainModel : Working_functions
+    public class MainModel
     {
+        public static CadUtilityLib MainWorkFunctions = CadUtilityLib.GetCurrent();
+
         public bool IsValidName(string Name)
         {
             if (string.IsNullOrEmpty(Name)) return false;

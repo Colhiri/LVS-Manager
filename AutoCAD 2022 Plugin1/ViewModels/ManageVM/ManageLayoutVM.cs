@@ -1,14 +1,16 @@
-﻿using AutoCAD_2022_Plugin1.Models;
-using AutoCAD_2022_Plugin1.Services;
+﻿using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageLayoutVM : MainVM, IMyTabContentViewModel
     {
-        public ManageLayoutVM()
+        public ManageLayoutVM(ParametersLVS parameters)
         {
             _LayoutToDelete = new ObservableCollection<string>();
+            this.Name = parameters.NameLayout;
+            this.PlotterName = parameters.PlotterName;
+            this.LayoutFormat = parameters.LayoutFormat;
         }
 
         #region Properties
@@ -17,13 +19,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                return EnabledFormsParamatersLayout;
+                return EnabledFormsParamaters;
             }
-            set { }
         }
-
-        /// Static model functions to interaction with Autocad
-        private CreateLayoutModel model = new CreateLayoutModel();
 
         /// Формирует список листов для удаления после закрытия окна
         private ObservableCollection<string> _LayoutToDelete;
@@ -36,11 +34,21 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         }
 
         /// Проверка редактирования некоторых частей View
-        public bool EnabledFormsParamatersLayout
+        public bool EnabledFormsParamaters
         {
             get
             {
+                if (Name == null) return false;
                 return !LayoutToDelete.Contains(Name);
+            }
+        }
+
+        public bool InvertEnabledForms 
+        { 
+            get 
+            {
+                if (Name == null) return false;
+                return !EnabledFormsParamaters;  
             }
         }
 
@@ -50,7 +58,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                _NamesLayouts = new ObservableCollection<string>(CadUtilityLib.FL.GetNames());
                 return _NamesLayouts;
             }
         }
@@ -67,10 +75,16 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             {
                 _Name = value.Trim();
                 _EditName = _Name;
+                OnPropertyChanged(nameof(NamesLayouts));
+                OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(EditName));
                 OnPropertyChanged(nameof(LayoutFormat));
                 OnPropertyChanged(nameof(PlotterName));
-                OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+                OnPropertyChanged(nameof(EnabledFormsParamaters));
+                OnPropertyChanged(nameof(InvertEnabledForms));
+
+                OnPropertyChanged(nameof(Plotters));
+                OnPropertyChanged(nameof(Formats));
             }
         }
         /// Отредактированное имя поля
@@ -79,6 +93,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (Name == null) return null;
                 return _EditName;
             }
             set
@@ -86,6 +101,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _EditName = value.Trim();
                 if (EditName != Name)
                 {
+                    CadUtilityLib.FL.GetField(Name).SetFieldName(_EditName);
                     OnPropertyChanged(nameof(Name));
                     OnPropertyChanged(nameof(NamesLayouts));
                 }
@@ -98,7 +114,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
+                if (Name == null) return null;
+                _Plotters = new ObservableCollection<string>(CadUtilityLib.GetPlotters());
                 return _Plotters;
             }
         }
@@ -108,11 +125,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (Name == null) return null;
                 return _PlotterName;
             }
             set
             {
                 _PlotterName = value;
+                CadUtilityLib.FL.GetField(Name).SetFieldPlotter(_PlotterName);
                 OnPropertyChanged(nameof(Formats));
             }
         }
@@ -124,7 +143,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             get
             {
                 if (PlotterName == null) return null;
-                _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(PlotterName));
+                _Formats = new ObservableCollection<string>(CadUtilityLib.GetAllCanonicalScales(PlotterName));
                 return _Formats;
             }
         }
@@ -134,11 +153,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (PlotterName == null) return null;
                 return _LayoutFormat;
             }
             set
             {
                 _LayoutFormat = value;
+                CadUtilityLib.FL.GetField(Name).SetFieldFormat(_LayoutFormat);
             }
         }
 
@@ -152,7 +173,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             if (Name == null) return;
             _LayoutToDelete.Add(Name);
-            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
         }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
@@ -173,7 +195,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void RemoveDelete()
         {
             _LayoutToDelete.Remove(Name);
-            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
         }
         private RelayCommand _CancelDeleteCommand;
         public RelayCommand CancelDeleteCommand
@@ -193,7 +216,22 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void Apply() 
         {
-            throw new System.Exception("Сделай применение изменений в макете!");
+            foreach (string DeleteNameField in  _LayoutToDelete)
+            {
+                CadUtilityLib.FL.DeleteField(DeleteNameField);
+            }
+            _LayoutToDelete.Clear();
+            OnPropertyChanged(nameof(NamesLayouts));
+            OnPropertyChanged(nameof(Name));
+            OnPropertyChanged(nameof(EditName));
+            OnPropertyChanged(nameof(LayoutFormat));
+            OnPropertyChanged(nameof(PlotterName));
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
+
+            OnPropertyChanged(nameof(Plotters));
+            OnPropertyChanged(nameof(Formats));
+            // throw new System.Exception("Сделай применение изменений в макете!");
         }
         private RelayCommand _ApplyCommand;
         public RelayCommand ApplyCommand

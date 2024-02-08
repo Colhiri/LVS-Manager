@@ -2,7 +2,7 @@
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using static AutoCAD_2022_Plugin1.Working_functions;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -134,12 +134,12 @@ namespace AutoCAD_2022_Plugin1
         public void DeleteViewport(Identificator Id) => Viewports.Remove(Viewports.Where(x => x.Id == Id).First());
         public void DeleteViewport(ObjectId Id) => Viewports.Remove(Viewports.Where(x => x.ContourObjects == Id).First());
         public void DeleteViewport(string Id) => Viewports.Remove(Viewports.Where(x => x.Id.ToString() == Id).First());
-        public void SetFieldName(Field FieldForEdit, string newNameLayout) => FieldForEdit.NameLayout = newNameLayout;
-        public void SetFieldPlotter(Field FieldForEdit, string newPlotterLayout) => FieldForEdit.PlotterName = newPlotterLayout;
-        public void SetFieldFormat(Field FieldForEdit, string newFormatLayout)
+        public void SetFieldName(string newNameLayout) => this.NameLayout = newNameLayout;
+        public void SetFieldPlotter(string newPlotterLayout) => this.PlotterName = newPlotterLayout;
+        public void SetFieldFormat(string newFormatLayout)
         {
-            FieldForEdit.LayoutFormat = newFormatLayout;
-            FieldForEdit.UpdatePaperSize();
+            this.LayoutFormat = newFormatLayout;
+            this.UpdatePaperSize();
         }
 
         public Field(string NameLayout, string LayoutFormat, string PlotterName)
@@ -216,10 +216,10 @@ namespace AutoCAD_2022_Plugin1
         public Point2d CenterPoint { get; private set; }
         public State StateInModel { get; private set; } = State.NoExist;
         public DistributionViewportOnField StartPoint { get; private set; }
-        public void SetScaleVP(ViewportInField VPforEdit, string NewScaleVP)
+        public void SetScaleVP(string NewScaleVP)
         {
-            VPforEdit.AnnotationScaleViewport = NewScaleVP;
-            VPforEdit.UpdateSizeVP();
+            this.AnnotationScaleViewport = NewScaleVP;
+            this.UpdateSizeVP();
         }
 
         public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)

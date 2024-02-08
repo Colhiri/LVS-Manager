@@ -10,7 +10,7 @@ using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 
 namespace AutoCAD_2022_Plugin1
 {
-    public class Working_functions
+    public class CadUtilityLib
     {
         private static Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
         private static Database AcDatabase = AcDocument.Database;
@@ -20,6 +20,17 @@ namespace AutoCAD_2022_Plugin1
         private static PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
         private static LayerStateManager layerManager = new LayerStateManager(AcDatabase);
         public static FieldList FL = new FieldList();
+
+        private CadUtilityLib() { }
+        private static CadUtilityLib _Instance;
+        public static CadUtilityLib GetCurrent() 
+        {
+            if (_Instance == null)
+            {
+                _Instance = new CadUtilityLib();
+            }
+            return _Instance; 
+        }
 
         /// <summary>
         /// Создает видовой экран по заданным параметрам

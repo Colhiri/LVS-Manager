@@ -5,6 +5,6 @@
     /// </summary>
     public interface IMyTabContentViewModel
     {
-        bool CheckTabEnabled { get; set; }
+        bool CheckTabEnabled { get; }
     }
 }

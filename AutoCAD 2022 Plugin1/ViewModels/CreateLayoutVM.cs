@@ -28,7 +28,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _PlottersIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                _PlottersIsEnabled = CadUtilityLib.FL.Contains(_Name);
                 return _PlottersIsEnabled;
             }
         }
@@ -41,7 +41,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _FormatsIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                _FormatsIsEnabled = CadUtilityLib.FL.Contains(_Name);
                 return _FormatsIsEnabled;
             }
         }
@@ -51,7 +51,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                _Names = new ObservableCollection<string>(CadUtilityLib.FL.GetNames());
                 return _Names;
             }
         }
@@ -85,7 +85,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
+                _Plotters = new ObservableCollection<string>(CadUtilityLib.GetPlotters());
                 return _Plotters;
             }
         }
@@ -108,7 +108,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                _Formats = new ObservableCollection<string>(CadUtilityLib.GetAllCanonicalScales(_PlotterName));
                 return _Formats;
             }
         }
@@ -130,7 +130,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
+                _Scales = new ObservableCollection<string>(CadUtilityLib.GetAllAnnotationScales());
                 return _Scales;
             }
         }

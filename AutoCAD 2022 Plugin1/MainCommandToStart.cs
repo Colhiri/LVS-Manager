@@ -4,7 +4,8 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using System;
-using static AutoCAD_2022_Plugin1.Working_functions;
+using System.Linq;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
 using Field = AutoCAD_2022_Plugin1.Field;
@@ -12,6 +13,7 @@ using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
 using AutoCAD_2022_Plugin1.Views.ManageViews;
 using AutoCAD_2022_Plugin1.ViewModels.ManageVM;
+using AutoCAD_2022_Plugin1.Services;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -127,6 +129,22 @@ namespace LightProgram
             string AnnotationScaleObjects = null;
             WorkObject TypeWorkObject = WorkObject.None;
 
+            try
+            {
+                Field field = FL.GetField(objectID);
+                NameLayoutObjects = field.NameLayout;
+                PlotterNameObjects = field.PlotterName;
+                LayoutFormatObjects = field.LayoutFormat;
+                TypeWorkObject = WorkObject.Field;
+            }
+            catch (System.Exception exception)
+            {
+                try
+                {
+                }
+            }
+
+
             foreach (string NameField in FL.GetNames())
             {
                 Field field = FL.GetField(NameField);
@@ -166,11 +184,14 @@ namespace LightProgram
 
             /// Особая инициализация формы из клиентского кода 
             /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            MainManageVM manageData = new MainManageVM();
-            // manageData.Name = NameLayoutObjects;
-            // manageData.LayoutFormat = LayoutFormatObjects;
-            // manageData.PlotterName = PlotterNameObjects;
-            // manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
+            ParametersLVS parameters = new ParametersLVS()
+            {
+                NameLayout = NameLayoutObjects,
+                LayoutFormat = LayoutFormatObjects,
+                PlotterName = PlotterNameObjects,
+                AnnotationScaleObjectsVP = AnnotationScaleObjects,
+            };
+            MainManageVM manageData = new MainManageVM(parameters);
             MainManageWindow window = new MainManageWindow(manageData);
             if (Application.ShowModalWindow(window) != true) return;
 

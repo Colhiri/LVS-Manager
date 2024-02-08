@@ -17,8 +17,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// <summary>
         /// Отслеживание активной вкладки
         /// </summary>
-        private int _ActiveTab;
-        public int ActiveTab
+        private object _ActiveTab;
+        public object ActiveTab
         {
             get
             {
@@ -28,37 +28,42 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             {
                 _ActiveTab = value;
                 EnabledViewportForm();
-                OnPropertyChanged(nameof(ActiveTab));
+                FieldNameEdit();
             }
         }
 
         /// <summary>
         /// Регулирует доступность содержимого на вкладке Viewport
         /// </summary>
-        private void EnabledViewportForm()
+        private bool EnabledViewportForm()
         {
             // Проверяем доступность первой вкладки, если она заблокирована удалением Layout,
             // то блокируем вторую вкладку, выставляя значение доступности.
-            bool TabEnabledVP;
-            bool check = Tabs.Where(x => x.TypeView == TypeView.Layout).Select(x => x.ViewModelTab.CheckTabEnabled).First();
-            if (check == false)
-            {
-                TabEnabledVP = false;
-            }
-            else
-            {
-                TabEnabledVP = true;
-            }
-            Tabs.Where(x => x.TypeView == TypeView.Viewport).Select(x => x.ViewModelTab).First().CheckTabEnabled = TabEnabledVP;
-            OnPropertyChanged(nameof(IMyTabContentViewModel.CheckTabEnabled));
+            return Tabs.Where(x => x.TypeView == TypeView.Layout)
+                             .Select(x => x.ViewModelTab.CheckTabEnabled)
+                             .First();
         }
 
-        public MainManageVM()
+        /// <summary>
+        /// Передает имя выбранного Макета на вкладке Макета
+        /// </summary>
+        /// <returns></returns>
+        private string FieldNameEdit()
         {
+            return (Tabs.Where(x => x.TypeView == TypeView.Layout)
+                                     .Select(x => x.ViewModelTab)
+                                     .First() as ManageLayoutVM).Name;
+        }
+
+        public MainManageVM(ParametersLVS parameters)
+        {
+            parameters.CheckFieldName = FieldNameEdit;
+            parameters.CheckTabEnabled = EnabledViewportForm;
+
             Tabs = new ObservableCollection<DummyViewModel>();
-            Tabs.Add(new DummyViewModel("Макет", TypeView.Layout, new ManageLayoutVM()));
-            Tabs.Add(new DummyViewModel("Видовой экран", TypeView.Viewport, new ManageVIewportVM()));
-            ActiveTab = 0;
+            Tabs.Add(new DummyViewModel("Макет", TypeView.Layout, new ManageLayoutVM(parameters)));
+            Tabs.Add(new DummyViewModel("Видовой экран", TypeView.Viewport, new ManageVIewportVM(parameters)));
+            ActiveTab = Tabs[0];
         }
     }
 }

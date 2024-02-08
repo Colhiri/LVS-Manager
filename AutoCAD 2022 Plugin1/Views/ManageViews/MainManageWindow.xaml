@@ -2,6 +2,7 @@
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels.ManageVM"
              xmlns:views="clr-namespace:AutoCAD_2022_Plugin1.Views.ManageViews"
@@ -33,14 +34,22 @@
                     ItemsSource="{Binding Tabs}"
                     ItemTemplate="{StaticResource CustomHeader}"
                     ContentTemplateSelector="{StaticResource Selector}"
-                    SelectedIndex="{Binding ActiveTab, Mode=TwoWay}">
+                    SelectedItem="{Binding ActiveTab, Mode=TwoWay}">
         </TabControl>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-            <Button Margin="2" Name="btn_Cancel" IsDefault="True" 
-                    Command="Close"  Content="Отмена"/>
-            
+            <Button Margin="2" Name="btn_Cancel" IsEnabled="True"
+                    Content="Отмена">
+                <i:Interaction.Triggers>
+                    <i:EventTrigger EventName="Click">
+                        <i:CallMethodAction MethodName="Close"
+                            TargetObject="{Binding RelativeSource={RelativeSource
+                                                   Mode=FindAncestor,
+                                                   AncestorType=Window}}">
+                        </i:CallMethodAction>
+                    </i:EventTrigger>
+                </i:Interaction.Triggers>
+            </Button>
         </StackPanel>
-
     </StackPanel>
 </Window>

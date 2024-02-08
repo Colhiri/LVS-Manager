@@ -1,28 +1,50 @@
-﻿using AutoCAD_2022_Plugin1.Models;
-using AutoCAD_2022_Plugin1.Services;
+﻿using AutoCAD_2022_Plugin1.Services;
+using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageVIewportVM : MainVM, IMyTabContentViewModel
     {
-        public ManageVIewportVM() 
+        public ManageVIewportVM(ParametersLVS parameters) 
         {
             _ViewportToDelete = new ObservableCollection<string>();
+            this.CheckFieldNameEvent = parameters.CheckFieldName;
+            this.CheckTabEnabledEvent = parameters.CheckTabEnabled;
+            this.AnnotationScaleObjectsVP = parameters.AnnotationScaleObjectsVP;
         }
 
-        private bool _CheckTabEnabled;
+        private event Func<string> CheckFieldNameEvent;
+        private event Func<bool> CheckTabEnabledEvent;
+        private string NameField => CheckFieldNameEvent();
+
         public bool CheckTabEnabled
         {
             get
             {
-                return _CheckTabEnabled;
-            }
-            set
-            {
-                _CheckTabEnabled = value;
+                return CheckTabEnabledEvent();
             }
         }
+
+        /// Проверка редактирования некоторых частей View
+        public bool EnabledFormsParamaters
+        {
+            get
+            {
+                if (ViewportName == null) return false;
+                return !ViewportToDelete.Contains(ViewportName);
+            }
+        }
+        public bool InvertEnabledForms
+        {
+            get
+            {
+                if (ViewportName == null) return false;
+                return !EnabledFormsParamaters;
+            }
+        }
+
 
         /// <summary>
         /// Формирует список видовых экранов для удаления после закрытия окна
@@ -42,15 +64,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                /// <summary>
-                /// TEST
-                /// TEST
-                /// TEST
-                /// TEST
-                /// </summary>
-                //string Name = Working_functions.FL.GetNames()[0];
-                //string[] viewportsID = CreateLayoutModel.FL.GetField(Name).ViewportIdentificators().Select(x => x.ToString()).ToArray();
-                _Viewports = new ObservableCollection<string>(new string[] { "1", "2"});
+                string[] viewportsIDs = CadUtilityLib.FL.GetField(NameField).ViewportIdentificators().Select(x => x.ToString()).ToArray();
+                _Viewports = new ObservableCollection<string>(viewportsIDs); //new string[] { "1", "2"});
                 return _Viewports;
             }
         }
@@ -73,7 +88,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
+                if (ViewportName == null) return
+                _Scales = new ObservableCollection<string>(CadUtilityLib.GetAllAnnotationScales());
                 return _Scales;
             }
         }
@@ -86,14 +102,22 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             }
             set
             {
+                throw new System.Exception("Сделай проверку масштаба");
                 _AnnotationScaleObjectsVP = value.Trim();
+                CadUtilityLib.FL.GetField(NameField).GetViewport(ViewportName).SetScaleVP(_AnnotationScaleObjectsVP);
             }
         }
 
         /// <summary>
         /// Добавление имени макета в список на удаление
         /// </summary>
-        private void AddDelete() => _ViewportToDelete.Add(ViewportName);
+        private void AddDelete()
+        {
+            if (ViewportName == null) return;
+            _ViewportToDelete.Add(ViewportName);
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
+        }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
         {
@@ -110,7 +134,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// <summary>
         /// Убрать макета или видовой экран из списка на удаление
         /// </summary>
-        private void RemoveDelete() => _ViewportToDelete.Remove(ViewportName);
+        private void RemoveDelete() 
+        {
+            if (ViewportName == null) return;
+            ViewportToDelete.Remove(ViewportName);
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
+        }
         private RelayCommand _CancelDeleteCommand;
         public RelayCommand CancelDeleteCommand
         {
@@ -124,12 +154,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             }
         }
         
+        /// <summary>
+        /// Наводится на выбранные объекты
+        /// </summary>
         private void ZoomTest()
         {
-            if (ViewportName != null)
-            {
-                var objectsID = CreateLayoutModel.FL.GetField(NameField).GetViewport(ViewportName).ObjectsIDs;
-            }
+            if (ViewportName == null) return;
+            var objectsID = CadUtilityLib.FL.GetField(NameField).GetViewport(ViewportName).ObjectsIDs;
+            CadUtilityLib.ZoomToObjects(objectsID);
         }
         /// <summary>
         /// Приблизить на объекты в видовом экране
@@ -152,7 +184,16 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void Apply()
         {
-            throw new System.Exception("Сделай применение изменений в макете!");
+            if (ViewportName == null) return;
+            foreach (string ViewportID in ViewportToDelete)
+            {
+                CadUtilityLib.FL.GetField(NameField).DeleteViewport(ViewportID);
+            }
+            ViewportToDelete.Clear();
+            OnPropertyChanged(nameof(ViewportName));
+            OnPropertyChanged(nameof(Viewports));
+            OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+            // throw new System.Exception("Сделай применение изменений в макете!");
         }
         private RelayCommand _ApplyCommand;
         public RelayCommand ApplyCommand
@@ -166,5 +207,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 return _ApplyCommand;
             }
         }
+
     }
 }
