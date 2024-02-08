@@ -33,12 +33,12 @@
                     ItemsSource="{Binding Tabs}"
                     ItemTemplate="{StaticResource CustomHeader}"
                     ContentTemplateSelector="{StaticResource Selector}"
-                    IsEnabled="{Binding}">
+                    SelectedIndex="{Binding ActiveTab, Mode=TwoWay}">
         </TabControl>
 
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
             <Button Margin="2" Name="btn_Cancel" IsDefault="True" 
-                    Click="CancelCommand"  Content="Отмена"/>
+                    Command="Close"  Content="Отмена"/>
             
         </StackPanel>
 

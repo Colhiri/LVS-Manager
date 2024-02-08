@@ -96,9 +96,12 @@
     <Compile Include="NoUse\NoUseCommands.cs" />
     <Compile Include="Services\Initialization.cs" />
     <Compile Include="MainCommandToStart.cs" />
+    <Compile Include="Services\DummyViewModel.cs" />
+    <Compile Include="Services\IMyTabContentViewModel.cs" />
     <Compile Include="ViewModels\ManageVM\ManageVIewportVM.cs" />
     <Compile Include="ViewModels\ManageVM\ManageLayoutVM.cs" />
     <Compile Include="ViewModels\ManageVM\MainManageVM.cs" />
+    <Compile Include="Services\TypeView.cs" />
     <Compile Include="Views\CreateLayoutView.xaml.cs">
       <DependentUpon>CreateLayoutView.xaml</DependentUpon>
     </Compile>

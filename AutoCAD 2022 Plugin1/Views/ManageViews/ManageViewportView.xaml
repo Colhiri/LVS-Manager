@@ -6,10 +6,13 @@
              xmlns:viewmodels="clr-namespace:AutoCAD_2022_Plugin1.ViewModels.ManageVM" 
              d:DataContext="{d:DesignInstance Type=viewmodels:ManageVIewportVM}"
              mc:Ignorable="d" 
-             d:DesignHeight="450" d:DesignWidth="800">
+             d:DesignHeight="450" d:DesignWidth="800"
+             IsEnabled="{Binding CheckTabEnabled}">
+             <!-- Блокировка View, если Layout удаляется -->
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="Auto"  MinWidth="150"></ColumnDefinition>
+            <ColumnDefinition Width="Auto" MinWidth="150"></ColumnDefinition>
             <ColumnDefinition Width="Auto" MinWidth="150"></ColumnDefinition>
             <ColumnDefinition Width="Auto" MinWidth="150"></ColumnDefinition>
         </Grid.ColumnDefinitions>
@@ -39,7 +42,7 @@
             Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
             Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
 
-        <Button Name="btnDoneViewport" Margin="2" Command="{Binding DoneCommand}"
+        <Button Name="btnDoneViewport" Margin="2" Command="{Binding ApplyCommand}"
             Grid.Row="2" Grid.Column="1" Content="Применить"/>
 
         <Button Name="btnDeleteViewport" Margin="2" Grid.Row="2" Grid.Column="2"

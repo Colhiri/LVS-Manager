@@ -4,8 +4,26 @@ using System.Collections.ObjectModel;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
-    public class ManageVIewportVM : MainVM
+    public class ManageVIewportVM : MainVM, IMyTabContentViewModel
     {
+        public ManageVIewportVM() 
+        {
+            _ViewportToDelete = new ObservableCollection<string>();
+        }
+
+        private bool _CheckTabEnabled;
+        public bool CheckTabEnabled
+        {
+            get
+            {
+                return _CheckTabEnabled;
+            }
+            set
+            {
+                _CheckTabEnabled = value;
+            }
+        }
+
         /// <summary>
         /// Формирует список видовых экранов для удаления после закрытия окна
         /// </summary>
@@ -14,10 +32,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _ViewportToDelete = new ObservableCollection<string>();
                 return _ViewportToDelete;
             }
-            set { }
         }
 
         /// Взаимодействие видовых экранов
@@ -110,11 +126,10 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         
         private void ZoomTest()
         {
-            //if (ViewportName != null)
-            //{
-            //    string Name = Working_functions.FL.GetNames()[0];
-            //    var objectsID = CreateLayoutModel.FL.GetField(Name).GetViewport(ViewportName).ObjectsIDs;
-            //}
+            if (ViewportName != null)
+            {
+                var objectsID = CreateLayoutModel.FL.GetField(NameField).GetViewport(ViewportName).ObjectsIDs;
+            }
         }
         /// <summary>
         /// Приблизить на объекты в видовом экране
@@ -129,6 +144,26 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                     _ZoomCommand = new RelayCommand(o => ZoomTest(), null);
                 }
                 return _ZoomCommand;
+            }
+        }
+
+        /// <summary>
+        /// Применить изменения
+        /// </summary>
+        private void Apply()
+        {
+            throw new System.Exception("Сделай применение изменений в макете!");
+        }
+        private RelayCommand _ApplyCommand;
+        public RelayCommand ApplyCommand
+        {
+            get
+            {
+                if (_ApplyCommand == null)
+                {
+                    _ApplyCommand = new RelayCommand(o => Apply(), null);
+                }
+                return _ApplyCommand;
             }
         }
     }

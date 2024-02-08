@@ -1,11 +1,10 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
-using System;
 using System.Collections.ObjectModel;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
-    public class ManageLayoutVM : MainVM
+    public class ManageLayoutVM : MainVM, IMyTabContentViewModel
     {
         public ManageLayoutVM()
         {
@@ -13,14 +12,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         }
 
         #region Properties
-        /// <summary>
-        /// Static model functions to iteration with Autocad
-        /// </summary>
+        /// Позволяет блокировать Tab Viewport'a
+        public bool CheckTabEnabled
+        {
+            get
+            {
+                return EnabledFormsParamatersLayout;
+            }
+            set { }
+        }
+
+        /// Static model functions to interaction with Autocad
         private CreateLayoutModel model = new CreateLayoutModel();
 
-        /// <summary>
         /// Формирует список листов для удаления после закрытия окна
-        /// </summary>
         private ObservableCollection<string> _LayoutToDelete;
         public ObservableCollection<string> LayoutToDelete
         {
@@ -28,15 +33,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             {
                 return _LayoutToDelete;
             }
-            set
-            {
-                _LayoutToDelete = value;
-            }
         }
 
-        /// <summary>
         /// Проверка редактирования некоторых частей View
-        /// </summary>
         public bool EnabledFormsParamatersLayout
         {
             get
@@ -55,6 +54,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 return _NamesLayouts;
             }
         }
+
+        /// Имя поля
         private string _Name;
         public string Name
         {
@@ -72,6 +73,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
             }
         }
+        /// Отредактированное имя поля
         private string _EditName;
         public string EditName
         {
@@ -100,6 +102,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 return _Plotters;
             }
         }
+        /// Имя плоттера
         private string _PlotterName;
         public string PlotterName
         {
@@ -125,6 +128,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 return _Formats;
             }
         }
+        /// Формат макета
         private string _LayoutFormat;
         public string LayoutFormat
         {
@@ -144,7 +148,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// <summary>
         /// Добавление имени макета в список на удаление
         /// </summary>
-        private void AddDelete() => _LayoutToDelete.Add(Name);
+        private void AddDelete()
+        {
+            if (Name == null) return;
+            _LayoutToDelete.Add(Name);
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+        }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
         {
@@ -161,7 +170,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// <summary>
         /// Убрать макета или видовой экран из списка на удаление
         /// </summary>
-        private void RemoveDelete() => _LayoutToDelete.Remove(Name);
+        private void RemoveDelete()
+        {
+            _LayoutToDelete.Remove(Name);
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+        }
         private RelayCommand _CancelDeleteCommand;
         public RelayCommand CancelDeleteCommand
         {
@@ -176,9 +189,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         }
 
         /// <summary>
-        /// Убрать макета или видовой экран из списка на удаление
+        /// Применить изменения
         /// </summary>
-        private void Apply() { }
+        private void Apply() 
+        {
+            throw new System.Exception("Сделай применение изменений в макете!");
+        }
         private RelayCommand _ApplyCommand;
         public RelayCommand ApplyCommand
         {
