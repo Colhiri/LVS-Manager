@@ -139,9 +139,14 @@ namespace LightProgram
             }
             catch (System.Exception exception)
             {
+                Application.ShowAlertDialog(exception.Message);
+
                 try
                 {
+                    ViewportInField vp = FL.GetNames().Select(x => FL.GetField(x).GetViewport(objectID)).Single();
+                    AnnotationScaleObjects = vp.AnnotationScaleViewport;
                 }
+
             }
 
 
