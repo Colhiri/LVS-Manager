@@ -1,4 +1,6 @@
-﻿using AutoCAD_2022_Plugin1.Services;
+﻿using AutoCAD_2022_Plugin1.Models;
+using AutoCAD_2022_Plugin1.Services;
+using Autodesk.AutoCAD.ApplicationServices;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -7,6 +9,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageVIewportVM : MainVM, IMyTabContentViewModel
     {
+        private ManageLayoutModel model = new ManageLayoutModel();
+
         public ManageVIewportVM(ParametersLVS parameters) 
         {
             _ViewportToDelete = new ObservableCollection<string>();
@@ -24,6 +28,21 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             get
             {
                 return CheckTabEnabledEvent();
+            }
+        }
+
+        /// Проверка корректности имени
+        private bool _ApplyButtonEnabled;
+        public bool ApplyButtonEnabled
+        {
+            get
+            {
+                _ApplyButtonEnabled = model.IsValidScale(AnnotationScaleObjectsVP);
+                if (_ApplyButtonEnabled == false)
+                {
+                    Application.ShowAlertDialog("Введен неправильный масштаб! Выберите другой или исправьте существующий!");
+                }
+                return _ApplyButtonEnabled;
             }
         }
 
@@ -102,9 +121,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             }
             set
             {
-                throw new System.Exception("Сделай проверку масштаба");
                 _AnnotationScaleObjectsVP = value.Trim();
-                CadUtilityLib.FL.GetField(NameField).GetViewport(ViewportName).SetScaleVP(_AnnotationScaleObjectsVP);
             }
         }
 

@@ -137,46 +137,23 @@ namespace LightProgram
                 LayoutFormatObjects = field.LayoutFormat;
                 TypeWorkObject = WorkObject.Field;
             }
-            catch (System.Exception exception)
+            catch (System.Exception ex)
             {
-                Application.ShowAlertDialog(exception.Message);
+                Application.ShowAlertDialog(ex.Message);
 
                 try
                 {
-                    ViewportInField vp = FL.GetNames().Select(x => FL.GetField(x).GetViewport(objectID)).Single();
-                    AnnotationScaleObjects = vp.AnnotationScaleViewport;
-                }
-
-            }
-
-
-            foreach (string NameField in FL.GetNames())
-            {
-                Field field = FL.GetField(NameField);
-                if (field.ContourField == objectID)
-                {
+                    Field field = FL.GetNames().Select(x => FL.GetField(x)).Where(x => x.CheckViewport(objectID)).First();
                     NameLayoutObjects = field.NameLayout;
                     PlotterNameObjects = field.PlotterName;
                     LayoutFormatObjects = field.LayoutFormat;
-                    TypeWorkObject = WorkObject.Field;
-                    break;
+                    AnnotationScaleObjects = field.GetViewport(objectID).AnnotationScaleViewport;
+                    TypeWorkObject = WorkObject.Viewport;
                 }
-                else
+                catch (System.Exception ex2)
                 {
-                    foreach (Identificator id in field.ViewportIdentificators())
-                    {
-                        ViewportInField vp = field.GetViewport(id);
-
-                        if (vp.ContourObjects == objectID)
-                        {
-                            NameLayoutObjects = field.NameLayout;
-                            PlotterNameObjects = field.PlotterName;
-                            LayoutFormatObjects = field.LayoutFormat;
-                            AnnotationScaleObjects = vp.AnnotationScaleViewport;
-                            TypeWorkObject = WorkObject.Viewport;
-                            break;
-                        }
-                    }
+                    Application.ShowAlertDialog($"Выбран неправильный объект. Заново. \n{ex2.Message}");
+                    return;
                 }
             }
 

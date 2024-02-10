@@ -1,10 +1,14 @@
-﻿using AutoCAD_2022_Plugin1.Services;
+﻿using AutoCAD_2022_Plugin1.Models;
+using AutoCAD_2022_Plugin1.Services;
+using Autodesk.AutoCAD.ApplicationServices;
 using System.Collections.ObjectModel;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageLayoutVM : MainVM, IMyTabContentViewModel
     {
+        private ManageLayoutModel model = new ManageLayoutModel();
+
         public ManageLayoutVM(ParametersLVS parameters)
         {
             _LayoutToDelete = new ObservableCollection<string>();
@@ -14,6 +18,21 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         }
 
         #region Properties
+        /// Проверка корректности имени
+        private bool _ApplyButtonEnabled;
+        public bool ApplyButtonEnabled
+        {
+            get
+            {
+                _ApplyButtonEnabled = model.IsValidName(Name);
+                if (_ApplyButtonEnabled == false)
+                {
+                    Application.ShowAlertDialog("Введено неправильное имя макета! Исправьте!");
+                }
+                return _ApplyButtonEnabled;
+            }
+        }
+
         /// Позволяет блокировать Tab Viewport'a
         public bool CheckTabEnabled
         {
@@ -77,6 +96,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _EditName = _Name;
                 OnPropertyChanged(nameof(NamesLayouts));
                 OnPropertyChanged(nameof(Name));
+                OnPropertyChanged(nameof(ApplyButtonEnabled));
                 OnPropertyChanged(nameof(EditName));
                 OnPropertyChanged(nameof(LayoutFormat));
                 OnPropertyChanged(nameof(PlotterName));

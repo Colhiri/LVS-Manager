@@ -44,6 +44,7 @@
             Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
 
         <Button Name="btnDoneViewport" Margin="2" Command="{Binding ApplyCommand}"
+                IsEnabled="{Binding }"
             Grid.Row="2" Grid.Column="1" Content="Применить"/>
 
         <Button Name="btnDeleteViewport" Margin="2" Grid.Row="2" Grid.Column="2"

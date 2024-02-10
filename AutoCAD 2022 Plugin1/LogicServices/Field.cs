@@ -124,6 +124,9 @@ namespace AutoCAD_2022_Plugin1
         public Point2d StartPoint { get; private set; }
         private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
         // Свойства для Field
+        public bool CheckViewport(Identificator Id) => Viewports.Select(x => x.Id == Id).Contains(true);
+        public bool CheckViewport(ObjectId Id) => Viewports.Select(x => x.ContourObjects == Id).Contains(true);
+        public bool CheckViewport(string Id) => Viewports.Select(x => x.Id.ToString() == Id).Contains(true);
         public ViewportInField GetViewport(Identificator Id) => Viewports.Where(x => x.Id == Id).First();
         public ViewportInField GetViewport(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First();
         public ViewportInField GetViewport(string Id) => Viewports.Where(x => x.Id.ToString() == Id).First();

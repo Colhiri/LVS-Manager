@@ -89,6 +89,7 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Models\ManageViewportModel.cs" />
     <Compile Include="Models\ManageLayoutModel.cs" />
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Models\CreateLayoutModel.cs" />
