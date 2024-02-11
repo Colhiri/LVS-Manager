@@ -135,7 +135,7 @@ namespace LightProgram
                 NameLayoutObjects = field.NameLayout;
                 PlotterNameObjects = field.PlotterName;
                 LayoutFormatObjects = field.LayoutFormat;
-                TypeWorkObject = WorkObject.Field;
+                TypeWorkObject = WorkObject.Layout;
             }
             catch (System.Exception ex)
             {
@@ -164,8 +164,6 @@ namespace LightProgram
                 return;
             }
 
-            /// Особая инициализация формы из клиентского кода 
-            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
             ParametersLVS parameters = new ParametersLVS()
             {
                 NameLayout = NameLayoutObjects,
@@ -177,33 +175,6 @@ namespace LightProgram
             MainManageWindow window = new MainManageWindow(manageData);
             if (Application.ShowModalWindow(window) != true) return;
 
-        }
-
-        /// <summary>
-        /// Тест работы второго окна и его функций
-        /// </summary>
-        [CommandMethod("zoomtest", CommandFlags.UsePickSet)]
-        public static void zoomtest()
-        {
-            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
-            if (AcDocument is null) throw new System.Exception("No active document!");
-            Database AcDatabase = AcDocument.Database;
-            Editor AcEditor = AcDocument.Editor;
-            LayoutManager layManager = LayoutManager.Current;
-            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
-
-            PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK)
-            {
-                Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSelection();
-            }
-            ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
-
-            AcEditor.WriteMessage("Objects selected");
-
-
-            // ZoomToObjects(objectsIDs);
         }
     }
 }

@@ -29,7 +29,7 @@ namespace AutoCAD_2022_Plugin1
 
     public enum WorkObject
     {
-        Field,
+        Layout,
         Viewport,
         None
     }
@@ -119,7 +119,6 @@ namespace AutoCAD_2022_Plugin1
         public Size OriginalSizeLayout { get; private set; }
         public Size DownScaleSizeLayout { get; private set; }
         // Общие параметры
-        public int CountViewport => Viewports.Count;
         public State StateInModel { get; private set; } = State.NoExist;
         public Point2d StartPoint { get; private set; }
         private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();

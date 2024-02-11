@@ -21,28 +21,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         }
 
         /// <summary>
-        /// Доступность ComboBox выбора плоттеров
+        /// Можно выбрать плоттер и формат когда макет еще не создан, если наоборот, то нужно менять плоттер  и формат макета через Managing
         /// </summary>
-        private bool _PlottersIsEnabled;
-        public bool PlottersIsEnabled
+        public bool EnabledForms
         {
             get
             {
-                _PlottersIsEnabled = CadUtilityLib.FL.Contains(_Name);
-                return _PlottersIsEnabled;
-            }
-        }
-
-        /// <summary>
-        /// Доступность ComboBox выбора плоттеров
-        /// </summary>
-        private bool _FormatsIsEnabled;
-        public bool FormatsIsEnabled
-        {
-            get
-            {
-                _FormatsIsEnabled = CadUtilityLib.FL.Contains(_Name);
-                return _FormatsIsEnabled;
+                return !CadUtilityLib.FL.Contains(_Name);
             }
         }
 
@@ -75,8 +60,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
 
                 OnPropertyChanged(nameof(DoneButtonIsEnabled));
-                OnPropertyChanged(nameof(FormatsIsEnabled));
-                OnPropertyChanged(nameof(PlottersIsEnabled));
+                OnPropertyChanged(nameof(EnabledForms));
             }
         }
 

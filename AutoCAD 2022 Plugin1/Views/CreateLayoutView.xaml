@@ -24,35 +24,35 @@
 
         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Введите имя листа или выберите созданный</TextBlock>
         <ComboBox Name="NamesLayoutComboBox" Margin="2" Grid.Row="0" Grid.Column="1"
-                  Text="{Binding Path=Name, UpdateSourceTrigger=PropertyChanged}"
-                  ItemsSource="{Binding Path=Names}"
+                  Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                  ItemsSource="{Binding Names}"
                   IsSynchronizedWithCurrentItem="True" IsEditable="True">
         </ComboBox>
 
         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Выберите плоттер для будущего макета</TextBlock>
         <ComboBox Name="Plotters"  Grid.Row="1" Grid.Column="1"
-                  SelectedItem="{Binding Path=PlotterName, UpdateSourceTrigger=PropertyChanged}"
-                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Plotters}"
-                  IsEnabled="{Binding Path=PlottersIsEnabled}">
+                  SelectedItem="{Binding PlotterName, UpdateSourceTrigger=PropertyChanged}"
+                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Plotters}"
+                  IsEnabled="{Binding EnabledForms}">
         </ComboBox>
 
         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Выберите формат будущего макета</TextBlock>
         <ComboBox Name="Formats"  Grid.Row="2" Grid.Column="1"
-                  SelectedItem="{Binding Path=LayoutFormat}"
-                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Formats}"
-                  IsEnabled="{Binding Path=FormatsIsEnabled}">
+                  SelectedItem="{Binding LayoutFormat}"
+                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Formats}"
+                  IsEnabled="{Binding EnabledForms}">
         </ComboBox>
 
         <TextBlock Margin="2" Grid.Row="3" Grid.Column="0">Выберите масштаб выбранных объектов на видовом экране</TextBlock>
         <ComboBox Name="Scales"  Grid.Row="3" Grid.Column="1"
-                  Text="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
-                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Scales}">
+                  Text="{Binding AnnotationScaleObjectsVP}" IsEditable="True"
+                  IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Scales}">
         </ComboBox>
         
         <!-- Применить -->
         <Button Margin="2" Name="btnDone" Command="{Binding Path=DoneCommand}" 
                 Grid.Row="4" Grid.Column="0"
-                IsEnabled="{Binding Path=DoneButtonIsEnabled}" Content="Применить"
+                IsEnabled="{Binding DoneButtonIsEnabled}" Content="Применить"
                 Click="DoneCommand"/>
         
         <!-- Отменить -->

@@ -25,7 +25,7 @@
         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Поменять макет</TextBlock>
         <ComboBox Margin="2" Grid.Row="0" Grid.Column="1"
               ItemsSource="{Binding NamesLayouts}"
-              SelectedItem="{Binding Name, Mode=TwoWay}"
+              Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" IsEditable="True"
               IsSynchronizedWithCurrentItem="True"></ComboBox>
 
         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя</TextBlock>
@@ -42,7 +42,7 @@
         <TextBlock Margin="2" Grid.Row="3" Grid.Column="0">Изменить формат макета</TextBlock>
         <ComboBox Margin="2" Grid.Row="3" Grid.Column="1"
               ItemsSource="{Binding Formats}" IsEnabled="{Binding EnabledFormsParamaters}"
-              SelectedItem="{Binding Path=LayoutFormat}"
+              Text="{Binding LayoutFormat, UpdateSourceTrigger=PropertyChanged}" IsEditable="True"
               IsSynchronizedWithCurrentItem="True">
         </ComboBox>
 

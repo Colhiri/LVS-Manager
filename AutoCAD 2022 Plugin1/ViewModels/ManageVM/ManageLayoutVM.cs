@@ -7,11 +7,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
     public class ManageLayoutVM : MainVM, IMyTabContentViewModel
     {
-        private ManageLayoutModel model = new ManageLayoutModel();
+        private ManageLayoutModel Model;
 
         public ManageLayoutVM(ParametersLVS parameters)
         {
-            _LayoutToDelete = new ObservableCollection<string>();
+            Model = new ManageLayoutModel();
             this.Name = parameters.NameLayout;
             this.PlotterName = parameters.PlotterName;
             this.LayoutFormat = parameters.LayoutFormat;
@@ -24,7 +24,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _ApplyButtonEnabled = model.IsValidName(Name);
+                _ApplyButtonEnabled = Model.IsValidName(Name);
                 if (_ApplyButtonEnabled == false)
                 {
                     Application.ShowAlertDialog("Введено неправильное имя макета! Исправьте!");
@@ -42,23 +42,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             }
         }
 
-        /// Формирует список листов для удаления после закрытия окна
-        private ObservableCollection<string> _LayoutToDelete;
-        public ObservableCollection<string> LayoutToDelete
-        {
-            get
-            {
-                return _LayoutToDelete;
-            }
-        }
-
         /// Проверка редактирования некоторых частей View
         public bool EnabledFormsParamaters
         {
             get
             {
                 if (Name == null) return false;
-                return !LayoutToDelete.Contains(Name);
+                return Model.CheckToDelete();
             }
         }
 
@@ -95,7 +85,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _Name = value.Trim();
                 _EditName = _Name;
                 OnPropertyChanged(nameof(NamesLayouts));
-                OnPropertyChanged(nameof(Name));
                 OnPropertyChanged(nameof(ApplyButtonEnabled));
                 OnPropertyChanged(nameof(EditName));
                 OnPropertyChanged(nameof(LayoutFormat));
@@ -121,7 +110,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _EditName = value.Trim();
                 if (EditName != Name)
                 {
-                    CadUtilityLib.FL.GetField(Name).SetFieldName(_EditName);
                     OnPropertyChanged(nameof(Name));
                     OnPropertyChanged(nameof(NamesLayouts));
                 }
@@ -151,7 +139,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             set
             {
                 _PlotterName = value;
-                CadUtilityLib.FL.GetField(Name).SetFieldPlotter(_PlotterName);
                 OnPropertyChanged(nameof(Formats));
             }
         }
@@ -179,7 +166,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             set
             {
                 _LayoutFormat = value;
-                CadUtilityLib.FL.GetField(Name).SetFieldFormat(_LayoutFormat);
             }
         }
 
@@ -192,7 +178,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void AddDelete()
         {
             if (Name == null) return;
-            _LayoutToDelete.Add(Name);
+            throw new System.Exception("Сделай удаление");
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -214,7 +200,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void RemoveDelete()
         {
-            _LayoutToDelete.Remove(Name);
+            throw new System.Exception("Сделай отмену удаления");
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -236,11 +222,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void Apply() 
         {
-            foreach (string DeleteNameField in  _LayoutToDelete)
-            {
-                CadUtilityLib.FL.DeleteField(DeleteNameField);
-            }
-            _LayoutToDelete.Clear();
+            throw new System.Exception("Сделай применение изменений в макете!");
             OnPropertyChanged(nameof(NamesLayouts));
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(EditName));
@@ -251,7 +233,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 
             OnPropertyChanged(nameof(Plotters));
             OnPropertyChanged(nameof(Formats));
-            // throw new System.Exception("Сделай применение изменений в макете!");
         }
         private RelayCommand _ApplyCommand;
         public RelayCommand ApplyCommand
