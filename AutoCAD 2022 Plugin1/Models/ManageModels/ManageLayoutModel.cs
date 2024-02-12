@@ -1,10 +1,59 @@
-﻿using System.Collections.Generic;
+﻿using AutoCAD_2022_Plugin1.Services;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Data;
 using System.Linq;
-using System.Xml.Linq;
 
 namespace AutoCAD_2022_Plugin1.Models
 {
+    public interface IObservable
+    {
+        void AddObserver(IObserver obs);
+        void NotifyObservers();
+        void RemoveObserver(IObserver obs);
+    }
+
+    public interface IObserver
+    {
+        void Update();
+    }
+
+    public class CurrentLayoutObservable : IObservable
+    {
+        public string CurrentLayout { get; private set; }
+        private List<IObserver> Observers;
+
+        public CurrentLayoutObservable(string CurrentLayout)
+        {
+            Observers = new List<IObserver>();
+            this.CurrentLayout = CurrentLayout;
+        }
+
+        public void AddObserver(IObserver obs)
+        {
+            Observers.Add(obs);
+        }
+
+        public void NotifyObservers()
+        {
+            foreach (IObserver obs in Observers)
+            {
+                obs.Update();
+            }
+        }
+
+        public void RemoveObserver(IObserver obs)
+        {
+            Observers.Remove(obs);
+        }
+
+        public void UpdateCurrent(string Current)
+        {
+            this.CurrentLayout = Current;
+            NotifyObservers();
+        }
+    }
+
     /// <summary>
     /// Прослойка для сохранения состояния и отслеживания изменений
     /// </summary>
@@ -32,8 +81,10 @@ namespace AutoCAD_2022_Plugin1.Models
         public bool NeedFormatUpdate => Format == OldFormatLayout;
     }
 
-    public class ManageLayoutModel : MainModel
+    public class ManageLayoutModel : MainModel, IObserver
     {
+        private CurrentLayoutObservable obs;
+        private ParametersLVS parameters;
         public ManageLayout CurrentLayout { get; set; }
 
         public List<ManageLayout> ManageLayouts
@@ -42,9 +93,12 @@ namespace AutoCAD_2022_Plugin1.Models
             private set;
         }
 
-        public ManageLayoutModel() 
+        public ManageLayoutModel(ParametersLVS parameters, CurrentLayoutObservable obs) 
         {
+            this.parameters = parameters;
             ManageLayouts = new List<ManageLayout>();
+            this.obs = obs;
+            obs.AddObserver(this);
             foreach (LayoutModel layout in FL.Fields)
             {
                 ManageLayouts.Add(new ManageLayout(layout.Name, layout.Plotter, layout.Format));
@@ -80,6 +134,20 @@ namespace AutoCAD_2022_Plugin1.Models
             {
                 if (Layout.Delete) FL.Fields.RemoveAll(x => x.Name == Layout.Name);
             }
+        }
+
+        public ObservableCollection<string> GetNames() => new ObservableCollection<string>(FL.Fields.Select(x => x.Name).ToList());
+        public ObservableCollection<string> GetPlotters() => new ObservableCollection<string>(CadUtilityLib.GetPlotters());
+        public ObservableCollection<string> GetFormats() => new ObservableCollection<string>(CadUtilityLib.GetAllCanonicalScales(CurrentLayout.Plotter));
+        public string GetCurrentPlotter() => CurrentLayout.Plotter;
+        public string GetCurrentFormat() => CurrentLayout.Format;
+
+        public void SetDelete() => CurrentLayout.Delete = true;
+        public void RemoveDelete() => CurrentLayout.Delete = false;
+        public ManageLayout GetCurrentLayout(string Name) => ManageLayouts.Where(lay => lay.Name == Name).First();
+        public void Update()
+        {
+            CurrentLayout = GetCurrentLayout(obs.CurrentLayout);
         }
     }
 }

@@ -5,16 +5,16 @@ using System.Collections.ObjectModel;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
-    public class ManageLayoutVM : MainVM, IMyTabContentViewModel
+    public class ManageLayoutVM : MainVM, IMyTabContentViewModel, IObserver
     {
+        private CurrentLayoutObservable obs;
         private ManageLayoutModel Model;
-
-        public ManageLayoutVM(ParametersLVS parameters)
+        public ManageLayoutVM(ManageLayoutModel Model, CurrentLayoutObservable obs)
         {
-            Model = new ManageLayoutModel();
-            this.Name = parameters.NameLayout;
-            this.PlotterName = parameters.PlotterName;
-            this.LayoutFormat = parameters.LayoutFormat;
+            this.Model = Model;
+            this.obs = obs;
+            this.obs.AddObserver(this);
+            this._Plotters = Model.GetPlotters();
         }
 
         #region Properties
@@ -67,7 +67,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _NamesLayouts = new ObservableCollection<string>(CadUtilityLib.FL.GetNames());
+                _NamesLayouts = Model.GetNames();
                 return _NamesLayouts;
             }
         }
@@ -84,6 +84,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             {
                 _Name = value.Trim();
                 _EditName = _Name;
+
+                obs.UpdateCurrent(Name);
+
                 OnPropertyChanged(nameof(NamesLayouts));
                 OnPropertyChanged(nameof(ApplyButtonEnabled));
                 OnPropertyChanged(nameof(EditName));
@@ -123,7 +126,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             get
             {
                 if (Name == null) return null;
-                _Plotters = new ObservableCollection<string>(CadUtilityLib.GetPlotters());
                 return _Plotters;
             }
         }
@@ -150,7 +152,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             get
             {
                 if (PlotterName == null) return null;
-                _Formats = new ObservableCollection<string>(CadUtilityLib.GetAllCanonicalScales(PlotterName));
+                _Formats = Model.GetFormats();
                 return _Formats;
             }
         }
@@ -178,7 +180,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void AddDelete()
         {
             if (Name == null) return;
-            throw new System.Exception("Сделай удаление");
+            //throw new System.Exception("Сделай удаление");
+            Model.SetDelete();
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -200,7 +203,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void RemoveDelete()
         {
-            throw new System.Exception("Сделай отмену удаления");
+            Model.RemoveDelete();
+            //throw new System.Exception("Сделай отмену удаления");
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -217,12 +221,21 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             }
         }
 
+        public void Update()
+        {
+            ManageLayout Current = Model.GetCurrentLayout(Name);
+            _Name = Current.Name;
+            _PlotterName = Current.Plotter;
+            _LayoutFormat = Current.Format;
+        }
+
         /// <summary>
         /// Применить изменения
         /// </summary>
         private void Apply() 
         {
-            throw new System.Exception("Сделай применение изменений в макете!");
+            Model.ApplyParameters();
+            //throw new System.Exception("Сделай применение изменений в макете!");
             OnPropertyChanged(nameof(NamesLayouts));
             OnPropertyChanged(nameof(Name));
             OnPropertyChanged(nameof(EditName));

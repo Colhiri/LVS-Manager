@@ -1,8 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
-using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Documents;
 
 namespace AutoCAD_2022_Plugin1.Models
 {
@@ -57,22 +54,21 @@ namespace AutoCAD_2022_Plugin1.Models
 
         private void UpdateLayouts()
         {
-            List<ManageViewport> ViewportToEdit = ManageViewports.Where(vp => (vp.NeedNameUpdate || vp.NeedScaleUpdate) && !vp.Delete)
+            List<ManageViewport> ViewportToEditManage = ManageViewports.Where(vp => (vp.NeedNameUpdate || vp.NeedScaleUpdate) && !vp.Delete)
                                                          .ToList();
-            List<string> CheckNameVP = ViewportToEdit.Select(x => x.Name).ToList();
 
-            FL.Fields.SelectMany(field => field.Viewports)
+            var query = FL.Fields.SelectMany(field => field.Viewports)
                      .ToList()
-                     .Select(vp => CheckNameVP.Contains(vp.Name))
-                     .Join(ViewportToEdit, NameVPEdit => NameVPEdit, VP => VP.Name, (NameVPEdit, VP) => new { ViewportEdit = NameVPEdit, ViewportReal = VP })
-                     .ToList();
+                     .Join(ViewportToEditManage,
+                           NameVPEdit => NameVPEdit.Name,
+                           VP => VP.Name,
+                           (NameVPEdit, VP) => new { ViewportEdit = VP, ViewportReal = NameVPEdit});
 
-            ViewportToEdit.ForEach(vp =>
+            foreach (var elementQ in query)
             {
-                if (vp.NeedNameUpdate) .Name = vp.Name;
-                if (vp.NeedScaleUpdate) Lay.Sc = vp.Scale;
-            });
-
+                if (elementQ.ViewportEdit.NeedNameUpdate) elementQ.ViewportReal.Name = elementQ.ViewportEdit.Name;
+                if (elementQ.ViewportEdit.NeedScaleUpdate) elementQ.ViewportReal.Scale = elementQ.ViewportEdit.Scale;
+            }
         }
 
         private void DeleteLayouts()
