@@ -85,7 +85,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 _Name = value.Trim();
                 _EditName = _Name;
 
-                obs.UpdateCurrent(Name);
+                obs.UpdateCurrentLayout(Name);
 
                 OnPropertyChanged(nameof(NamesLayouts));
                 OnPropertyChanged(nameof(ApplyButtonEnabled));
@@ -174,6 +174,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         #endregion
 
         #region Commands
+        public void Update()
+        {
+            ManageLayout Current = Model.GetCurrentLayout(Name);
+            _Name = Current.Name;
+            _PlotterName = Current.Plotter;
+            _LayoutFormat = Current.Format; 
+        }
+
         /// <summary>
         /// Добавление имени макета в список на удаление
         /// </summary>
@@ -219,14 +227,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
                 }
                 return _CancelDeleteCommand;
             }
-        }
-
-        public void Update()
-        {
-            ManageLayout Current = Model.GetCurrentLayout(Name);
-            _Name = Current.Name;
-            _PlotterName = Current.Plotter;
-            _LayoutFormat = Current.Format;
         }
 
         /// <summary>

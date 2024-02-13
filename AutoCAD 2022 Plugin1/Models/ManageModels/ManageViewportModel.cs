@@ -1,4 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Autodesk.AutoCAD.DatabaseServices;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.IO.Packaging;
 using System.Linq;
 
 namespace AutoCAD_2022_Plugin1.Models
@@ -6,15 +9,20 @@ namespace AutoCAD_2022_Plugin1.Models
     public class ManageViewport
     {
         public string Name { get; set; }
+        public string Field { get; }
         public string Scale { get; set; }
         public bool Delete { get; set; }
+        public string Layout { get; set; }
+        public ObjectIdCollection SelectedObjects { get; set; }
         
         private string OldName;
         private string OldScale;
 
-        public ManageViewport(string Name, string Scale, bool Delete = false)
+        public ManageViewport(string Name, string Scale, string Field, ObjectIdCollection SelectedObjects, bool Delete = false)
         {
             this.Name = Name;
+            this.Field = Field;
+            this.SelectedObjects = SelectedObjects;
             this.Scale = OldScale = Scale;
             this.Delete = Delete;
         }
@@ -39,19 +47,27 @@ namespace AutoCAD_2022_Plugin1.Models
             {
                 foreach (ViewportModel viewport in layout.Viewports)
                 {
-                    ManageViewports.Add(new ManageViewport(viewport.Name, viewport.Scale));
+                    ManageViewports.Add(new ManageViewport(viewport.Name, viewport.Scale, layout.Name, viewport.SelectedObjects));
                 }
             }
         }
         
         public bool CheckToDelete() => CurrentViewport.Delete;
-
+        public ObservableCollection<string> GetViewports(string LayoutName)
+        {
+            return new ObservableCollection<string>(ManageViewports.Where(x => x.Layout == LayoutName)
+                                                                   .Select(x => x.Name)
+                                                                   .ToList());
+        }
+        public ManageViewport GetCurrentViewport() => CurrentViewport;
+        public ObjectIdCollection GetObjects() => CurrentViewport.SelectedObjects;
+        public void SetDelete() => CurrentViewport.Delete = true;
+        public void RemoveDelete() => CurrentViewport.Delete = false;
         public void ApplyParameters()
         {
             DeleteLayouts();
             UpdateLayouts();
         }
-
         private void UpdateLayouts()
         {
             List<ManageViewport> ViewportToEditManage = ManageViewports.Where(vp => (vp.NeedNameUpdate || vp.NeedScaleUpdate) && !vp.Delete)

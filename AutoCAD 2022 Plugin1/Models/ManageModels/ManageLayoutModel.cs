@@ -21,6 +21,8 @@ namespace AutoCAD_2022_Plugin1.Models
     public class CurrentLayoutObservable : IObservable
     {
         public string CurrentLayout { get; private set; }
+        public string CurrentViewport { get; private set; }
+
         private List<IObserver> Observers;
 
         public CurrentLayoutObservable(string CurrentLayout)
@@ -47,9 +49,15 @@ namespace AutoCAD_2022_Plugin1.Models
             Observers.Remove(obs);
         }
 
-        public void UpdateCurrent(string Current)
+        public void UpdateCurrentLayout(string Current)
         {
             this.CurrentLayout = Current;
+            NotifyObservers();
+        }
+
+        public void UpdateCurrentViewport(string Current)
+        {
+            this.CurrentViewport = Current;
             NotifyObservers();
         }
     }

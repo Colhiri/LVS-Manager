@@ -1,27 +1,25 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
 using Autodesk.AutoCAD.ApplicationServices;
+using Autodesk.AutoCAD.GraphicsSystem;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Xml.Linq;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
-
-    
-
-    public class ManageVIewportVM : MainVM, IMyTabContentViewModel
+    public class ManageVIewportVM : MainVM, IMyTabContentViewModel, IObserver
     {
-        private ManageLayoutModel model = new ManageLayoutModel();
+        private CurrentLayoutObservable obs;
+        private ManageViewportModel Model;
 
-
-        public ManageVIewportVM(ParametersLVS parameters) 
+        public ManageVIewportVM(ManageViewportModel Model, CurrentLayoutObservable obs) 
         {
-
-            this.CheckFieldNameEvent = parameters.CheckFieldName;
-            this.CheckTabEnabledEvent = parameters.CheckTabEnabled;
-            this.AnnotationScaleObjectsVP = parameters.AnnotationScaleObjectsVP;
+            Model = new ManageViewportModel();
+            this.obs = obs;
+            obs.AddObserver(this);
         }
 
         private event Func<string> CheckFieldNameEvent;
@@ -42,7 +40,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                _ApplyButtonEnabled = model.IsValidScale(AnnotationScaleObjectsVP);
+                _ApplyButtonEnabled = Model.IsValidScale(AnnotationScaleObjectsVP);
                 if (_ApplyButtonEnabled == false)
                 {
                     Application.ShowAlertDialog("Введен неправильный масштаб! Выберите другой или исправьте существующий!");
@@ -57,7 +55,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
             get
             {
                 if (ViewportName == null) return false;
-                return !ViewportToDelete.Contains(ViewportName);
+                return Model.CheckToDelete();
             }
         }
         public bool InvertEnabledForms
@@ -75,7 +73,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
-                string[] viewportsIDs = CadUtilityLib.FL.GetField(NameField).ViewportIdentificators().Select(x => x.ToString()).ToArray();
+                var viewportsIDs = 
                 _Viewports = new ObservableCollection<string>(viewportsIDs);
                 return _Viewports;
             }
@@ -130,7 +128,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void AddDelete()
         {
             if (ViewportName == null) return;
-            _ViewportToDelete.Add(ViewportName);
+            Model.SetDelete();
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -153,7 +151,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void RemoveDelete() 
         {
             if (ViewportName == null) return;
-            ViewportToDelete.Remove(ViewportName);
+            Model.RemoveDelete();
             OnPropertyChanged(nameof(EnabledFormsParamaters));
             OnPropertyChanged(nameof(InvertEnabledForms));
         }
@@ -176,7 +174,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         private void ZoomTest()
         {
             if (ViewportName == null) return;
-            var objectsID = CadUtilityLib.FL.GetField(NameField).GetViewport(ViewportName).ObjectsIDs;
+            var objectsID = Model.GetObjects();
             CadUtilityLib.ZoomToObjects(objectsID);
         }
         /// <summary>
@@ -200,16 +198,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// </summary>
         private void Apply()
         {
-            if (ViewportName == null) return;
-            foreach (string ViewportID in ViewportToDelete)
-            {
-                CadUtilityLib.FL.GetField(NameField).DeleteViewport(ViewportID);
-            }
-            ViewportToDelete.Clear();
+            Model.ApplyParameters();
+            //throw new System.Exception("Сделай применение изменений в макете!");
             OnPropertyChanged(nameof(ViewportName));
             OnPropertyChanged(nameof(Viewports));
             OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
         }
+
+        public void Update()
+        {
+            ManageViewport Current = Model.GetCurrentViewport();
+            _ViewportName = Current.Name;
+            _AnnotationScaleObjectsVP = Current.Scale;
+        }
+
         private RelayCommand _ApplyCommand;
         public RelayCommand ApplyCommand
         {
