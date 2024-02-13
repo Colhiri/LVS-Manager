@@ -89,6 +89,10 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LogicServices\DistributionObjectsInModel.cs" />
+    <Compile Include="LogicServices\Enums.cs" />
+    <Compile Include="LogicServices\Identificator.cs" />
+    <Compile Include="LogicServices\NewField.cs" />
     <Compile Include="Models\ManageModels\MainManageModel.cs" />
     <Compile Include="Models\ManageModels\ManageViewportModel.cs" />
     <Compile Include="Models\ManageModels\ManageLayoutModel.cs" />

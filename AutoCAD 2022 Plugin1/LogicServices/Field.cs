@@ -4,36 +4,10 @@ using System.Collections.Generic;
 using System.Linq;
 using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
-namespace AutoCAD_2022_Plugin1
+#error Поправь класс Field List, если не получится вот старый вариант
+
+namespace AutoCAD_2022_Plugin1.NoUse
 {
-    /// <summary>
-    /// Состояние отрисовки видового экрана или поля в пространстве модели
-    /// </summary>
-    public enum State
-    {
-        Exist,
-        NoExist
-    }
-
-    /// <summary>
-    /// Где находится стартовая точка отрисовки полей и видовых экранов
-    /// </summary>
-    public enum LocationDraw
-    {
-        TopLeft, 
-        TopRight, 
-        BottomLeft,
-        BottomRight,
-        Custom
-    }
-
-    public enum WorkObject
-    {
-        Layout,
-        Viewport,
-        None
-    }
-
     /// <summary>
     /// Создать массив Полей
     /// </summary>
@@ -166,7 +140,7 @@ namespace AutoCAD_2022_Plugin1
                 StartPoint = new Point2d(FieldList.CurrentStartPoint.X - DownScaleSizeLayout.Width * 0.5,
                                          FieldList.CurrentStartPoint.Y);
             }
-            DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
+            DistributionObjectsInModel PointVP = new DistributionObjectsInModel(StartPoint);
             // Добавляем параметры видового экрана
             var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout);
             Viewports.Add(viewport);
@@ -217,14 +191,14 @@ namespace AutoCAD_2022_Plugin1
         // Общие параметры
         public Point2d CenterPoint { get; private set; }
         public State StateInModel { get; private set; } = State.NoExist;
-        public DistributionViewportOnField StartPoint { get; private set; }
+        public DistributionObjectsInModel StartPoint { get; private set; }
         public void SetScaleVP(string NewScaleVP)
         {
             this.AnnotationScaleViewport = NewScaleVP;
             this.UpdateSizeVP();
         }
 
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionObjectsInModel StartDrawPointVP, string NameLayout)
         {
             this.AnnotationScaleViewport = AnnotationScaleViewport;
             this.ObjectsIDs = ObjectsIDs;
@@ -255,33 +229,6 @@ namespace AutoCAD_2022_Plugin1
             SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
-        }
-    }
-
-    /// <summary>
-    /// Инкапсуляция логики идентификатора для возможных будущих изменений
-    /// </summary>
-    public class Identificator
-    {
-        private static int _ID { get; set; } = 0;
-        private int ID { get; set; }
-        public override string ToString() => ID.ToString();
-        public Identificator()
-        {
-            ID = _ID;
-            _ID++;
-        }
-    }
-
-    public class DistributionViewportOnField
-    {
-        public Point2d StartPoint { get; set; }
-        private Point2d PointDrawing { get; set; }
-        public Point2d ToPoint2d() => StartPoint;
-
-        public DistributionViewportOnField(Point2d StartPoint)
-        {
-            this.StartPoint = StartPoint;
         }
     }
 }

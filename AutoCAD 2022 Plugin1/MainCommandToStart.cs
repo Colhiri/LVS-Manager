@@ -8,7 +8,6 @@ using System.Linq;
 using static AutoCAD_2022_Plugin1.CadUtilityLib;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
-using Field = AutoCAD_2022_Plugin1.Field;
 using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
 using AutoCAD_2022_Plugin1.Views.ManageViews;
@@ -59,13 +58,14 @@ namespace LightProgram
             // располагаются точки, какой начальный принтер.
             // Здесь должен располагаться конфиг, откуда все подгружается
             // Имитация
-            FieldList.ColorIndexForField = 3;
-            FieldList.ColorIndexForViewport = 4;
-            FL.StartPoint = new Point2d(0.0, 0.0);
+            Point2d StartPoint = new Point2d(0, 0);
+            int ColorIndexLayout = 3;
             string plotterNameFromConfig = "Нет";
+            int ColorIndexViewport = 4;
+            string DownScale = "1:1";
+            FieldList FL = FieldList.GetInstance(StartPoint, ColorIndexLayout, ColorIndexViewport, DownScale);
 
-            /// Особая инициализация формы из клиентского кода 
-            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
+            /// инициализация формы из клиентского кода 
             CreateLayoutVM tempData = new CreateLayoutVM();
             tempData.PlotterName = plotterNameFromConfig;
             CreateLayoutView window = new CreateLayoutView(tempData);
@@ -85,17 +85,19 @@ namespace LightProgram
             string resultPlotter = tempData.PlotterName;
             string resultLayoutFormat = tempData.LayoutFormat;
             string resultScale = tempData.AnnotationScaleObjectsVP;
+            #error Сделай получение имени видового экрана
+            string resultNameViewport = "viewport";
 
             // Добавлем новую филду
-            Field field = FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter) as Field;
-            if (field == null) throw new ArgumentNullException();
-            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs);
+            LayoutModel layout = FL.AddLayout(resultNameLayout, resultLayoutFormat, resultPlotter);
+            if (layout == null) throw new ArgumentNullException();
+            ViewportModel viewport = layout.AddViewport(resultNameViewport, resultScale, objectsIDs);
             //viewport.ChangeStartPoint(new Point2d(0, 0));
 
-            if (field.StateInModel == State.NoExist) 
-                field.Draw();
+            if (layout.StateType == State.NoExist) 
+                layout.Draw();
 
-            if (viewport.StateInModel == State.NoExist)
+            if (viewport.StateType == State.NoExist)
                 viewport.Draw();
         }
 
