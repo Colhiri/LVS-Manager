@@ -99,6 +99,7 @@
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Models\CreateLayoutModel.cs" />
     <Compile Include="Services\MyViewSelector.cs" />
+    <Compile Include="Services\Observer.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
     <Compile Include="LogicServices\Size.cs" />

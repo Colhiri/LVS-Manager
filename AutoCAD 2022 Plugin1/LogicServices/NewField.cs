@@ -120,7 +120,7 @@ namespace AutoCAD_2022_Plugin1
 
         public void Draw()
         {
-            #error Здесь указана стартовая точка преобразованная в Point2d
+            #warning Здесь указана стартовая точка преобразованная в Point2d
             ContourObject = DrawRectangle(StartPoint.ToPoint2d(), DownScaleSize, ColorIndex);
             SetLayer(ContourObject, Name);
             StateType = State.Exist;

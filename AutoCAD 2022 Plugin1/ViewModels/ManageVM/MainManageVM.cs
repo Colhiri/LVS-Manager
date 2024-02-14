@@ -14,6 +14,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         /// Список для отслеживания вкладкок в Manage
         public ObservableCollection<DummyViewModel> Tabs { get; set; }
 
+        public CurrentLayoutObservable CurrentLayout { get; set; }
+
         /// <summary>
         /// Отслеживание активной вкладки
         /// </summary>
@@ -57,12 +59,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 
         public MainManageVM(ParametersLVS parameters)
         {
+            CurrentLayoutObservable obs = new CurrentLayoutObservable(parameters.NameLayout);
+
             parameters.CheckFieldName = FieldNameEdit;
             parameters.CheckTabEnabled = EnabledViewportForm;
 
             Tabs = new ObservableCollection<DummyViewModel>();
-            Tabs.Add(new DummyViewModel("Макет", TypeView.Layout, new ManageLayoutVM(parameters)));
-            Tabs.Add(new DummyViewModel("Видовой экран", TypeView.Viewport, new ManageVIewportVM(parameters)));
+            Tabs.Add(new DummyViewModel("Макет", TypeView.Layout, new ManageLayoutVM(parameters, obs)));
+            Tabs.Add(new DummyViewModel("Видовой экран", TypeView.Viewport, new ManageVIewportVM(parameters, obs)));
             ActiveTab = Tabs[0];
         }
     }

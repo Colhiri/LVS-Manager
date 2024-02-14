@@ -1,11 +1,14 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace AutoCAD_2022_Plugin1.ViewModels
 {
     public class CreateLayoutVM : MainVM
     {
-        private CreateLayoutModel model = new CreateLayoutModel();
+        CreateLayoutModel Model = new CreateLayoutModel();
+
+        public FieldList FL = FieldList.GetInstance();
 
         /// <summary>
         /// Доступность Button "Применить"
@@ -15,7 +18,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _DoneButtonIsEnabled = model.IsValidName(_Name) && model.IsValidScale(_AnnotationScaleObjectsVP);
+                _DoneButtonIsEnabled = Model.IsValidName(_Name) && Model.IsValidScale(_AnnotationScaleObjectsVP);
                 return _DoneButtonIsEnabled;
             }
         }
@@ -27,7 +30,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                return !CadUtilityLib.FL.Contains(_Name);
+                return !FL.Fields.Select(x => x.Name).Contains(_Name);
             }
         }
 
@@ -36,7 +39,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Names = new ObservableCollection<string>(CadUtilityLib.FL.GetNames());
+                _Names = new ObservableCollection<string>(FL.Fields.Select(x => x.Name));
                 return _Names;
             }
         }
@@ -107,6 +110,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             {
                 _LayoutFormat = value;
             }
+        }
+
+        private string _ViewportName;
+        public string ViewportName
+        {
+            get { return _ViewportName; }
+            set { _ViewportName = value; }
         }
 
         private ObservableCollection<string> _Scales;

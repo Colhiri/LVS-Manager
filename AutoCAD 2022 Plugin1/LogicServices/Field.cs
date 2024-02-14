@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
-#error Поправь класс Field List, если не получится вот старый вариант
+#warning Поправь класс Field List, если не получится вот старый вариант
 
 namespace AutoCAD_2022_Plugin1.NoUse
 {

@@ -39,6 +39,7 @@ namespace LightProgram
          * в) перерисовать все исходя из новых параметров --- НУЖЕН КЛАСС ПЕРЕОТРИСОВКИ И ПЕРЕРАСПРЕДЕЛЕНИЯ ЗНАЧЕНИЙ
          */
         public static LocationDraw StartLocationDrawing { get; private set; } = LocationDraw.TopLeft;
+        public static FieldList FL = FieldList.GetInstance();
 
         /// <summary>
         /// 
@@ -85,8 +86,7 @@ namespace LightProgram
             string resultPlotter = tempData.PlotterName;
             string resultLayoutFormat = tempData.LayoutFormat;
             string resultScale = tempData.AnnotationScaleObjectsVP;
-            #error Сделай получение имени видового экрана
-            string resultNameViewport = "viewport";
+            string resultNameViewport = tempData.ViewportName;
 
             // Добавлем новую филду
             LayoutModel layout = FL.AddLayout(resultNameLayout, resultLayoutFormat, resultPlotter);
@@ -133,10 +133,10 @@ namespace LightProgram
 
             try
             {
-                Field field = FL.GetField(objectID);
-                NameLayoutObjects = field.NameLayout;
-                PlotterNameObjects = field.PlotterName;
-                LayoutFormatObjects = field.LayoutFormat;
+                LayoutModel field = FL.Fields.Where(x => x.ContourObject == objectID).First();
+                NameLayoutObjects = field.Name;
+                PlotterNameObjects = field.Plotter;
+                LayoutFormatObjects = field.Format;
                 TypeWorkObject = WorkObject.Layout;
             }
             catch (System.Exception ex)
@@ -145,11 +145,11 @@ namespace LightProgram
 
                 try
                 {
-                    Field field = FL.GetNames().Select(x => FL.GetField(x)).Where(x => x.CheckViewport(objectID)).First();
-                    NameLayoutObjects = field.NameLayout;
-                    PlotterNameObjects = field.PlotterName;
-                    LayoutFormatObjects = field.LayoutFormat;
-                    AnnotationScaleObjects = field.GetViewport(objectID).AnnotationScaleViewport;
+                    LayoutModel field = FL.Fields.Where(x => x.Viewports.Select(vp => vp.ContourObject).Contains(objectID)).First();
+                    NameLayoutObjects = field.Name;
+                    PlotterNameObjects = field.Plotter;
+                    LayoutFormatObjects = field.Format;
+                    AnnotationScaleObjects = field.Viewports.Where(x => x.ContourObject == objectID).First().Scale;
                     TypeWorkObject = WorkObject.Viewport;
                 }
                 catch (System.Exception ex2)
