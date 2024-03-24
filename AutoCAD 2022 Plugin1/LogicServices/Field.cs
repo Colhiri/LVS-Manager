@@ -42,9 +42,9 @@ namespace AutoCAD_2022_Plugin1
     {
         // Общие параметры
         public List<Field> Fields { get; set; } = new List<Field>();
-        public string CurrentLayout { get; private set; }
+        public string CurrentLayout { get; set; }
         public Point2d StartPoint { get; set; }
-        public static Point2d CurrentStartPoint { get; private set; }
+        public static Point2d CurrentStartPoint { get; set; }
         public static int ColorIndexForField { get; set; }
         public static int ColorIndexForViewport { get; set; }
 
@@ -93,34 +93,47 @@ namespace AutoCAD_2022_Plugin1
     public class Field
     {
         public Identificator Id { get; private set; }
-        public ObjectId ContourField { get; private set; }
+        public ObjectId ContourField { get; set; }
         // Параметры размеров
         public static string DownScale { get; set; } = "1:1";
-        public string NameLayout { get; private set; }
-        
+        public string NameLayout { get; set; }
+
+        // Формат макета
         private string _LayoutFormat;
         public string LayoutFormat 
         {
             get { return _LayoutFormat; }
-            private set 
+            set 
             {
                 _LayoutFormat = value;
                 this.UpdatePaperSize();
             } 
         }
-        public string PlotterName { get; private set; }
-        public Size OriginalSizeLayout { get; private set; }
-        public Size DownScaleSizeLayout { get; private set; }
+
+        // Плоттер макета
+        private string _PlotterName;
+        public string PlotterName 
+        {
+            get { return _PlotterName; }
+            set 
+            {
+                _PlotterName = value;
+            } 
+        }
+
+
+        public Size OriginalSizeLayout { get; set; }
+        public Size DownScaleSizeLayout { get; set; }
         // Общие параметры
-        public State StateInModel { get; private set; } = State.NoExist;
-        public Point2d StartPoint { get; private set; }
+        public State StateInModel { get; set; } = State.NoExist;
+        public Point2d StartPoint { get; set; }
         public List<ViewportInField> Viewports = new List<ViewportInField>();
 
         public Field(string NameLayout, string LayoutFormat, string PlotterName)
         {
             this.NameLayout = NameLayout;
-            this.LayoutFormat = LayoutFormat;
             this.PlotterName = PlotterName;
+            this.LayoutFormat = LayoutFormat;
             Id = new Identificator();
             UpdatePaperSize();
         }
@@ -178,34 +191,34 @@ namespace AutoCAD_2022_Plugin1
     {
         // Параметры идентификации
         public Identificator Id { get; private set; }
-        public ObjectId ContourObjects { get; private set; }
-        public ObjectIdCollection ObjectsIDs { get; private set; }
-        public string NameLayout { get; private set; }
+        public ObjectId ContourObjects { get; set; }
+        public ObjectIdCollection ObjectsIDs { get; set; }
+        public string NameLayout { get; set; }
         // Параметры размеров
         private string _AnnotationScaleViewport;
         public string AnnotationScaleViewport 
         {   get { return _AnnotationScaleViewport; }
-            private set 
+            set 
             {
                 _AnnotationScaleViewport = value;
                 this.UpdateSizeVP();
             } 
         }
-        public double CustomScaleViewport { get; private set; }
-        public Size SizeObjectsWithoutScale { get; private set; }
-        public Size SizeObjectsWithScaling { get; private set; }
+        public double CustomScaleViewport { get; set; }
+        public Size SizeObjectsWithoutScale { get; set; }
+        public Size SizeObjectsWithScaling { get; set; }
         // Общие параметры
-        public Point2d CenterPoint { get; private set; }
-        public State StateInModel { get; private set; } = State.NoExist;
-        public DistributionViewportOnField StartPoint { get; private set; }
+        public Point2d CenterPoint { get; set; }
+        public State StateInModel { get; set; } = State.NoExist;
+        public DistributionViewportOnField StartPoint { get; set; }
 
         public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
         {
-            this.AnnotationScaleViewport = AnnotationScaleViewport;
+            this.Id = new Identificator();
             this.ObjectsIDs = ObjectsIDs;
             this.StartPoint = StartDrawPointVP;
             this.NameLayout = NameLayout;
-            this.Id = new Identificator();
+            this.AnnotationScaleViewport = AnnotationScaleViewport;
 
             SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);

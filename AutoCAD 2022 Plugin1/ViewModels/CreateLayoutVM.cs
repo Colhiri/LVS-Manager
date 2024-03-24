@@ -1,5 +1,6 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 
 namespace AutoCAD_2022_Plugin1.ViewModels
@@ -29,7 +30,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _PlottersIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                _PlottersIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(_Name);
                 return !_PlottersIsEnabled;
             }
         }
@@ -42,7 +43,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _FormatsIsEnabled = CreateLayoutModel.FL.Contains(_Name);
+                _FormatsIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(_Name);
                 return !_FormatsIsEnabled;
             }
         }
@@ -52,7 +53,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.NameLayout));
                 return _Names;
             }
         }
@@ -67,11 +68,17 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             {
                 _Name = value;
 
-                PlotterName = CreateLayoutModel.FL.GetPlotter(_Name);
+                if (CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(value))
+                {
+                    PlotterName = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _Name).First().PlotterName;
+                    
+
+                    LayoutFormat = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _Name).First().LayoutFormat;
+                    
+                }
                 OnPropertyChanged(nameof(Plotters));
                 OnPropertyChanged(nameof(PlotterName));
 
-                LayoutFormat = CreateLayoutModel.FL.GetFormat(_Name);
                 OnPropertyChanged(nameof(Formats));
                 OnPropertyChanged(nameof(LayoutFormat));
 

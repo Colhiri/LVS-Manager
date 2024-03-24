@@ -11,6 +11,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using AutoCAD_2022_Plugin1.ViewModels.ManageLV;
+using System.Linq;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -84,7 +85,8 @@ namespace LightProgram
             string resultScale = tempData.AnnotationScaleObjectsVP;
 
             // Добавлем новую филду
-            Field field = FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter) as Field;
+            FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter);
+            Field field = FL.Fields.Where(x => x.NameLayout == resultNameLayout).First();
             if (field == null) throw new ArgumentNullException();
             ViewportInField viewport = field.AddViewport(resultScale, objectsIDs);
             //viewport.ChangeStartPoint(new Point2d(0, 0));
@@ -126,9 +128,8 @@ namespace LightProgram
             string AnnotationScaleObjects = null;
             WorkObject TypeWorkObject = WorkObject.None;
 
-            foreach (string NameField in FL.GetNames())
+            foreach (Field field in FL.Fields)
             {
-                Field field = FL.GetField(NameField);
                 if (field.ContourField == objectID)
                 {
                     NameLayoutObjects = field.NameLayout;
@@ -139,10 +140,8 @@ namespace LightProgram
                 }
                 else
                 {
-                    foreach (Identificator id in field.ViewportIdentificators())
+                    foreach (ViewportInField vp in field.Viewports)
                     {
-                        ViewportInField vp = field.GetViewport(id);
-
                         if (vp.ContourObjects == objectID)
                         {
                             NameLayoutObjects = field.NameLayout;
@@ -175,33 +174,6 @@ namespace LightProgram
             
             if (Application.ShowModalWindow(window) != true) return;
 
-        }
-
-        /// <summary>
-        /// Тест работы второго окна и его функций
-        /// </summary>
-        [CommandMethod("zoomtest", CommandFlags.UsePickSet)]
-        public static void zoomtest()
-        {
-            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
-            if (AcDocument is null) throw new System.Exception("No active document!");
-            Database AcDatabase = AcDocument.Database;
-            Editor AcEditor = AcDocument.Editor;
-            LayoutManager layManager = LayoutManager.Current;
-            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
-
-            PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK)
-            {
-                Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSelection();
-            }
-            ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
-
-            AcEditor.WriteMessage("Objects selected");
-
-
-            // ZoomToObjects(objectsIDs);
         }
     }
 }
