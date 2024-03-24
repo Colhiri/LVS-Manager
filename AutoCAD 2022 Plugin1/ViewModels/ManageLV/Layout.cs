@@ -8,6 +8,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
     public partial class ManageLayoutViewportVM
     {
+        private Field CurrentField;
+
         /// Взаимодействие с именами макетов
         private ObservableCollection<string> _NamesLayouts;
         public ObservableCollection<string> NamesLayouts
@@ -29,6 +31,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             {
                 _Name = value.Trim();
                 _EditName = _Name;
+
+
                 OnPropertyChanged(nameof(EditName));
                 OnPropertyChanged(nameof(LayoutFormat));
                 OnPropertyChanged(nameof(PlotterName));
