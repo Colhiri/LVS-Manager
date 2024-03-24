@@ -97,7 +97,6 @@
     <Compile Include="ViewModels\ManageLV\General.cs" />
     <Compile Include="ViewModels\ManageLV\Layout.cs" />
     <Compile Include="LogicServices\Size.cs" />
-    <Compile Include="NoUse\NoUseCommands.cs" />
     <Compile Include="Services\Initialization.cs" />
     <Compile Include="MainCommandToStart.cs" />
     <Compile Include="ViewModels\ManageLV\Viewport.cs" />
@@ -111,7 +110,6 @@
     <Compile Include="Views\ManageLayoutViewportView.xaml.cs">
       <DependentUpon>ManageLayoutViewportView.xaml</DependentUpon>
     </Compile>
-    <Compile Include="NoUse\WrapInfoScale.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

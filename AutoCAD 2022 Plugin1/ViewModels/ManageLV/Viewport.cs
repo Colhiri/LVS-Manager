@@ -7,13 +7,17 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
     public partial class ManageLayoutViewportVM
     {
+        private ViewportInField CurrentViewport;
+
         /// Взаимодействие видовых экранов
         private ObservableCollection<string> _Viewports;
         public ObservableCollection<string> Viewports
         {
             get
             {
-                string[] viewportsID = CreateLayoutModel.FL.GetField(Name).ViewportIdentificators().Select(x => x.ToString()).ToArray();
+                string[] viewportsID = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name)
+                                                                  .First()
+                                                                  .Viewports.Select(x => x.Id.ToString()).ToArray();
                 _Viewports = new ObservableCollection<string>(viewportsID);
                 return _Viewports;
             }
@@ -28,6 +32,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _Viewport = value;
+                AnnotationScaleObjectsVP = CreateLayoutModel.FL.Fields
             }
         }
 

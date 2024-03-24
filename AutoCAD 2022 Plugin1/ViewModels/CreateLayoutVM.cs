@@ -30,7 +30,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             get
             {
                 _PlottersIsEnabled = CreateLayoutModel.FL.Contains(_Name);
-                return _PlottersIsEnabled;
+                return !_PlottersIsEnabled;
             }
         }
 
@@ -43,7 +43,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             get
             {
                 _FormatsIsEnabled = CreateLayoutModel.FL.Contains(_Name);
-                return _FormatsIsEnabled;
+                return !_FormatsIsEnabled;
             }
         }
 
@@ -66,9 +66,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             set
             {
                 _Name = value;
+
+                PlotterName = CreateLayoutModel.FL.GetPlotter(_Name);
                 OnPropertyChanged(nameof(Plotters));
                 OnPropertyChanged(nameof(PlotterName));
 
+                LayoutFormat = CreateLayoutModel.FL.GetFormat(_Name);
                 OnPropertyChanged(nameof(Formats));
                 OnPropertyChanged(nameof(LayoutFormat));
 
