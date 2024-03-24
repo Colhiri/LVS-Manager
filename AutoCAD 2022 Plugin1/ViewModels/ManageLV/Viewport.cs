@@ -32,7 +32,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _Viewport = value;
-                AnnotationScaleObjectsVP = CreateLayoutModel.FL.Fields
+                CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name)
+                                                             .First()
+                                                             .Viewports.Where(x => x.Id.ToString() == _Viewport).First();
+                AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
+                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
             }
         }
 
@@ -69,7 +73,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             {
                 if (_ZoomCommand == null)
                 {
-                    var objectsID = CreateLayoutModel.FL.GetField(Name).GetViewport(Viewport).ObjectsIDs;
+                    var objectsID = CurrentViewport.ObjectsIDs;
                     _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
                 }
                 return _ZoomCommand;

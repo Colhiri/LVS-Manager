@@ -16,7 +16,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.NameLayout));
                 return _NamesLayouts;
             }
         }
@@ -30,11 +30,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _Name = value.Trim();
-                _EditName = _Name;
 
+                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name).First();
 
-                OnPropertyChanged(nameof(EditName));
+                if (_EditName != Name)
+                {
+                    _Name = _EditName;
+                    CurrentField.NameLayout = _EditName;
+                    OnPropertyChanged(nameof(Name));
+                }
+                OnPropertyChanged(nameof(NamesLayouts));
+
+                LayoutFormat = CurrentField.LayoutFormat;
                 OnPropertyChanged(nameof(LayoutFormat));
+                PlotterName = CurrentField.PlotterName;
                 OnPropertyChanged(nameof(PlotterName));
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
             }
@@ -49,11 +58,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _EditName = value.Trim();
-                if (_EditName != _Name)
-                {
-                    OnPropertyChanged(nameof(Name));
-                    OnPropertyChanged(nameof(NamesLayouts));
-                }
             }
         }
 
