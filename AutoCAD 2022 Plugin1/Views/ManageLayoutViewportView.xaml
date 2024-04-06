@@ -32,12 +32,9 @@
                         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Поменять макет</TextBlock>
                         <ComboBox Margin="2" Grid.Row="0" Grid.Column="1"
                                   ItemsSource="{Binding NamesLayouts}"
-                                  SelectedItem="{Binding Name}"
-                                  IsSynchronizedWithCurrentItem="True"></ComboBox>
-
-                        <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя</TextBlock>
-                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" IsEnabled="{Binding EnabledFormsParamatersLayout}"
-                                 Text="{Binding EditName}"></TextBox>
+                                  SelectedItem="{Binding FieldName}"
+                                  IsSynchronizedWithCurrentItem="True"
+                                  IsEditable="True"></ComboBox>
 
                         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить плоттер</TextBlock>
                         <ComboBox Margin="2" Grid.Row="2" Grid.Column="1"
@@ -88,14 +85,14 @@
 
                         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Выбрать видовой экран в макете</TextBlock>
                         <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="2"
-                                  SelectedItem="{Binding Path=Viewport}"
+                                  SelectedItem="{Binding Path=ViewportId}"
                                   ItemsSource="{Binding Viewports}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
 
                         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить аннотационный масштаб</TextBlock>
                         <ComboBox Margin="2" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                                  Text="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
+                                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
                                   ItemsSource="{Binding Scales}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
