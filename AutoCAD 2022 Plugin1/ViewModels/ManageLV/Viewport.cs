@@ -15,26 +15,28 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                string[] viewportsID = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name)
-                                                                  .First()
-                                                                  .Viewports.Select(x => x.Id.ToString()).ToArray();
-                _Viewports = new ObservableCollection<string>(viewportsID);
                 return _Viewports;
-            }
-        }
-        private string _Viewport;
-        public string Viewport
-        {
-            get
-            {
-                return _Viewport;
             }
             set
             {
-                _Viewport = value;
-                CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name)
+                _Viewports = value;
+                ViewportId = Viewports.First();
+                OnPropertyChanged(nameof(ViewportId));
+            }
+        }
+        private string _ViewportId;
+        public string ViewportId
+        {
+            get
+            {
+                return _ViewportId;
+            }
+            set
+            {
+                _ViewportId = value == null ? Viewports.First() : value;
+                CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == FieldName)
                                                              .First()
-                                                             .Viewports.Where(x => x.Id.ToString() == _Viewport).First();
+                                                             .Viewports.Where(x => x.Id.ToString() == _ViewportId).First();
                 AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
             }

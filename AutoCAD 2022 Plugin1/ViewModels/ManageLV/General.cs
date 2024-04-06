@@ -1,6 +1,9 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
+using AutoCAD_2022_Plugin1.Services;
+using System;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
@@ -12,10 +15,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         private CreateLayoutModel model = new CreateLayoutModel();
 
         /// <summary>
+        /// Тип вкладки
+        /// </summary>
+        private WorkObject _TypeActiveTab;
+        public WorkObject TypeActiveTab
+        {
+            get { return _TypeActiveTab; }
+            set { _TypeActiveTab = value; }
+        }
+
+        /// <summary>
         /// Активная вкладка для реализации команд
         /// </summary>
-        private object _ActiveTab;
-        public object ActiveTab
+        private TabItem _ActiveTab;
+        public TabItem ActiveTab
         {
             get
             {
@@ -62,7 +75,106 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                return !LayoutToDelete.Contains(Name);
+                return !LayoutToDelete.Contains(FieldName);
+            }
+        }
+
+        /// <summary>
+        /// Добавление имени макета в список на удаление
+        /// </summary>
+        private void AddDelete()
+        {
+            switch (ActiveTab.Name)
+            {
+                case "Layout":
+                    _LayoutToDelete.Add(FieldName);
+                    break;
+                case "Viewport":
+                    _ViewportToDelete.Add(ViewportId);
+                    break;
+            }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+        }
+        private RelayCommand _DeleteCommand;
+        public RelayCommand DeleteCommand
+        {
+            get
+            {
+                if (_DeleteCommand == null)
+                {
+                    _DeleteCommand = new RelayCommand(o => AddDelete(), null);
+                }
+                return _DeleteCommand;
+            }
+        }
+
+        /// <summary>
+        /// Убрать макет или видовой экран из списка на удаление
+        /// </summary>
+        private void RemoveDelete()
+        {
+            switch (ActiveTab.Name)
+            {
+                case "Layout":
+                    _LayoutToDelete.Remove(FieldName);
+                    break;
+                case "Viewport":
+                    _ViewportToDelete.Remove(ViewportId);
+                    break;
+            }
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+        }
+
+        /// <summary>
+        /// Сохранить изменения в макете
+        /// </summary>
+        private void SaveChangesLayout()
+        {
+            CurrentField.PlotterName = _PlotterName;
+            CurrentField.LayoutFormat = _LayoutFormat;
+        }
+
+        /// <summary>
+        /// Сохранить изменения в видовом экране
+        /// </summary>
+        private void SaveChangesViewport()
+        {
+            CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+        }
+
+        private RelayCommand _CancelDeleteCommand;
+        public RelayCommand CancelDeleteCommand
+        {
+            get
+            {
+                if (_CancelDeleteCommand == null)
+                {
+                    _CancelDeleteCommand = new RelayCommand(o => RemoveDelete(), null);
+                }
+                return _CancelDeleteCommand;
+            }
+        }
+
+        private RelayCommand _DoneCommand;
+        public RelayCommand DoneCommand
+        {
+            get
+            {
+                if (_DoneCommand == null)
+                {
+                    Action<object> act = null;
+                    switch (ActiveTab.Name) 
+                    {
+                        case "Layout":
+                            act = o => SaveChangesLayout();
+                            break;
+                        case "Viewport":
+                            act = o => SaveChangesViewport();
+                            break;
+                    }
+                    _DoneCommand = new RelayCommand(o => act(null), null);
+                }
+                return _DoneCommand;
             }
         }
     }

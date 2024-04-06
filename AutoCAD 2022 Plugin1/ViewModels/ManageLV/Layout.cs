@@ -20,44 +20,33 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 return _NamesLayouts;
             }
         }
-        private string _Name;
-        public string Name
+        private string _FieldName;
+        public string FieldName
         {
             get
             {
-                return _Name;
+                return _FieldName;
             }
             set
             {
-                _Name = value.Trim();
+                _FieldName = value;
 
-                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == Name).First();
-
-                if (_EditName != Name)
-                {
-                    _Name = _EditName;
-                    CurrentField.NameLayout = _EditName;
-                    OnPropertyChanged(nameof(Name));
-                }
+                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _FieldName).First();
+                CurrentField.NameLayout = _FieldName;
                 OnPropertyChanged(nameof(NamesLayouts));
+                
+                PlotterName = CurrentField.PlotterName;
+                OnPropertyChanged(nameof(PlotterName));
 
                 LayoutFormat = CurrentField.LayoutFormat;
                 OnPropertyChanged(nameof(LayoutFormat));
-                PlotterName = CurrentField.PlotterName;
-                OnPropertyChanged(nameof(PlotterName));
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
-            }
-        }
-        private string _EditName;
-        public string EditName
-        {
-            get
-            {
-                return _EditName;
-            }
-            set
-            {
-                _EditName = value.Trim();
+
+                Viewports = new ObservableCollection<string>(CurrentField.Viewports.Select(x => x.Id.ToString()));
+                OnPropertyChanged(nameof(Viewports));
+                ViewportId = Viewports.First();
+                OnPropertyChanged(nameof(ViewportId));
+                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
             }
         }
 
@@ -92,6 +81,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             get
             {
                 _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                LayoutFormat = CurrentField.LayoutFormat;
+                OnPropertyChanged(nameof(LayoutFormat));
                 return _Formats;
             }
         }
@@ -107,66 +98,5 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 _LayoutFormat = value;
             }
         }
-
-        /// <summary>
-        /// Добавление имени макета в список на удаление
-        /// </summary>
-        private void AddDelete()
-        {
-            switch (ActiveTab) 
-            {
-                case "Layout":
-                    _LayoutToDelete.Add(Name);
-                    break;
-                case "Viewport":
-                    _ViewportToDelete.Add(Name);
-                    break;
-            }
-            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
-        }
-        private RelayCommand _DeleteCommand;
-        public RelayCommand DeleteCommand
-        {
-            get
-            {
-                if (_DeleteCommand == null)
-                {
-                    _DeleteCommand = new RelayCommand(o => AddDelete(), null);
-                }
-                return _DeleteCommand;
-            }
-        }
-
-        /// <summary>
-        /// Убрать макета или видовой экран из списка на удаление
-        /// </summary>
-        private void RemoveDelete()
-        {
-            switch (ActiveTab)
-            {
-                case "Layout":
-                    _LayoutToDelete.Remove(Name);
-                    break;
-                case "Viewport":
-                    _ViewportToDelete.Remove(Name);
-                    break;
-            }
-            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
-        }
-
-        private RelayCommand _CancelDeleteCommand;
-        public RelayCommand CancelDeleteCommand
-        {
-            get
-            {
-                if (_CancelDeleteCommand == null)
-                {
-                    _CancelDeleteCommand = new RelayCommand(o => RemoveDelete(), null);
-                }
-                return _CancelDeleteCommand;
-            }
-        }
-
-        
     }
 }

@@ -125,6 +125,7 @@ namespace LightProgram
             string NameLayoutObjects = null;
             string PlotterNameObjects = null;
             string LayoutFormatObjects = null;
+            string ViewportName = null;
             string AnnotationScaleObjects = null;
             WorkObject TypeWorkObject = WorkObject.None;
 
@@ -147,6 +148,7 @@ namespace LightProgram
                             NameLayoutObjects = field.NameLayout;
                             PlotterNameObjects = field.PlotterName;
                             LayoutFormatObjects = field.LayoutFormat;
+                            ViewportName = vp.Id.ToString();
                             AnnotationScaleObjects = vp.AnnotationScaleViewport;
                             TypeWorkObject = WorkObject.Viewport;
                             break;
@@ -164,16 +166,16 @@ namespace LightProgram
 
             /// инициализация формы из клиентского кода 
             ManageLayoutViewportVM manageData = new ManageLayoutViewportVM();
-            manageData.Name = NameLayoutObjects;
+            manageData.FieldName = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;
+            manageData.ViewportId = ViewportName;
             manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
 
             ManageLayoutViewportView window = new ManageLayoutViewportView(manageData);
             window.DataContext = manageData;
             
             if (Application.ShowModalWindow(window) != true) return;
-
         }
     }
 }
