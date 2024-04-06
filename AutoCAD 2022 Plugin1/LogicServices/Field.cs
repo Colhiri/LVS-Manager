@@ -42,7 +42,6 @@ namespace AutoCAD_2022_Plugin1
     {
         // Общие параметры
         public List<Field> Fields { get; set; } = new List<Field>();
-        public string CurrentLayout { get; set; }
         public Point2d StartPoint { get; set; }
         public static Point2d CurrentStartPoint { get; set; }
         public static int ColorIndexForField { get; set; }
@@ -81,9 +80,7 @@ namespace AutoCAD_2022_Plugin1
                 Field field = new Field(nameLayout, LayoutFormat, PlotterName);
                 Fields.Add(field);
                 CurrentStartPoint = IncreaseStart();
-                CurrentLayout = nameLayout;
             }
-            
         }
     }
 
@@ -121,7 +118,6 @@ namespace AutoCAD_2022_Plugin1
             } 
         }
 
-
         public Size OriginalSizeLayout { get; set; }
         public Size DownScaleSizeLayout { get; set; }
         // Общие параметры
@@ -143,7 +139,7 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         /// <param name="AnnotationScaleViewport"></param>
         /// <param name="ObjectsId"></param>
-        public ViewportInField AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId)
+        public ViewportInField AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId, string NameViewport)
         {
             // Добавляем стартовую точку
             if (StateInModel == State.NoExist)
@@ -153,7 +149,7 @@ namespace AutoCAD_2022_Plugin1
             }
             DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
             // Добавляем параметры видового экрана
-            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout);
+            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout, NameViewport);
             Viewports.Add(viewport);
             return viewport;
         }
@@ -194,6 +190,7 @@ namespace AutoCAD_2022_Plugin1
         public ObjectId ContourObjects { get; set; }
         public ObjectIdCollection ObjectsIDs { get; set; }
         public string NameLayout { get; set; }
+        public string NameViewport { get; set; }
         // Параметры размеров
         private string _AnnotationScaleViewport;
         public string AnnotationScaleViewport 
@@ -205,23 +202,24 @@ namespace AutoCAD_2022_Plugin1
             } 
         }
         public double CustomScaleViewport { get; set; }
-        public Size SizeObjectsWithoutScale { get; set; }
+        public Size SizeObjectsWithoutScaling { get; set; }
         public Size SizeObjectsWithScaling { get; set; }
         // Общие параметры
         public Point2d CenterPoint { get; set; }
         public State StateInModel { get; set; } = State.NoExist;
         public DistributionViewportOnField StartPoint { get; set; }
 
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout, string NameViewport)
         {
             this.Id = new Identificator();
             this.ObjectsIDs = ObjectsIDs;
             this.StartPoint = StartDrawPointVP;
             this.NameLayout = NameLayout;
+            this.NameViewport = NameViewport;
             this.AnnotationScaleViewport = AnnotationScaleViewport;
 
-            SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
+            SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
+            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
             CenterPoint = Point3dTo2d(CheckCenterModel(ObjectsIDs));
         }
@@ -240,8 +238,8 @@ namespace AutoCAD_2022_Plugin1
 
         public void UpdateSizeVP()
         {
-            SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
+            SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
+            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
         }
     }

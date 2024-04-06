@@ -39,6 +39,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                                                              .Viewports.Where(x => x.Id.ToString() == _ViewportId).First();
                 AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+
+                NameViewport = CurrentViewport.NameViewport;
+                OnPropertyChanged(nameof(NameViewport));
+            }
+        }
+
+        private string _NameViewport;
+        public string NameViewport
+        {
+            get { return _NameViewport; }
+            set
+            {
+                _NameViewport = value;
+                CurrentViewport.NameViewport = _NameViewport;
             }
         }
 
@@ -65,9 +79,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
         }
 
+
         /// <summary>
         /// Приблизить на объекты в видовом экране
         /// </summary>
+        private void ZoomFunc()
+        {
+            var objectsID = CurrentViewport.ObjectsIDs;
+            _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
+        }
         private RelayCommand _ZoomCommand;
         public RelayCommand ZoomCommand
         {
@@ -75,8 +95,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             {
                 if (_ZoomCommand == null)
                 {
-                    var objectsID = CurrentViewport.ObjectsIDs;
-                    _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
+                    _ZoomCommand = new RelayCommand(o => ZoomFunc(), null);
                 }
                 return _ZoomCommand;
             }

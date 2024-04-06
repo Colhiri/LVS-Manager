@@ -126,20 +126,24 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         }
 
         /// <summary>
-        /// Сохранить изменения в макете
+        /// Сохранить изменения
         /// </summary>
-        private void SaveChangesLayout()
+        private void SaveChanges()
         {
-            CurrentField.PlotterName = _PlotterName;
-            CurrentField.LayoutFormat = _LayoutFormat;
-        }
+            switch (ActiveTab.Name)
+            {
+                case "Layout":
+                    CurrentField.NameLayout = _EditFieldName;
+                    OnPropertyChanged(nameof(NamesLayouts));
 
-        /// <summary>
-        /// Сохранить изменения в видовом экране
-        /// </summary>
-        private void SaveChangesViewport()
-        {
-            CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+                    CurrentField.PlotterName = _PlotterName;
+                    CurrentField.LayoutFormat = _LayoutFormat;
+                    break;
+                case "Viewport":
+                    CurrentViewport.NameViewport = _NameViewport;
+                    CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+                    break;
+            }
         }
 
         private RelayCommand _CancelDeleteCommand;
@@ -162,17 +166,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             {
                 if (_DoneCommand == null)
                 {
-                    Action<object> act = null;
-                    switch (ActiveTab.Name) 
-                    {
-                        case "Layout":
-                            act = o => SaveChangesLayout();
-                            break;
-                        case "Viewport":
-                            act = o => SaveChangesViewport();
-                            break;
-                    }
-                    _DoneCommand = new RelayCommand(o => act(null), null);
+                    _DoneCommand = new RelayCommand(o => SaveChanges(), null);
                 }
                 return _DoneCommand;
             }

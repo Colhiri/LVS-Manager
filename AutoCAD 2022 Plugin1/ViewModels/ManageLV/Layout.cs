@@ -11,6 +11,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
     {
         private Field CurrentField;
 
+        public bool DoneCommandEnabled
+        {
+            get 
+            { 
+                return CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(EditFieldName) && model.IsValidName(EditFieldName); 
+            }
+        }
+
         /// Взаимодействие с именами макетов
         private ObservableCollection<string> _NamesLayouts;
         public ObservableCollection<string> NamesLayouts
@@ -21,6 +29,17 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 return _NamesLayouts;
             }
         }
+        private string _EditFieldName;
+        public string EditFieldName
+        {
+            get { return _EditFieldName; }
+            set
+            {
+                _EditFieldName = value;
+                OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            }
+        }
+
         private string _FieldName;
         public string FieldName
         {
@@ -31,11 +50,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _FieldName = value;
-
                 CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _FieldName).First();
-                CurrentField.NameLayout = _FieldName;
                 OnPropertyChanged(nameof(NamesLayouts));
-                
+
+                EditFieldName = CurrentField.NameLayout;
+                OnPropertyChanged(nameof(EditFieldName));
+
                 PlotterName = CurrentField.PlotterName;
                 OnPropertyChanged(nameof(PlotterName));
 

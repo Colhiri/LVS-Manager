@@ -126,14 +126,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         private string _LayoutFormat;
         public string LayoutFormat
         {
-            get
-            {
-                return _LayoutFormat;
-            }
-            set
-            {
-                _LayoutFormat = value;
-            }
+            get { return _LayoutFormat; }
+            set{ _LayoutFormat = value; }
+        }
+
+        private string _NameViewport;
+        public string NameViewport
+        {
+            get { return _NameViewport; }
+            set { _NameViewport = value; }
         }
 
         private ObservableCollection<string> _Scales;
@@ -148,14 +149,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         private string _AnnotationScaleObjectsVP;
         public string AnnotationScaleObjectsVP
         {
-            get
-            {
-                return _AnnotationScaleObjectsVP;
-            }
-            set
-            {
-                _AnnotationScaleObjectsVP = value;
-            }
+            get { return _AnnotationScaleObjectsVP; }
+            set { _AnnotationScaleObjectsVP = value; }
         }
     }
 }
