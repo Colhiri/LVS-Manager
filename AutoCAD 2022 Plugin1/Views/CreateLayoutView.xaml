@@ -20,6 +20,7 @@
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
             <RowDefinition Height="Auto"></RowDefinition>
+            <RowDefinition Height="Auto"></RowDefinition>
         </Grid.RowDefinitions>
 
         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Введите имя листа или выберите созданный</TextBlock>
@@ -49,16 +50,19 @@
                   IsSynchronizedWithCurrentItem="True" ItemsSource="{Binding Path=Scales}">
         </ComboBox>
         
+        <TextBlock Margin="2" Grid.Row="4" Grid.Column="0">Введите имя видового экрана</TextBlock>
+        <TextBox Margin="2" Grid.Row="4" Grid.Column="1" Text="{Binding NameViewport}"></TextBox>
+
         <!-- Применить -->
         <Button Margin="2" Name="btnDone" Click="DoneClose" 
-                Grid.Row="4" Grid.Column="0"
+                Grid.Row="5" Grid.Column="0"
                 IsEnabled="{Binding Path=DoneButtonIsEnabled}">
             Применить
         </Button>
 
         <!-- Отменить -->
         <Button Margin="2" Name="btnCancel" Width="{Binding ElementName=btnDone, Path=ActualWidth}" 
-                Grid.Row="4" Grid.Column="1"
+                Grid.Row="5" Grid.Column="1"
                 Click="Cancel">
             Отмена
         </Button>

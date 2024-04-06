@@ -83,12 +83,13 @@ namespace LightProgram
             string resultPlotter = tempData.PlotterName;
             string resultLayoutFormat = tempData.LayoutFormat;
             string resultScale = tempData.AnnotationScaleObjectsVP;
+            string NameViewport = tempData.NameViewport;
 
             // Добавлем новую филду
             FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter);
             Field field = FL.Fields.Where(x => x.NameLayout == resultNameLayout).First();
             if (field == null) throw new ArgumentNullException();
-            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs);
+            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs, NameViewport);
             //viewport.ChangeStartPoint(new Point2d(0, 0));
 
             if (field.StateInModel == State.NoExist) 
