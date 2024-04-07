@@ -620,6 +620,26 @@ namespace AutoCAD_2022_Plugin1
         }
 
         /// <summary>
+        /// Удалить объект из базы данных автокада
+        /// </summary>
+        /// <param name="objectToDelete"></param>
+        /// <returns></returns>
+        public static void DeleteObjects(ObjectId objectToDelete)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            objectToDelete.GetObject(OpenMode.ForWrite).Erase();
+
+            /*
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+
+            }
+            */
+
+        }
+
+        /// <summary>
         /// Создать слой
         /// </summary>
         /// <param name="NameLayer"></param>
