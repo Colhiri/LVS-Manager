@@ -11,7 +11,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
     {
         private Field CurrentField;
 
-        public bool DoneCommandEnabled
+        public bool EnabledDoneCommandLayout
         {
             get 
             { 

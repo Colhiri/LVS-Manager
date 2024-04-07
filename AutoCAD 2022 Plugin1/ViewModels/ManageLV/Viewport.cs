@@ -9,6 +9,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
     {
         private ViewportInField CurrentViewport;
 
+        public bool EnabledDoneCommandViewport
+        {
+            get
+            {
+                return model.IsValidScale(AnnotationScaleObjectsVP);
+            }
+        }
+
         /// Взаимодействие видовых экранов
         private ObservableCollection<string> _Viewports;
         public ObservableCollection<string> Viewports

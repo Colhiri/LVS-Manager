@@ -1,4 +1,5 @@
-﻿using Autodesk.AutoCAD.DatabaseServices;
+﻿using AutoCAD_2022_Plugin1.Models;
+using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
@@ -102,8 +103,13 @@ namespace AutoCAD_2022_Plugin1
             get { return _LayoutFormat; }
             set 
             {
-                _LayoutFormat = value;
-                this.UpdatePaperSize();
+                if (_LayoutFormat != value)
+                {
+                    CreateLayoutModel.DeleteObjects(ContourField);
+                    Draw();
+                    _LayoutFormat = value;
+                    this.UpdatePaperSize();
+                }
             } 
         }
 
@@ -197,9 +203,14 @@ namespace AutoCAD_2022_Plugin1
         {   get { return _AnnotationScaleViewport; }
             set 
             {
-                _AnnotationScaleViewport = value;
-                this.UpdateSizeVP();
-            } 
+                if (_AnnotationScaleViewport != value)
+                {
+                    _AnnotationScaleViewport = value;
+                    this.UpdateSizeVP();
+                    CreateLayoutModel.DeleteObjects(ContourObjects);
+                    Draw();
+                }
+            }
         }
         public double CustomScaleViewport { get; set; }
         public Size SizeObjectsWithoutScaling { get; set; }
