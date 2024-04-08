@@ -47,14 +47,9 @@ namespace AutoCAD_2022_Plugin1
         public static Point2d CurrentStartPoint { get; set; }
         public static int ColorIndexForField { get; set; }
         public static int ColorIndexForViewport { get; set; }
+        public double BorderValueLayout { get; set; } = 300;
 
-        /// <summary>
-        /// Пересчитать стартовые точки, чтобы не было пересечения между макетами и видовыми экранами
-        /// </summary>
-        public void RefreshStartPoints()
-        {
-
-        }
+        public Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
 
         /// <summary>
         /// Увеличивает стартовый Х в зависимости от выбранного формата макета
@@ -69,9 +64,12 @@ namespace AutoCAD_2022_Plugin1
             for (int i = 0; i < Fields.Count; i++)
             {
                 Size sizeLayout = GetSizePaper(Fields[i].LayoutFormat, Fields[i].PlotterName);
-                newPlusX = newPlusX + sizeLayout.Width * 0.5 + sizeLayout.Width;
+                newPlusX = newPlusX + sizeLayout.Width + BorderValueLayout;
             }
-            return new Point2d(StartPoint.X + newPlusX, StartPoint.Y);
+
+            Point2d FieldStartPoint = new Point2d(StartPoint.X + newPlusX, StartPoint.Y);
+
+            return FieldStartPoint;
         }
 
         public void AddField(string nameLayout, string LayoutFormat, string PlotterName)
@@ -80,7 +78,44 @@ namespace AutoCAD_2022_Plugin1
             {
                 Field field = new Field(nameLayout, LayoutFormat, PlotterName);
                 Fields.Add(field);
+                
+                StartsPointsFields.Add(nameLayout, CurrentStartPoint);
+
                 CurrentStartPoint = IncreaseStart();
+
+                // field.Draw();
+            }
+        }
+
+        /// <summary>
+        /// Перерисовывает полилинию макета, если не совпадают стартовые точки в словаре стартовых точек полей и стартой точки в классе поля. Обновляет словарь в конце
+        /// </summary>
+        /// <exception cref="System.Exception"></exception>
+        public void RedrawFieldsViewports()
+        {
+            for (int i = 0; i < Fields.Count;i++)
+            {
+                Field f = Fields[i];
+
+                if (f.StartPoint != StartsPointsFields[f.NameLayout])
+                {
+                    if (i == 0) throw new System.Exception("Положение полилинии первого макета нарушено");
+                    Field pastField = Fields[i - 1];
+                    double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width;
+                    double CorrectY = pastField.StartPoint.Y;
+                    Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
+                    f.StartPoint = CorrectStartFieldPoint;
+                    CreateLayoutModel.DeleteObjects(f.ContourField);
+                    f.Draw();
+
+                    foreach (ViewportInField vp in f.Viewports)
+                    {
+                        CreateLayoutModel.DeleteObjects(vp.ContourObjects);
+                        vp.Draw();
+                    }
+                }
+
+                StartsPointsFields[f.NameLayout] = f.StartPoint;
             }
         }
     }
@@ -105,10 +140,13 @@ namespace AutoCAD_2022_Plugin1
             {
                 if (_LayoutFormat != value)
                 {
-                    CreateLayoutModel.DeleteObjects(ContourField);
-                    Draw();
                     _LayoutFormat = value;
+                    if (ContourField != ObjectId.Null) 
+                    {
+                        CreateLayoutModel.DeleteObjects(ContourField);
+                    }
                     this.UpdatePaperSize();
+                    Draw();
                 }
             } 
         }
@@ -133,11 +171,13 @@ namespace AutoCAD_2022_Plugin1
 
         public Field(string NameLayout, string LayoutFormat, string PlotterName)
         {
+            Id = new Identificator();
+
+            StartPoint = new Point2d(FieldList.CurrentStartPoint.X, FieldList.CurrentStartPoint.Y);
+
             this.NameLayout = NameLayout;
             this.PlotterName = PlotterName;
             this.LayoutFormat = LayoutFormat;
-            Id = new Identificator();
-            UpdatePaperSize();
         }
 
         /// <summary>
@@ -147,22 +187,11 @@ namespace AutoCAD_2022_Plugin1
         /// <param name="ObjectsId"></param>
         public ViewportInField AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId, string NameViewport)
         {
-            // Добавляем стартовую точку
-            if (StateInModel == State.NoExist)
-            {
-                StartPoint = new Point2d(FieldList.CurrentStartPoint.X - DownScaleSizeLayout.Width * 0.5,
-                                         FieldList.CurrentStartPoint.Y);
-            }
             DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
             // Добавляем параметры видового экрана
             var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout, NameViewport);
             Viewports.Add(viewport);
             return viewport;
-        }
-
-        public void UpdateStartPoint()
-        {
-
         }
 
         public void UpdatePaperSize()
@@ -177,12 +206,11 @@ namespace AutoCAD_2022_Plugin1
         /// Рисуем Field
         /// </summary>
         /// <returns></returns>
-        public object Draw()
+        public void Draw()
         {
             ContourField = DrawRectangle(StartPoint, DownScaleSizeLayout, FieldList.ColorIndexForField);
             SetLayer(ContourField, NameLayout);
             StateInModel = State.Exist;
-            return null;
         }
     }
 
@@ -205,9 +233,12 @@ namespace AutoCAD_2022_Plugin1
             {
                 if (_AnnotationScaleViewport != value)
                 {
+                    if (ContourObjects != ObjectId.Null) 
+                    {
+                        CreateLayoutModel.DeleteObjects(ContourObjects);
+                    }
                     _AnnotationScaleViewport = value;
                     this.UpdateSizeVP();
-                    CreateLayoutModel.DeleteObjects(ContourObjects);
                     Draw();
                 }
             }
@@ -239,12 +270,11 @@ namespace AutoCAD_2022_Plugin1
         /// Рисуем контур объектов в пространстве модели
         /// </summary>
         /// <returns></returns>
-        public object Draw()
+        public void Draw()
         {
             ContourObjects = DrawRectangle(StartPoint.ToPoint2d(), SizeObjectsWithScaling, FieldList.ColorIndexForViewport);
             SetLayer(ContourObjects, NameLayout);
             StateInModel = State.Exist;
-            return null;
         }
 
         public void UpdateSizeVP()
