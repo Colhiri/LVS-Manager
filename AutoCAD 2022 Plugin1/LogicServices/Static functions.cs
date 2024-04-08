@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
+using Autodesk.AutoCAD.Internal;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -628,15 +629,14 @@ namespace AutoCAD_2022_Plugin1
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
-            objectToDelete.GetObject(OpenMode.ForWrite).Erase();
-
-            /*
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            using (Transaction AcTrans = AcDatabase.TransactionManager.StartTransaction())
             {
-
+                using (Polyline poly = AcTrans.GetObject(objectToDelete, OpenMode.ForWrite) as Polyline)
+                {
+                    poly.Erase(true);
+                }
+                AcTrans.Commit();
             }
-            */
-
         }
 
         /// <summary>

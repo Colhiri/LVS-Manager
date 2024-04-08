@@ -62,23 +62,25 @@ namespace LightProgram
             FL.StartPoint = new Point2d(0.0, 0.0);
             string plotterNameFromConfig = "Нет";
 
-            /// инициализация формы из клиентского кода 
+            // Получаем выбранные объекты
+            PromptSelectionResult select = AcEditor.SelectImplied();
+            if (select.Status != PromptStatus.OK)
+            {
+                Application.ShowAlertDialog("Объекты не выбраны! Заново!");
+                return;
+            }
+
+            // инициализация формы из клиентского кода 
             CreateLayoutVM tempData = new CreateLayoutVM();
             tempData.PlotterName = plotterNameFromConfig;
             CreateLayoutView window = new CreateLayoutView(tempData);
             window.DataContext = tempData;
 
             if (Application.ShowModalWindow(window) != true) return;
-
-            // Получаем выбранные объекты
-            PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK)
-            {
-                Application.ShowAlertDialog("Объекты не выбраны! Заново!");
-                // select = AcEditor.GetSelection();
-            }
+            
             ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
 
+            // Получаем данные из формы WPF
             string resultNameLayout = tempData.Name;
             string resultPlotter = tempData.PlotterName;
             string resultLayoutFormat = tempData.LayoutFormat;
@@ -90,13 +92,6 @@ namespace LightProgram
             Field field = FL.Fields.Where(x => x.NameLayout == resultNameLayout).First();
             if (field == null) throw new ArgumentNullException();
             ViewportInField viewport = field.AddViewport(resultScale, objectsIDs, NameViewport);
-            //viewport.ChangeStartPoint(new Point2d(0, 0));
-
-            if (field.StateInModel == State.NoExist) 
-                field.Draw();
-
-            if (viewport.StateInModel == State.NoExist)
-                viewport.Draw();
         }
 
 
@@ -175,8 +170,14 @@ namespace LightProgram
 
             ManageLayoutViewportView window = new ManageLayoutViewportView(manageData);
             window.DataContext = manageData;
+
+            
             
             if (Application.ShowModalWindow(window) != true) return;
+
+
+            // Перерисовываем если есть изменения в формате макета
+            FL.RedrawFieldsViewports();
         }
     }
 }
