@@ -50,6 +50,8 @@ namespace AutoCAD_2022_Plugin1
         public double BorderValueLayout { get; set; } = 300;
 
         public Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
+        public Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
+
 
         /// <summary>
         /// Увеличивает стартовый Х в зависимости от выбранного формата макета
@@ -80,10 +82,12 @@ namespace AutoCAD_2022_Plugin1
                 Fields.Add(field);
                 
                 StartsPointsFields.Add(nameLayout, CurrentStartPoint);
+                
+                double EndPoint = (field.StartPoint.X + field.DownScaleSizeLayout.Width);
+
+                EndsPointsFields.Add(nameLayout, new Point2d(EndPoint, StartPoint.Y));
 
                 CurrentStartPoint = IncreaseStart();
-
-                // field.Draw();
             }
         }
 
@@ -97,25 +101,53 @@ namespace AutoCAD_2022_Plugin1
             {
                 Field f = Fields[i];
 
-                if (f.StartPoint != StartsPointsFields[f.NameLayout])
+                double EndPoint = (f.StartPoint.X + f.DownScaleSizeLayout.Width + BorderValueLayout);
+
+                if (i == 0 && new Point2d(EndPoint, f.StartPoint.Y) != EndsPointsFields[f.NameLayout])
                 {
-                    if (i == 0) throw new System.Exception("Положение полилинии первого макета нарушено");
-                    Field pastField = Fields[i - 1];
-                    double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width;
-                    double CorrectY = pastField.StartPoint.Y;
+                    double CorrectX = f.StartPoint.X;
+                    double CorrectY = f.StartPoint.Y;
+                    
                     Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
                     f.StartPoint = CorrectStartFieldPoint;
                     CreateLayoutModel.DeleteObjects(f.ContourField);
                     f.Draw();
 
+                    StartsPointsFields[f.NameLayout] = CorrectStartFieldPoint;
+                    EndsPointsFields[f.NameLayout] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSizeLayout.Width, CorrectStartFieldPoint.Y);
+
                     foreach (ViewportInField vp in f.Viewports)
                     {
+                        vp.StartPoint.StartPoint = CorrectStartFieldPoint;
                         CreateLayoutModel.DeleteObjects(vp.ContourObjects);
                         vp.Draw();
                     }
                 }
+                else
+                {
+                    Field pastField = Fields[i - 1];
 
-                StartsPointsFields[f.NameLayout] = f.StartPoint;
+                    if (f.StartPoint.X <= pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout)
+                    {
+                        double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout;
+                        double CorrectY = pastField.StartPoint.Y;
+
+                        Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
+                        f.StartPoint = CorrectStartFieldPoint;
+                        CreateLayoutModel.DeleteObjects(f.ContourField);
+                        f.Draw();
+
+                        StartsPointsFields[f.NameLayout] = CorrectStartFieldPoint;
+                        EndsPointsFields[f.NameLayout] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSizeLayout.Width, CorrectStartFieldPoint.Y);
+
+                        foreach (ViewportInField vp in f.Viewports)
+                        {
+                            vp.StartPoint.StartPoint = CorrectStartFieldPoint;
+                            CreateLayoutModel.DeleteObjects(vp.ContourObjects);
+                            vp.Draw();
+                        }
+                    }
+                }
             }
         }
     }

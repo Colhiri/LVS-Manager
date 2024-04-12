@@ -36,11 +36,12 @@
                                   IsSynchronizedWithCurrentItem="True"></ComboBox>
 
                         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя макета</TextBlock>
-                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding EditFieldName}"></TextBox>
+                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding EditFieldName}" IsEnabled="{Binding EnabledFormsParamatersLayout}"></TextBox>
 
                         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить плоттер</TextBlock>
                         <ComboBox Margin="2" Grid.Row="2" Grid.Column="1"
                                   ItemsSource="{Binding Plotters}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
+                                  
                                   SelectedItem="{Binding Path=PlotterName}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
@@ -60,12 +61,12 @@
                         <Button Name="btnDeleteLayout" Margin="2"
                                 Grid.Row="4" Grid.Column="1" Content="Удалить" Command="{Binding DeleteCommand}"
                                 Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
+                                Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}" IsEnabled="{Binding EnabledFormsParamatersLayout}"/>
 
                         <Button Name="btnCancelDeleteLayout" Margin="2"
                                 Grid.Row="4" Grid.Column="2" Content="Отменить удаление" Command="{Binding CancelDeleteCommand}"
                                 Height="{Binding ElementName=btnDoneLayout, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}"/>
+                                Width="{Binding ElementName=btnDoneLayout, Path=ActualWidth}" IsEnabled="{Binding InvertEnabledFormsParamatersLayout}"/>
                     </Grid>
                 </TabItem.Content>
             </TabItem>
@@ -95,12 +96,12 @@
                         </ComboBox>
 
                         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя видового экрана</TextBlock>
-                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding NameViewport}"></TextBox>
+                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding NameViewport}"  IsEnabled="{Binding EnabledFormsParamatersLayout}"></TextBox>
 
                         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить аннотационный масштаб</TextBlock>
                         <ComboBox Margin="2" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
                                   SelectedItem="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
-                                  ItemsSource="{Binding Scales}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
+                                  ItemsSource="{Binding Scales}" IsEnabled="{Binding EnabledFormsParamatersViewport}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
 
@@ -110,17 +111,17 @@
                                 Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
 
                         <Button Name="btnDoneViewport" Margin="2" Command="{Binding DoneCommand}"
-                                Grid.Row="3" Grid.Column="1" Content="Применить" IsEnabled="{Binding EnabledDoneCommandViewport}"/>
+                                Grid.Row="3" Grid.Column="1" Content="Применить" IsEnabled="{Binding EnabledFormsParamatersLayout}"/>
 
                         <Button Name="btnDeleteViewport" Margin="2" Grid.Row="3" Grid.Column="2"
                                 Content="Удалить" Command="{Binding DeleteCommand}"
                                 Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
+                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"  IsEnabled="{Binding EnabledFormsParamatersViewport}"/>
 
                         <Button Name="btnCancelDeleteViewport" Margin="2" Grid.Row="3" Grid.Column="3"
                                 Content="Отменить удаление" Command="{Binding CancelDeleteCommand}"
                                 Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
+                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}" IsEnabled="{Binding InvertEnabledFormsParamatersViewport}"/>
                     </Grid>
                 </TabItem.Content>
             </TabItem>
