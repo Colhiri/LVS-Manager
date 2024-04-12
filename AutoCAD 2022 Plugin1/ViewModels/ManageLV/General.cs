@@ -2,6 +2,7 @@
 using AutoCAD_2022_Plugin1.Services;
 using System;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -9,6 +10,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
     public partial class ManageLayoutViewportVM : MainVM
     {
+
+        public ManageLayoutViewportVM()
+        {
+            _LayoutToDelete = new ObservableCollection<string>();
+            _ViewportToDelete = new ObservableCollection<string>();
+            _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.NameLayout));
+        }
+
         /// <summary>
         /// Static model functions to iteration with Autocad
         /// </summary>
@@ -48,10 +57,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _LayoutToDelete = new ObservableCollection<string>();
                 return _LayoutToDelete;
             }
-            private set { }
         }
 
         /// <summary>
@@ -62,10 +69,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _ViewportToDelete = new ObservableCollection<string>();
                 return _ViewportToDelete;
             }
-            private set { }
         }
 
         /// <summary>
@@ -79,6 +84,41 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
         }
 
+        public bool InvertEnabledFormsParamatersLayout
+        {
+            get
+            {
+                return LayoutToDelete.Contains(FieldName);
+            }
+        }
+
+        /// <summary>
+        /// Проверка редактирования некоторых частей View
+        /// </summary>
+        public bool EnabledFormsParamatersViewport
+        {
+            get
+            {
+                if (LayoutToDelete.Contains(FieldName))
+                {
+                    return false;
+                }
+                return !ViewportToDelete.Contains(ViewportId);
+            }
+        }
+
+        public bool InvertEnabledFormsParamatersViewport
+        {
+            get
+            {
+                if (LayoutToDelete.Contains(FieldName))
+                {
+                    return false;
+                }
+                return ViewportToDelete.Contains(ViewportId);
+            }
+        }
+
         /// <summary>
         /// Добавление имени макета в список на удаление
         /// </summary>
@@ -87,13 +127,16 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             switch (ActiveTab.Name)
             {
                 case "Layout":
-                    _LayoutToDelete.Add(FieldName);
+                    LayoutToDelete.Add(FieldName);
                     break;
                 case "Viewport":
-                    _ViewportToDelete.Add(ViewportId);
+                    ViewportToDelete.Add(ViewportId);
                     break;
             }
             OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersViewport));
         }
         private RelayCommand _DeleteCommand;
         public RelayCommand DeleteCommand
@@ -116,13 +159,16 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             switch (ActiveTab.Name)
             {
                 case "Layout":
-                    _LayoutToDelete.Remove(FieldName);
+                    LayoutToDelete.Remove(FieldName);
                     break;
                 case "Viewport":
-                    _ViewportToDelete.Remove(ViewportId);
+                    ViewportToDelete.Remove(ViewportId);
                     break;
             }
             OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersViewport));
         }
 
         /// <summary>
@@ -133,17 +179,33 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             switch (ActiveTab.Name)
             {
                 case "Layout":
-                    CurrentField.NameLayout = _EditFieldName;
-                    OnPropertyChanged(nameof(NamesLayouts));
-
-                    CurrentField.PlotterName = _PlotterName;
-                    CurrentField.LayoutFormat = _LayoutFormat;
+                    if (!LayoutToDelete.Contains(FieldName))
+                    {
+                        CurrentField.NameLayout = EditFieldName;
+                        CurrentField.PlotterName = PlotterName;
+                        CurrentField.LayoutFormat = LayoutFormat;
+                    }
+                    if (LayoutToDelete.Contains(FieldName))
+                    {
+                        CreateLayoutModel.FL.Fields.Remove(CurrentField);
+                        NamesLayouts.Remove(FieldName);
+                    }
                     break;
                 case "Viewport":
-                    CurrentViewport.NameViewport = _NameViewport;
-                    CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+                    if (!ViewportToDelete.Contains(ViewportId))
+                    {
+                        CurrentViewport.NameViewport = _NameViewport;
+                        CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+                    }
+                    if (ViewportToDelete.Contains(ViewportId))
+                    {
+                        CurrentField.Viewports.Remove(CurrentViewport);
+                        Viewports.Remove(ViewportId);
+                    }
                     break;
             }
+            // Перерисовываем если есть изменения в формате макета
+            CreateLayoutModel.FL.RedrawFieldsViewports();
         }
 
         private RelayCommand _CancelDeleteCommand;

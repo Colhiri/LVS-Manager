@@ -50,6 +50,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 
                 NameViewport = CurrentViewport.NameViewport;
                 OnPropertyChanged(nameof(NameViewport));
+                OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
             }
         }
 

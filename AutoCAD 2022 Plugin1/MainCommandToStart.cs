@@ -170,14 +170,8 @@ namespace LightProgram
 
             ManageLayoutViewportView window = new ManageLayoutViewportView(manageData);
             window.DataContext = manageData;
-
-            
             
             if (Application.ShowModalWindow(window) != true) return;
-
-
-            // Перерисовываем если есть изменения в формате макета
-            FL.RedrawFieldsViewports();
         }
     }
 }
