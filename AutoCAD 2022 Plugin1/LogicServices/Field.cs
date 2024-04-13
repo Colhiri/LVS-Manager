@@ -65,7 +65,7 @@ namespace AutoCAD_2022_Plugin1
 
                 EndsPointsFields.Add(nameLayout, EndPoint);
 
-                CurrentStartPoint = new Point2d(EndPoint.X, StartPoint.Y);
+                CurrentStartPoint = new Point2d(EndPoint.X + BorderValueLayout, StartPoint.Y);
             }
         }
 
@@ -120,7 +120,7 @@ namespace AutoCAD_2022_Plugin1
                 {
                     Field pastField = Fields[i - 1];
 
-                    if (f.StartPoint.X - pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout == 0)
+                    if (f.StartPoint.X - (pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout) != 0)
                     {
                         double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout;
                         double CorrectY = pastField.StartPoint.Y;
@@ -164,7 +164,7 @@ namespace AutoCAD_2022_Plugin1
                 if (_NameLayout != null && _NameLayout != value)
                 {
                     FieldList.StartsPointsFields.Add(value, FieldList.StartsPointsFields[_NameLayout]);
-                    FieldList.StartsPointsFields.Add(value, FieldList.EndsPointsFields[_NameLayout]);
+                    FieldList.EndsPointsFields.Add(value, FieldList.EndsPointsFields[_NameLayout]);
                     FieldList.StartsPointsFields.Remove(_NameLayout);
                     FieldList.EndsPointsFields.Remove(_NameLayout);
                 }

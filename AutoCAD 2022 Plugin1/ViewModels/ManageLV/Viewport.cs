@@ -95,7 +95,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         private void ZoomFunc()
         {
             var objectsID = CurrentViewport.ObjectsIDs;
-            _ZoomCommand = new RelayCommand(o => CreateLayoutModel.ZoomToObjects(objectsID), null);
+            CreateLayoutModel.ZoomToObjects(objectsID);
         }
         private RelayCommand _ZoomCommand;
         public RelayCommand ZoomCommand
