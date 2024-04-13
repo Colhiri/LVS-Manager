@@ -63,7 +63,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 LayoutFormat = CurrentField.LayoutFormat;
                 OnPropertyChanged(nameof(LayoutFormat));
 
-                Viewports = new ObservableCollection<string>(CurrentField.Viewports.Select(x => x.Id.ToString()));
+                /// Если видовые экраны удалены, замещаем на нулевое значение
+                try
+                {
+                    Viewports = new ObservableCollection<string>(CurrentField.Viewports.Select(x => x.Id.ToString()));
+                }
+                catch
+                {
+                    Viewports = null;
+                }
                 OnPropertyChanged(nameof(Viewports));
                 ViewportId = Viewports.First();
                 OnPropertyChanged(nameof(ViewportId));

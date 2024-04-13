@@ -188,6 +188,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     }
                     if (LayoutToDelete.Contains(FieldName))
                     {
+                        foreach (ViewportInField vp in CurrentField.Viewports)
+                        {
+                            CreateLayoutModel.DeleteObjects(vp.ContourObjects);
+                        }
+                        CreateLayoutModel.DeleteObjects(CurrentField.ContourField);
                         CreateLayoutModel.FL.Fields.Remove(CurrentField);
                         NamesLayouts.Remove(FieldName);
                     }
@@ -200,6 +205,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     }
                     if (ViewportToDelete.Contains(ViewportId))
                     {
+                        CreateLayoutModel.DeleteObjects(CurrentViewport.ContourObjects);
                         CurrentField.Viewports.Remove(CurrentViewport);
                         Viewports.Remove(ViewportId);
                     }
