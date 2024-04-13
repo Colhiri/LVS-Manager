@@ -49,30 +49,8 @@ namespace AutoCAD_2022_Plugin1
         public static int ColorIndexForViewport { get; set; }
         public double BorderValueLayout { get; set; } = 300;
 
-        public Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
-        public Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
-
-
-        /// <summary>
-        /// Увеличивает стартовый Х в зависимости от выбранного формата макета
-        /// </summary>
-        /// <returns></returns>
-        private Point2d IncreaseStart()
-        {
-            double newPlusX = 0;
-
-            if (Fields.Count == 0) return StartPoint;
-
-            for (int i = 0; i < Fields.Count; i++)
-            {
-                Size sizeLayout = GetSizePaper(Fields[i].LayoutFormat, Fields[i].PlotterName);
-                newPlusX = newPlusX + sizeLayout.Width + BorderValueLayout;
-            }
-
-            Point2d FieldStartPoint = new Point2d(StartPoint.X + newPlusX, StartPoint.Y);
-
-            return FieldStartPoint;
-        }
+        public static Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
+        public static Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
 
         public void AddField(string nameLayout, string LayoutFormat, string PlotterName)
         {
@@ -83,11 +61,26 @@ namespace AutoCAD_2022_Plugin1
                 
                 StartsPointsFields.Add(nameLayout, CurrentStartPoint);
                 
-                double EndPoint = (field.StartPoint.X + field.DownScaleSizeLayout.Width);
+                Point2d EndPoint = new Point2d(field.StartPoint.X + field.DownScaleSizeLayout.Width, field.StartPoint.Y);
 
-                EndsPointsFields.Add(nameLayout, new Point2d(EndPoint, StartPoint.Y));
+                EndsPointsFields.Add(nameLayout, EndPoint);
 
-                CurrentStartPoint = IncreaseStart();
+                CurrentStartPoint = new Point2d(EndPoint.X, StartPoint.Y);
+            }
+        }
+
+        /// <summary>
+        /// Обновить словари конечных и начальных точек для сравнения точек при переотрисовке полилиний макетов и видовых экранов
+        /// </summary>
+        public void UpdateDictionary()
+        {
+            StartsPointsFields.Clear();
+            EndsPointsFields.Clear();
+
+            foreach (Field f in Fields)
+            {
+                StartsPointsFields.Add(f.NameLayout, f.StartPoint);
+                EndsPointsFields.Add(f.NameLayout, new Point2d(f.StartPoint.X + f.DownScaleSizeLayout.Width, f.StartPoint.Y));
             }
         }
 
@@ -127,7 +120,7 @@ namespace AutoCAD_2022_Plugin1
                 {
                     Field pastField = Fields[i - 1];
 
-                    if (f.StartPoint.X <= pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout)
+                    if (f.StartPoint.X - pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout == 0)
                     {
                         double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout;
                         double CorrectY = pastField.StartPoint.Y;
@@ -161,7 +154,23 @@ namespace AutoCAD_2022_Plugin1
         public ObjectId ContourField { get; set; }
         // Параметры размеров
         public static string DownScale { get; set; } = "1:1";
-        public string NameLayout { get; set; }
+
+        public string _NameLayout;
+        public string NameLayout
+        {
+            get { return _NameLayout; }
+            set
+            {
+                if (_NameLayout != null && _NameLayout != value)
+                {
+                    FieldList.StartsPointsFields.Add(value, FieldList.StartsPointsFields[_NameLayout]);
+                    FieldList.StartsPointsFields.Add(value, FieldList.EndsPointsFields[_NameLayout]);
+                    FieldList.StartsPointsFields.Remove(_NameLayout);
+                    FieldList.EndsPointsFields.Remove(_NameLayout);
+                }
+                _NameLayout = value;
+            }
+        }
 
         // Формат макета
         private string _LayoutFormat;

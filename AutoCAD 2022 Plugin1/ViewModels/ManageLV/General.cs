@@ -184,6 +184,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         CurrentField.NameLayout = EditFieldName;
                         CurrentField.PlotterName = PlotterName;
                         CurrentField.LayoutFormat = LayoutFormat;
+                        NamesLayouts[NamesLayouts.IndexOf(FieldName)] = EditFieldName;
                     }
                     if (LayoutToDelete.Contains(FieldName))
                     {
@@ -194,8 +195,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 case "Viewport":
                     if (!ViewportToDelete.Contains(ViewportId))
                     {
-                        CurrentViewport.NameViewport = _NameViewport;
-                        CurrentViewport.AnnotationScaleViewport = _AnnotationScaleObjectsVP;
+                        CurrentViewport.NameViewport = NameViewport;
+                        CurrentViewport.AnnotationScaleViewport = AnnotationScaleObjectsVP;
                     }
                     if (ViewportToDelete.Contains(ViewportId))
                     {

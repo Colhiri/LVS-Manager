@@ -15,7 +15,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get 
             { 
-                return CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(EditFieldName) && model.IsValidName(EditFieldName); 
+                bool first = !CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(EditFieldName) && model.IsValidName(EditFieldName);
+                return first || EditFieldName == FieldName; 
             }
         }
 
@@ -35,7 +36,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _EditFieldName = value;
-                OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+                OnPropertyChanged(nameof(EnabledDoneCommandLayout));
+
             }
         }
 
@@ -52,6 +54,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _FieldName).First();
 
                 EditFieldName = CurrentField.NameLayout;
+                
                 OnPropertyChanged(nameof(EditFieldName));
 
                 PlotterName = CurrentField.PlotterName;
