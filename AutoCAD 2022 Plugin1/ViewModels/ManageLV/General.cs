@@ -1,9 +1,7 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 using System.Windows.Controls;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
@@ -70,52 +68,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             get
             {
                 return _ViewportToDelete;
-            }
-        }
-
-        /// <summary>
-        /// Проверка редактирования некоторых частей View
-        /// </summary>
-        public bool EnabledFormsParamatersLayout
-        {
-            get
-            {
-                return !LayoutToDelete.Contains(FieldName);
-            }
-        }
-
-        public bool InvertEnabledFormsParamatersLayout
-        {
-            get
-            {
-                return LayoutToDelete.Contains(FieldName);
-            }
-        }
-
-        /// <summary>
-        /// Проверка редактирования некоторых частей View
-        /// </summary>
-        public bool EnabledFormsParamatersViewport
-        {
-            get
-            {
-                if (LayoutToDelete.Contains(FieldName))
-                {
-                    return false;
-                }
-                return !ViewportToDelete.Contains(ViewportId);
-            }
-        }
-
-        public bool InvertEnabledFormsParamatersViewport
-        {
-            get
-            {
-                if (LayoutToDelete.Contains(FieldName))
-                {
-                    return false;
-                }
-                return ViewportToDelete.Contains(ViewportId);
             }
         }
 
@@ -195,7 +147,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         CreateLayoutModel.DeleteObjects(CurrentField.ContourField);
                         CreateLayoutModel.FL.Fields.Remove(CurrentField);
                         NamesLayouts.Remove(FieldName);
+                        LayoutToDelete.Remove(FieldName);
                     }
+                    OnPropertyChanged(nameof(ViewportId));
+                    OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+                    OnPropertyChanged(nameof(Viewports));
                     break;
                 case "Viewport":
                     if (!ViewportToDelete.Contains(ViewportId))
@@ -208,7 +164,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         CreateLayoutModel.DeleteObjects(CurrentViewport.ContourObjects);
                         CurrentField.Viewports.Remove(CurrentViewport);
                         Viewports.Remove(ViewportId);
+                        ViewportToDelete.Remove(ViewportId);
                     }
+                    OnPropertyChanged(nameof(ViewportId));
+                    OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+                    OnPropertyChanged(nameof(Viewports));
                     break;
             }
             // Перерисовываем если есть изменения в формате макета

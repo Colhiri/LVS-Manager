@@ -1,5 +1,6 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -9,17 +10,47 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
     {
         private ViewportInField CurrentViewport;
 
+        /// <summary>
+        /// Доступность команды применения изменений параметров видового экрана
+        /// </summary>
         public bool EnabledDoneCommandViewport
         {
             get
             {
-                return model.IsValidScale(AnnotationScaleObjectsVP);
+                return model.IsValidScale(AnnotationScaleObjectsVP) && CurrentViewport != null;
+            }
+        }
+
+        /// <summary>
+        /// Проверка редактирования некоторых частей View
+        /// </summary>
+        public bool EnabledFormsParamatersViewport
+        {
+            get
+            {
+                if (LayoutToDelete.Contains(FieldName) || ViewportId == null)
+                {
+                    return false;
+                }
+                return !ViewportToDelete.Contains(ViewportId);
+            }
+        }
+
+        public bool InvertEnabledFormsParamatersViewport
+        {
+            get
+            {
+                if (LayoutToDelete.Contains(FieldName))
+                {
+                    return false;
+                }
+                return ViewportToDelete.Contains(ViewportId);
             }
         }
 
         /// Взаимодействие видовых экранов
-        private ObservableCollection<string> _Viewports;
-        public ObservableCollection<string> Viewports
+        private List<string> _Viewports;
+        public List<string> Viewports
         {
             get
             {
@@ -28,8 +59,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _Viewports = value;
-                ViewportId = Viewports.First();
-                OnPropertyChanged(nameof(ViewportId));
             }
         }
         private string _ViewportId;
@@ -41,16 +70,26 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
             set
             {
-                _ViewportId = value == null ? Viewports.First() : value;
-                CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == FieldName)
+                _ViewportId = value;
+                
+                if (_ViewportId != null)
+                {
+                    CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == FieldName)
                                                              .First()
                                                              .Viewports.Where(x => x.Id.ToString() == _ViewportId).First();
-                AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
+                    AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
+                    NameViewport = CurrentViewport.NameViewport;
+                }
+                else
+                {
+                    CurrentViewport = null;
+                    AnnotationScaleObjectsVP = null;
+                    NameViewport = null;
+                }
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-
-                NameViewport = CurrentViewport.NameViewport;
                 OnPropertyChanged(nameof(NameViewport));
                 OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
+                OnPropertyChanged(nameof(EnabledDoneCommandViewport));
             }
         }
 
@@ -61,7 +100,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _NameViewport = value;
-                CurrentViewport.NameViewport = _NameViewport;
             }
         }
 
@@ -85,17 +123,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _AnnotationScaleObjectsVP = value;
+                OnPropertyChanged(nameof(EnabledDoneCommandViewport));
             }
         }
-
 
         /// <summary>
         /// Приблизить на объекты в видовом экране
         /// </summary>
         private void ZoomFunc()
         {
-            var objectsID = CurrentViewport.ObjectsIDs;
-            CreateLayoutModel.ZoomToObjects(objectsID);
+            if (CurrentViewport != null)
+            {
+                var objectsID = CurrentViewport.ObjectsIDs;
+                CreateLayoutModel.ZoomToObjects(objectsID);
+            }
         }
         private RelayCommand _ZoomCommand;
         public RelayCommand ZoomCommand

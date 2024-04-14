@@ -3,7 +3,6 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using System.Windows.Controls;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 namespace AutoCAD_2022_Plugin1

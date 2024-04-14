@@ -1,8 +1,6 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
-using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
 using System.Linq;
-using System.Windows;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
@@ -10,6 +8,27 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
     {
         private Field CurrentField;
 
+        /// <summary>
+        /// Проверка редактирования некоторых частей View
+        /// </summary>
+        public bool EnabledFormsParamatersLayout
+        {
+            get
+            {
+                return !LayoutToDelete.Contains(FieldName);
+            }
+        }
+        public bool InvertEnabledFormsParamatersLayout
+        {
+            get
+            {
+                return LayoutToDelete.Contains(FieldName);
+            }
+        }
+
+        /// <summary>
+        /// Доступность кнопки применения изменения параметров макета
+        /// </summary>
         public bool EnabledDoneCommandLayout
         {
             get 
@@ -63,21 +82,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 OnPropertyChanged(nameof(LayoutFormat));
 
                 /// Если видовые экраны удалены, замещаем на нулевое значение
-                try
-                {
-                    Viewports = new ObservableCollection<string>(CurrentField.Viewports.Select(x => x.Id.ToString()));
-                }
-                catch
-                {
-                    Viewports = null;
-                }
-                OnPropertyChanged(nameof(Viewports));
-                ViewportId = Viewports.First();
-                OnPropertyChanged(nameof(ViewportId));
-                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+                Viewports = CurrentField.Viewports.Select(x => x.Id.ToString()).ToList();
+                ViewportId = Viewports.FirstOrDefault();
 
+                OnPropertyChanged(nameof(Viewports));
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
-                OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
             }
         }
 
