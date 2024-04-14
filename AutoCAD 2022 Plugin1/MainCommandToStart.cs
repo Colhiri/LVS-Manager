@@ -165,9 +165,11 @@ namespace LightProgram
             manageData.FieldName = NameLayoutObjects;
             manageData.LayoutFormat = LayoutFormatObjects;
             manageData.PlotterName = PlotterNameObjects;
-            manageData.ViewportId = ViewportName;
-            manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
-
+            if (ViewportName != null)
+            {
+                manageData.ViewportId = ViewportName;
+                manageData.AnnotationScaleObjectsVP = AnnotationScaleObjects;
+            }
             ManageLayoutViewportView window = new ManageLayoutViewportView(manageData);
             window.DataContext = manageData;
             

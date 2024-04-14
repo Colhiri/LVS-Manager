@@ -96,7 +96,7 @@
                         </ComboBox>
 
                         <TextBlock Margin="2" Grid.Row="1" Grid.Column="0">Изменить имя видового экрана</TextBlock>
-                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding NameViewport}"  IsEnabled="{Binding EnabledFormsParamatersLayout}"></TextBox>
+                        <TextBox Margin="2" Grid.Row="1" Grid.Column="1" Text="{Binding NameViewport}"  IsEnabled="{Binding EnabledFormsParamatersViewport}"></TextBox>
 
                         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить аннотационный масштаб</TextBlock>
                         <ComboBox Margin="2" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
@@ -108,10 +108,11 @@
                         <Button Name="btnZoomViewport" Margin="2" Grid.Row="3" Grid.Column="0"
                                 Content="Навестись" Command="{Binding ZoomCommand}"
                                 Height="{Binding ElementName=btnDoneViewport, Path=ActualHeight}"
-                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"/>
+                                Width="{Binding ElementName=btnDoneViewport, Path=ActualWidth}"
+                                IsEnabled="{Binding EnabledFormsParamatersViewport}"/>
 
                         <Button Name="btnDoneViewport" Margin="2" Command="{Binding DoneCommand}"
-                                Grid.Row="3" Grid.Column="1" Content="Применить" IsEnabled="{Binding EnabledFormsParamatersLayout}"/>
+                                Grid.Row="3" Grid.Column="1" Content="Применить" IsEnabled="{Binding EnabledDoneCommandViewport}"/>
 
                         <Button Name="btnDeleteViewport" Margin="2" Grid.Row="3" Grid.Column="2"
                                 Content="Удалить" Command="{Binding DeleteCommand}"
