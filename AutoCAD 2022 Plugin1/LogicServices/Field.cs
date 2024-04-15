@@ -3,6 +3,7 @@ using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Messaging;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 namespace AutoCAD_2022_Plugin1
@@ -36,6 +37,164 @@ namespace AutoCAD_2022_Plugin1
     }
 
     /// <summary>
+    /// Конфигурация для параметров отрисовки объектов на полилинии
+    /// </summary>
+    public class Config
+    {
+        // Путь к конфигурации
+        public string Path {  get; set; }
+        // Единственный экземпляр класса (Синглтон)
+        private static Config instance;
+
+        /// <summary>
+        /// Получить текущий экземпляр класса
+        /// </summary>
+        /// <param name="Path"></param>
+        /// <returns></returns>
+        public static Config GetConfig(string Path)
+        {
+            if (instance == null)
+            {
+                instance = new Config(Path);
+            }
+            return instance;
+        }
+
+        private Config(string Path)
+        {
+            this.Path = Path;
+        }
+
+    }
+
+    /// <summary>
+    /// Базовый класс
+    /// </summary>
+    public abstract class Element
+    {
+        // Имя
+        public string Name { get; set; }
+        // Идентификатор
+        public Identificator ID { get; private set; }
+        // Размер полилинии
+        public Size OriginalSize { get; set; }
+        // Размер полилинии после уменьшения масштаба
+        public Size DownScaleSize { get; set; }
+        // Тип рабочего объекта (макет или видовой экран)
+        public WorkObject WorkObject { get; set; }
+        // Стартовая точка
+        public DistribitionOnModel Distribution { get; set; }
+        // Состояние полилинии в пространстве модели
+        public State StateInModel { get; set; }
+        // Контур полилинии (макета или видового экрана) в пространстве модели
+        public ObjectId ContourPolyline {  get; set; }
+
+        public Element(string Name)
+        {
+            this.ID = new Identificator();
+            this.Name = Name;
+        }
+
+        /// <summary>
+        /// Создать полилинию в пространстве модели (макета или видового экрана)
+        /// </summary>
+        public void Draw()
+        {
+            ContourPolyline = DrawRectangle(Distribution.StartPoint, DownScaleSize, FieldList.ColorIndexForViewport);
+            SetLayer(ContourPolyline, Name);
+            StateInModel = State.Exist;
+        }
+
+        /// <summary>
+        /// Обновить размер полилинии (макета или видового экрана)
+        /// </summary>
+        public abstract void UpdatePolylineSize();
+    }
+
+    /// <summary>
+    /// Макет
+    /// </summary>
+    public class FieldTest : Element
+    {
+        // Плоттер
+        public string Plotter { get; set; }
+        // Формат макета
+        public string Format { get; set; }
+        // Видовые экраны
+        public List<ViewportTest> Viewports { get; set; }
+
+        public FieldTest(string Name, string Plotter, string Format) : base(Name)
+        {
+            this.Plotter = Plotter;
+            this.Format = Format;
+        }
+
+        /// <summary>
+        /// Получить размеры полилинии макета
+        /// </summary>
+        public override void UpdatePolylineSize()
+        {
+            // Получаем оригинальный масштаб
+            OriginalSize = GetSizePaper(Format, Plotter);
+            // Применяем уменьшающий коэффициент
+            DownScaleSize = ApplyScaleToSizeObjectsInModel(OriginalSize, FieldList.DownScale);
+        }
+    }
+
+    /// <summary>
+    /// Видовой экран
+    /// </summary>
+    public class ViewportTest : Element
+    {
+        // Аннотационный масштаб видового экрана
+        public string AnnotationScale { get; set; }
+        // Список объектов на пространстве модели, которые будут показаны на видовом экране
+        public ObjectIdCollection ObjectIDs { get; set; }
+
+        public ViewportTest(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs, DistribitionOnModel Distibution) : base(Name)
+        {
+            this.AnnotationScale = AnnotationScale;
+            this.ObjectIDs = ObjectIDs;
+            Distribution = new ViewportDistributionOnModel();
+        }
+
+        /// <summary>
+        /// Получить размеры полилинии видового экрана
+        /// </summary>
+        public override void UpdatePolylineSize()
+        {
+            OriginalSize = CheckModelSize(ObjectIDs);
+            DownScaleSize = ApplyScaleToSizeObjectsInModel(OriginalSize, AnnotationScale);
+            DownScaleSize = ApplyScaleToSizeObjectsInModel(DownScaleSize, FieldList.DownScale);
+        }
+    }
+
+    /// <summary>
+    /// Базовый класс распределения
+    /// </summary>
+    public abstract class DistribitionOnModel
+    {
+        public Point2d StartPoint { get; set; }
+        public Config Config { get; set; }
+    }
+
+    /// <summary>
+    /// Распределение видовых экранов на пространстве модели в пределах полилинии одного макета
+    /// </summary>
+    public class ViewportDistributionOnModel : DistribitionOnModel
+    {
+    }
+
+    /// <summary>
+    /// Распределение макетов на пространстве модели
+    /// </summary>
+    public class FieldDistributionOnModel : DistribitionOnModel
+    {
+    }
+
+
+
+    /// <summary>
     /// Создать массив Полей
     /// </summary>
     public class FieldList
@@ -47,6 +206,8 @@ namespace AutoCAD_2022_Plugin1
         public static int ColorIndexForField { get; set; }
         public static int ColorIndexForViewport { get; set; }
         public double BorderValueLayout { get; set; } = 300;
+        // Параметры размеров
+        public static string DownScale { get; set; } = "1:1";
 
         public static Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
         public static Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
@@ -151,8 +312,7 @@ namespace AutoCAD_2022_Plugin1
     {
         public Identificator Id { get; private set; }
         public ObjectId ContourField { get; set; }
-        // Параметры размеров
-        public static string DownScale { get; set; } = "1:1";
+        
 
         public string _NameLayout;
         public string NameLayout
@@ -239,7 +399,7 @@ namespace AutoCAD_2022_Plugin1
             // Получаем оригинальный масштаб
             OriginalSizeLayout = GetSizePaper(LayoutFormat, PlotterName);
             // Применяем уменьшающий коэффициент
-            DownScaleSizeLayout = ApplyScaleToSizeObjectsInModel(OriginalSizeLayout, DownScale);
+            DownScaleSizeLayout = ApplyScaleToSizeObjectsInModel(OriginalSizeLayout, FieldList.DownScale);
         }
 
         /// <summary
@@ -302,7 +462,7 @@ namespace AutoCAD_2022_Plugin1
 
             SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
+            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, FieldList.DownScale);
             CenterPoint = Point3dTo2d(CheckCenterModel(ObjectsIDs));
         }
 
@@ -321,7 +481,7 @@ namespace AutoCAD_2022_Plugin1
         {
             SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
+            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, FieldList.DownScale);
         }
     }
 
