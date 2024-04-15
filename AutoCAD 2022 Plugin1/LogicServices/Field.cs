@@ -1,9 +1,11 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
+using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.Json;
 using System.Linq;
-using System.Runtime.Remoting.Messaging;
 using static AutoCAD_2022_Plugin1.Working_functions;
 
 namespace AutoCAD_2022_Plugin1
@@ -15,18 +17,6 @@ namespace AutoCAD_2022_Plugin1
     {
         Exist,
         NoExist
-    }
-
-    /// <summary>
-    /// Где находится стартовая точка отрисовки полей и видовых экранов
-    /// </summary>
-    public enum LocationDraw
-    {
-        TopLeft, 
-        TopRight, 
-        BottomLeft,
-        BottomRight,
-        Custom
     }
 
     public enum WorkObject
@@ -41,30 +31,89 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class Config
     {
-        // Путь к конфигурации
-        public string Path {  get; set; }
+        // Путь к конфигурации (Автоматический путь)
+        private string PathToConfigFile = $"ConfigFile.json";
+
         // Единственный экземпляр класса (Синглтон)
         private static Config instance;
+        
+        // Цвет полилинии макета
+        public int ColorIndexForField { get; set; }
+        // Цвет полилинии видового экрана
+        public int ColorIndexForViewport { get; set; }
+        // Граница между полилинями макетов
+        public double BorderValueLayout { get; set; }
+        // Дополнительное общее уменьшение размера полилиний макетов и видовых экранов
+        public string DownScale { get; set; }
+        // Стартовый плоттер
+        public string DefaultPlotter { get; set; }
+        // Стартовая точка для полилиний
+        public Point2d StartPointModel { get; set; }
 
         /// <summary>
         /// Получить текущий экземпляр класса
         /// </summary>
-        /// <param name="Path"></param>
+        /// <param name="PathToConfigFile"></param>
         /// <returns></returns>
-        public static Config GetConfig(string Path)
+        public static Config GetConfig()
         {
             if (instance == null)
             {
-                instance = new Config(Path);
+                instance = new Config();
             }
             return instance;
         }
 
-        private Config(string Path)
+        /// <summary>
+        /// Закрытый конструктор для синглтона
+        /// </summary>
+        private Config() 
         {
-            this.Path = Path;
+            if (!File.Exists(PathToConfigFile))
+            {
+                Application.ShowAlertDialog("Configuration does not exists file. \nI will create a new file with default parameters!");
+                DefaultInitialize();
+                using (FileStream f = File.OpenWrite(PathToConfigFile)) 
+                {
+                    JsonSerializer.Serialize<Config>(f, this);
+                }
+            }
+            else
+            {
+                using (FileStream f = File.OpenRead(PathToConfigFile))
+                {
+                    Config config = JsonSerializer.Deserialize<Config>(f);
+                    InitializeWithCopy(config);
+                }
+            }
         }
 
+        /// <summary>
+        /// Задать стандартные параметры работы
+        /// </summary>
+        private void DefaultInitialize()
+        {
+            ColorIndexForField = 3;
+            ColorIndexForViewport = 4;
+            BorderValueLayout = 300;
+            DownScale = "1:1";
+            DefaultPlotter = "Нет";
+            StartPointModel = new Point2d(0, 0);
+        }
+
+        /// <summary>
+        /// Задает параметры из переданной копии класса (используется при инициализации после десериализации)
+        /// </summary>
+        /// <param name="config"></param>
+        private void InitializeWithCopy(Config config)
+        {
+            ColorIndexForField = config.ColorIndexForField;
+            ColorIndexForViewport = config.ColorIndexForViewport;
+            BorderValueLayout = config.BorderValueLayout;
+            DownScale = config.DownScale;
+            DefaultPlotter = config.DefaultPlotter;
+            StartPointModel = config.StartPointModel;
+        }
     }
 
     /// <summary>
@@ -72,6 +121,9 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public abstract class Element
     {
+        // Конфигурационные параметры
+        protected Config config;
+
         // Имя
         public string Name { get; set; }
         // Идентификатор
@@ -88,11 +140,14 @@ namespace AutoCAD_2022_Plugin1
         public State StateInModel { get; set; }
         // Контур полилинии (макета или видового экрана) в пространстве модели
         public ObjectId ContourPolyline {  get; set; }
+        // Цвет контура полилинии   
+        public int ColorIndex { get; set; }
 
         public Element(string Name)
         {
             this.ID = new Identificator();
             this.Name = Name;
+            this.config = Config.GetConfig();
         }
 
         /// <summary>
@@ -100,7 +155,7 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         public void Draw()
         {
-            ContourPolyline = DrawRectangle(Distribution.StartPoint, DownScaleSize, FieldList.ColorIndexForViewport);
+            ContourPolyline = DrawRectangle(Distribution.StartPoint, DownScaleSize, ColorIndex);
             SetLayer(ContourPolyline, Name);
             StateInModel = State.Exist;
         }
@@ -137,7 +192,7 @@ namespace AutoCAD_2022_Plugin1
             // Получаем оригинальный масштаб
             OriginalSize = GetSizePaper(Format, Plotter);
             // Применяем уменьшающий коэффициент
-            DownScaleSize = ApplyScaleToSizeObjectsInModel(OriginalSize, FieldList.DownScale);
+            DownScaleSize = ApplyScaleToSizeObjectsInModel(OriginalSize, config.DownScale);
         }
     }
 
@@ -146,16 +201,19 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class ViewportTest : Element
     {
+        // Конфигурационные параметры 
+        private Config config = Config.GetConfig();
+
         // Аннотационный масштаб видового экрана
         public string AnnotationScale { get; set; }
         // Список объектов на пространстве модели, которые будут показаны на видовом экране
         public ObjectIdCollection ObjectIDs { get; set; }
 
-        public ViewportTest(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs, DistribitionOnModel Distibution) : base(Name)
+        public ViewportTest(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs) : base(Name)
         {
             this.AnnotationScale = AnnotationScale;
             this.ObjectIDs = ObjectIDs;
-            Distribution = new ViewportDistributionOnModel();
+            Distribution = ViewportDistributionOnModel.GetInstance();
         }
 
         /// <summary>
@@ -165,7 +223,7 @@ namespace AutoCAD_2022_Plugin1
         {
             OriginalSize = CheckModelSize(ObjectIDs);
             DownScaleSize = ApplyScaleToSizeObjectsInModel(OriginalSize, AnnotationScale);
-            DownScaleSize = ApplyScaleToSizeObjectsInModel(DownScaleSize, FieldList.DownScale);
+            DownScaleSize = ApplyScaleToSizeObjectsInModel(DownScaleSize, config.DownScale);
         }
     }
 
@@ -183,6 +241,21 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class ViewportDistributionOnModel : DistribitionOnModel
     {
+
+        public static ViewportDistributionOnModel instance; 
+        public static ViewportDistributionOnModel GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = new ViewportDistributionOnModel();
+            }
+            return instance;
+        }
+        private ViewportDistributionOnModel()
+        {
+
+        }
+
     }
 
     /// <summary>
@@ -190,6 +263,19 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class FieldDistributionOnModel : DistribitionOnModel
     {
+        public static FieldDistributionOnModel instance;
+        public static FieldDistributionOnModel GetInstance()
+        {
+            if (instance == null)
+            {
+                instance = new FieldDistributionOnModel();
+            }
+            return instance;
+        }
+        private FieldDistributionOnModel()
+        {
+
+        }
     }
 
 

@@ -37,7 +37,6 @@ namespace LightProgram
          * б) откроется менеджмент - поменять все как нужно
          * в) перерисовать все исходя из новых параметров --- НУЖЕН КЛАСС ПЕРЕОТРИСОВКИ И ПЕРЕРАСПРЕДЕЛЕНИЯ ЗНАЧЕНИЙ
          */
-        public static LocationDraw StartLocationDrawing { get; private set; } = LocationDraw.TopLeft;
 
         /// <summary>
         /// 
