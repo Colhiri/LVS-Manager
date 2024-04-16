@@ -74,11 +74,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 
                 if (_ViewportId != null)
                 {
-                    CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == FieldName)
+                    CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.Name == FieldName)
                                                              .First()
-                                                             .Viewports.Where(x => x.Id.ToString() == _ViewportId).First();
-                    AnnotationScaleObjectsVP = CurrentViewport.AnnotationScaleViewport;
-                    NameViewport = CurrentViewport.NameViewport;
+                                                             .Viewports.Where(x => x.ID.ToString() == _ViewportId).First();
+                    AnnotationScaleObjectsVP = CurrentViewport.AnnotationScale;
+                    NameViewport = CurrentViewport.Name;
                 }
                 else
                 {
@@ -134,7 +134,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             if (CurrentViewport != null)
             {
-                var objectsID = CurrentViewport.ObjectsIDs;
+                var objectsID = CurrentViewport.ObjectIDs;
                 CreateLayoutModel.ZoomToObjects(objectsID);
             }
         }
