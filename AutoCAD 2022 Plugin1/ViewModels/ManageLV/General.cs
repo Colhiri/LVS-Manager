@@ -13,7 +13,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             _LayoutToDelete = new ObservableCollection<string>();
             _ViewportToDelete = new ObservableCollection<string>();
-            _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.NameLayout));
+            _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name));
         }
 
         /// <summary>
@@ -133,18 +133,18 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 case "Layout":
                     if (!LayoutToDelete.Contains(FieldName))
                     {
-                        CurrentField.NameLayout = EditFieldName;
-                        CurrentField.PlotterName = PlotterName;
-                        CurrentField.LayoutFormat = LayoutFormat;
+                        CurrentField.Name = EditFieldName;
+                        CurrentField.Plotter= PlotterName;
+                        CurrentField.Format = LayoutFormat;
                         NamesLayouts[NamesLayouts.IndexOf(FieldName)] = EditFieldName;
                     }
                     if (LayoutToDelete.Contains(FieldName))
                     {
                         foreach (ViewportInField vp in CurrentField.Viewports)
                         {
-                            CreateLayoutModel.DeleteObjects(vp.ContourObjects);
+                            CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
                         }
-                        CreateLayoutModel.DeleteObjects(CurrentField.ContourField);
+                        CreateLayoutModel.DeleteObjects(CurrentField.ContourPolyline);
                         CreateLayoutModel.FL.Fields.Remove(CurrentField);
                         NamesLayouts.Remove(FieldName);
                         LayoutToDelete.Remove(FieldName);
@@ -156,12 +156,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 case "Viewport":
                     if (!ViewportToDelete.Contains(ViewportId))
                     {
-                        CurrentViewport.NameViewport = NameViewport;
-                        CurrentViewport.AnnotationScaleViewport = AnnotationScaleObjectsVP;
+                        CurrentViewport.Name = NameViewport;
+                        CurrentViewport.AnnotationScale = AnnotationScaleObjectsVP;
                     }
                     if (ViewportToDelete.Contains(ViewportId))
                     {
-                        CreateLayoutModel.DeleteObjects(CurrentViewport.ContourObjects);
+                        CreateLayoutModel.DeleteObjects(CurrentViewport.ContourPolyline);
                         CurrentField.Viewports.Remove(CurrentViewport);
                         Viewports.Remove(ViewportId);
                         ViewportToDelete.Remove(ViewportId);

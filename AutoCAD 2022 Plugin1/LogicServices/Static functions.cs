@@ -20,7 +20,7 @@ namespace AutoCAD_2022_Plugin1
         private static ObjectContextManager OCM = AcDatabase.ObjectContextManager;
         private static PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
         private static LayerStateManager layerManager = new LayerStateManager(AcDatabase);
-        public static FieldList FL = new FieldList();
+        public static Regulator FL = new Regulator();
 
         /// <summary>
         /// Создает видовой экран по заданным параметрам

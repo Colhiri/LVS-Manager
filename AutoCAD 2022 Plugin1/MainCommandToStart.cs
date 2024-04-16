@@ -12,6 +12,7 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using AutoCAD_2022_Plugin1.ViewModels.ManageLV;
 using System.Linq;
+using AutoCAD_2022_Plugin1.LogicServices;
 
 [assembly: CommandClass(typeof(LightProgram.MainCommandToStart))]
 
@@ -51,15 +52,8 @@ namespace LightProgram
             LayoutManager layManager = LayoutManager.Current;
             ObjectContextManager OCM = AcDatabase.ObjectContextManager;
 
-            // Создаем форму
-            // Нужно сделать подгрузку конфига для того, чтобы сразу было можно настроить глобальные параметры плагина, например, где 
-            // располагаются точки, какой начальный принтер.
-            // Здесь должен располагаться конфиг, откуда все подгружается
-            // Имитация
-            FieldList.ColorIndexForField = 3;
-            FieldList.ColorIndexForViewport = 4;
-            FL.StartPoint = new Point2d(0.0, 0.0);
-            string plotterNameFromConfig = "Нет";
+            // Подгружаем конфигурацию параметров
+            Config config = Config.GetConfig();
 
             // Получаем выбранные объекты
             PromptSelectionResult select = AcEditor.SelectImplied();
@@ -71,7 +65,7 @@ namespace LightProgram
 
             // инициализация формы из клиентского кода 
             CreateLayoutVM tempData = new CreateLayoutVM();
-            tempData.PlotterName = plotterNameFromConfig;
+            tempData.PlotterName = config.DefaultPlotter;
             CreateLayoutView window = new CreateLayoutView(tempData);
             window.DataContext = tempData;
 
@@ -87,12 +81,11 @@ namespace LightProgram
             string NameViewport = tempData.NameViewport;
 
             // Добавлем новую филду
-            FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter);
-            Field field = FL.Fields.Where(x => x.NameLayout == resultNameLayout).First();
+            FL.Fields.Add(new Field(resultNameLayout, resultPlotter, resultLayoutFormat));
+            Field field = FL.Fields.Where(x => x.Name == resultNameLayout).First();
             if (field == null) throw new ArgumentNullException();
-            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs, NameViewport);
+            field.Viewports.Add(new ViewportInField(NameViewport, resultScale, objectsIDs, field));
         }
-
 
         [CommandMethod("Managing", CommandFlags.UsePickSet)]
         public static void ManagingLayVP()
@@ -126,11 +119,11 @@ namespace LightProgram
 
             foreach (Field field in FL.Fields)
             {
-                if (field.ContourField == objectID)
+                if (field.ContourPolyline == objectID)
                 {
-                    NameLayoutObjects = field.NameLayout;
-                    PlotterNameObjects = field.PlotterName;
-                    LayoutFormatObjects = field.LayoutFormat;
+                    NameLayoutObjects = field.Name;
+                    PlotterNameObjects = field.Plotter;
+                    LayoutFormatObjects = field.Format;
                     TypeWorkObject = WorkObject.Field;
                     break;
                 }
@@ -138,13 +131,13 @@ namespace LightProgram
                 {
                     foreach (ViewportInField vp in field.Viewports)
                     {
-                        if (vp.ContourObjects == objectID)
+                        if (vp.ContourPolyline == objectID)
                         {
-                            NameLayoutObjects = field.NameLayout;
-                            PlotterNameObjects = field.PlotterName;
-                            LayoutFormatObjects = field.LayoutFormat;
-                            ViewportName = vp.Id.ToString();
-                            AnnotationScaleObjects = vp.AnnotationScaleViewport;
+                            NameLayoutObjects = field.Name;
+                            PlotterNameObjects = field.Plotter;
+                            LayoutFormatObjects = field.Format;
+                            ViewportName = vp.ID.ToString();
+                            AnnotationScaleObjects = vp.AnnotationScale;
                             TypeWorkObject = WorkObject.Viewport;
                             break;
                         }

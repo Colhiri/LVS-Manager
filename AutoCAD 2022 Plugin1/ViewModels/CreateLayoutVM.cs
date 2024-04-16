@@ -30,7 +30,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _PlottersIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(_Name);
+                _PlottersIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.Name).Contains(_Name);
                 return !_PlottersIsEnabled;
             }
         }
@@ -43,7 +43,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _FormatsIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(_Name);
+                _FormatsIsEnabled = CreateLayoutModel.FL.Fields.Select(x => x.Name).Contains(_Name);
                 return !_FormatsIsEnabled;
             }
         }
@@ -53,7 +53,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.NameLayout));
+                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name));
                 return _Names;
             }
         }
@@ -68,12 +68,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             {
                 _Name = value;
 
-                if (CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(value))
+                if (CreateLayoutModel.FL.Fields.Select(x => x.Name).Contains(value))
                 {
-                    PlotterName = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _Name).First().PlotterName;
+                    PlotterName = CreateLayoutModel.FL.Fields.Where(x => x.Name == _Name).First().Plotter;
                     
 
-                    LayoutFormat = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _Name).First().LayoutFormat;
+                    LayoutFormat = CreateLayoutModel.FL.Fields.Where(x => x.Name == _Name).First().Format;
                     
                 }
                 OnPropertyChanged(nameof(Plotters));

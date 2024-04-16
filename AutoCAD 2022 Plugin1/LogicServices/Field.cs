@@ -1,12 +1,10 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
-using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.DatabaseServices;
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
-using System.IO;
-using System.Text.Json;
 using System.Linq;
 using static AutoCAD_2022_Plugin1.Working_functions;
+using AutoCAD_2022_Plugin1.LogicServices;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -27,94 +25,81 @@ namespace AutoCAD_2022_Plugin1
     }
 
     /// <summary>
-    /// Конфигурация для параметров отрисовки объектов на полилинии
+    /// Создать массив Полей
     /// </summary>
-    public class Config
+    public class Regulator
     {
-        // Путь к конфигурации (Автоматический путь)
-        private string PathToConfigFile = $"ConfigFile.json";
+        // Получаем конфигурационные параметры
+        Config config = Config.GetConfig();
+        // Получаем список макетов
+        public FieldList<Field> Fields { get; set; } = FieldList<Field>.GetInstance();
+        // Получаем распределение макетов по пространству модели
+        public FieldDistributionOnModel distribution { get; set; } = FieldDistributionOnModel.GetInstance();
 
-        // Единственный экземпляр класса (Синглтон)
-        private static Config instance;
-        
-        // Цвет полилинии макета
-        public int ColorIndexForField { get; set; }
-        // Цвет полилинии видового экрана
-        public int ColorIndexForViewport { get; set; }
-        // Граница между полилинями макетов
-        public double BorderValueLayout { get; set; }
-        // Дополнительное общее уменьшение размера полилиний макетов и видовых экранов
-        public string DownScale { get; set; }
-        // Стартовый плоттер
-        public string DefaultPlotter { get; set; }
-        // Стартовая точка для полилиний
-        public Point2d StartPointModel { get; set; }
+        public Point2d StartPoint { get; set; }
+        public static Point2d CurrentStartPoint { get; set; }
 
         /// <summary>
-        /// Получить текущий экземпляр класса
+        /// Перерисовывает полилинию макета, если не совпадают стартовые точки в словаре стартовых точек полей и стартой точки в классе поля. Обновляет словарь в конце
         /// </summary>
-        /// <param name="PathToConfigFile"></param>
-        /// <returns></returns>
-        public static Config GetConfig()
+        /// <exception cref="System.Exception"></exception>
+        public void RedrawFieldsViewports()
         {
-            if (instance == null)
+            for (int i = 0; i < Fields.Count;i++)
             {
-                instance = new Config();
-            }
-            return instance;
-        }
+                Field f = Fields[i];
 
-        /// <summary>
-        /// Закрытый конструктор для синглтона
-        /// </summary>
-        private Config() 
-        {
-            if (!File.Exists(PathToConfigFile))
-            {
-                Application.ShowAlertDialog("Configuration does not exists file. \nI will create a new file with default parameters!");
-                DefaultInitialize();
-                using (FileStream f = File.OpenWrite(PathToConfigFile)) 
+                double EndPoint = (f.StartPoint.X + f.DownScaleSize.Width + config.BorderValueLayout);
+
+                if (i == 0 && new Point2d(EndPoint, f.StartPoint.Y) != distribution.EndsPointsFields[f.Name])
                 {
-                    JsonSerializer.Serialize<Config>(f, this);
+                    double CorrectX = f.StartPoint.X;
+                    double CorrectY = f.StartPoint.Y;
+                    
+                    Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
+                    f.StartPoint = CorrectStartFieldPoint;
+                    CreateLayoutModel.DeleteObjects(f.ContourPolyline);
+                    f.Draw();
+
+                    distribution.StartsPointsFields[f.Name] = CorrectStartFieldPoint;
+                    distribution.EndsPointsFields[f.Name] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSize.Width, CorrectStartFieldPoint.Y);
+
+                    foreach (ViewportInField vp in f.Viewports)
+                    {
+                        vp.StartPoint = CorrectStartFieldPoint;
+                        CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
+                        vp.Draw();
+                    }
+                }
+                else
+                {
+                    Field pastField = Fields[i - 1];
+
+                    if (f.StartPoint.X - (pastField.StartPoint.X + pastField.DownScaleSize.Width + config.BorderValueLayout) != 0)
+                    {
+                        double CorrectX = pastField.StartPoint.X + pastField.DownScaleSize.Width + config.BorderValueLayout;
+                        double CorrectY = pastField.StartPoint.Y;
+
+                        Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
+                        f.StartPoint = CorrectStartFieldPoint;
+                        CreateLayoutModel.DeleteObjects(f.ContourPolyline);
+                        f.Draw();
+
+                        distribution.StartsPointsFields[f.Name] = CorrectStartFieldPoint;
+                        distribution.EndsPointsFields[f.Name] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSize.Width, CorrectStartFieldPoint.Y);
+
+                        foreach (ViewportInField vp in f.Viewports)
+                        {
+                            vp.StartPoint = CorrectStartFieldPoint;
+                            CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
+                            vp.Draw();
+                        }
+                    }
                 }
             }
-            else
-            {
-                using (FileStream f = File.OpenRead(PathToConfigFile))
-                {
-                    Config config = JsonSerializer.Deserialize<Config>(f);
-                    InitializeWithCopy(config);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Задать стандартные параметры работы
-        /// </summary>
-        private void DefaultInitialize()
-        {
-            ColorIndexForField = 3;
-            ColorIndexForViewport = 4;
-            BorderValueLayout = 300;
-            DownScale = "1:1";
-            DefaultPlotter = "Нет";
-            StartPointModel = new Point2d(0, 0);
-        }
-
-        /// <summary>
-        /// Задает параметры из переданной копии класса (используется при инициализации после десериализации)
-        /// </summary>
-        /// <param name="config"></param>
-        private void InitializeWithCopy(Config config)
-        {
-            ColorIndexForField = config.ColorIndexForField;
-            ColorIndexForViewport = config.ColorIndexForViewport;
-            BorderValueLayout = config.BorderValueLayout;
-            DownScale = config.DownScale;
-            DefaultPlotter = config.DefaultPlotter;
-            StartPointModel = config.StartPointModel;
         }
     }
+    
 
     /// <summary>
     /// Базовый класс
@@ -132,6 +117,10 @@ namespace AutoCAD_2022_Plugin1
         public Size OriginalSize { get; set; }
         // Размер полилинии после уменьшения масштаба
         public Size DownScaleSize { get; set; }
+        // Стартовая точка полилинии объекта
+        public Point2d StartPoint { get; set; }
+        // Конечная точка полилинии объекта
+        public Point2d EndPoint { get; set; }
         // Тип рабочего объекта (макет или видовой экран)
         public WorkObject WorkObject { get; set; }
         // Стартовая точка
@@ -139,7 +128,7 @@ namespace AutoCAD_2022_Plugin1
         // Состояние полилинии в пространстве модели
         public State StateInModel { get; set; }
         // Контур полилинии (макета или видового экрана) в пространстве модели
-        public ObjectId ContourPolyline {  get; set; }
+        public ObjectId ContourPolyline { get; set; }
         // Цвет контура полилинии   
         public int ColorIndex { get; set; }
 
@@ -148,6 +137,7 @@ namespace AutoCAD_2022_Plugin1
             this.ID = new Identificator();
             this.Name = Name;
             this.config = Config.GetConfig();
+            this.StateInModel = State.NoExist;
         }
 
         /// <summary>
@@ -155,8 +145,9 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         public void Draw()
         {
-            ContourPolyline = DrawRectangle(Distribution.StartPoint, DownScaleSize, ColorIndex);
-            SetLayer(ContourPolyline, Name);
+            ContourPolyline = DrawRectangle(Distribution.CurrentStartPoint, DownScaleSize, ColorIndex);
+            // Не имеет смысла ставить слой на созданную полилинию
+            // SetLayer(ContourPolyline, Name);
             StateInModel = State.Exist;
         }
 
@@ -169,19 +160,30 @@ namespace AutoCAD_2022_Plugin1
     /// <summary>
     /// Макет
     /// </summary>
-    public class FieldTest : Element
+    public class Field : Element
     {
         // Плоттер
         public string Plotter { get; set; }
         // Формат макета
         public string Format { get; set; }
         // Видовые экраны
-        public List<ViewportTest> Viewports { get; set; }
+        public List<ViewportInField> Viewports { get; set; }
 
-        public FieldTest(string Name, string Plotter, string Format) : base(Name)
+        public Field(string Name, string Plotter, string Format) : base(Name)
         {
             this.Plotter = Plotter;
             this.Format = Format;
+            this.ColorIndex = config.ColorIndexForField;
+            Viewports = new List<ViewportInField>();
+
+            UpdatePolylineSize();
+
+            this.Distribution = FieldDistributionOnModel.GetInstance();
+
+            this.StartPoint = Distribution.GetStartPoint();
+            this.EndPoint = new Point2d(StartPoint.X + DownScaleSize.Width, StartPoint.Y);
+
+            Draw();
         }
 
         /// <summary>
@@ -199,21 +201,26 @@ namespace AutoCAD_2022_Plugin1
     /// <summary>
     /// Видовой экран
     /// </summary>
-    public class ViewportTest : Element
+    public class ViewportInField : Element
     {
-        // Конфигурационные параметры 
-        private Config config = Config.GetConfig();
-
         // Аннотационный масштаб видового экрана
         public string AnnotationScale { get; set; }
         // Список объектов на пространстве модели, которые будут показаны на видовом экране
         public ObjectIdCollection ObjectIDs { get; set; }
 
-        public ViewportTest(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs) : base(Name)
+        public ViewportInField(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs, Field field) : base(Name)
         {
             this.AnnotationScale = AnnotationScale;
             this.ObjectIDs = ObjectIDs;
-            Distribution = ViewportDistributionOnModel.GetInstance();
+            this.ColorIndex = config.ColorIndexForViewport;
+            UpdatePolylineSize();
+
+            Distribution = new ViewportDistributionOnModel(field, this);
+
+            this.StartPoint = Distribution.GetStartPoint();
+            this.EndPoint = Distribution.GetEndPoint();
+
+            Draw();
         }
 
         /// <summary>
@@ -232,28 +239,46 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public abstract class DistribitionOnModel
     {
-        public Point2d StartPoint { get; set; }
-        public Config Config { get; set; }
+        public Point2d CurrentStartPoint { get; set; }
+        public Point2d CurrentEndPoint { get; set; }
+        public Config config { get; set; } = Config.GetConfig();
+
+        public abstract Point2d GetStartPoint();
+        public abstract Point2d GetEndPoint();
+
     }
 
     /// <summary>
-    /// Распределение видовых экранов на пространстве модели в пределах полилинии одного макета
+    /// Лист без дубликатов
     /// </summary>
-    public class ViewportDistributionOnModel : DistribitionOnModel
+    /// <typeparam name="T"></typeparam>
+    public class FieldList<T> : List<T>
     {
+        private static FieldDistributionOnModel dist;
 
-        public static ViewportDistributionOnModel instance; 
-        public static ViewportDistributionOnModel GetInstance()
+        private static FieldList<T> instance;
+        public static FieldList<T> GetInstance()
         {
             if (instance == null)
             {
-                instance = new ViewportDistributionOnModel();
+                instance = new FieldList<T>();
+                dist = FieldDistributionOnModel.GetInstance();
             }
             return instance;
         }
-        private ViewportDistributionOnModel()
+        private FieldList()
         {
 
+        }
+
+        public new void Add(T Item)
+        {
+            if (!Contains(Item))
+            {
+                dist.StartsPointsFields.Add((Item as Field).Name, dist.GetStartPoint());
+                dist.EndsPointsFields.Add((Item as Field).Name, dist.GetStartPoint());
+                base.Add(Item);
+            }
         }
 
     }
@@ -263,311 +288,87 @@ namespace AutoCAD_2022_Plugin1
     /// </summary>
     public class FieldDistributionOnModel : DistribitionOnModel
     {
-        public static FieldDistributionOnModel instance;
+        /// <summary>
+        /// Нужен класс, который будет отвечать за распределение макетов в пространстве модели. 
+        /// Т.е. этот класс должен отвечать за предоставление данных о начальных точках для макетов, а также переставлять точки 
+        /// в случае изменения параметров макета/макетов
+        /// 
+        /// Это значит что данный класс будет один, так как распределение макетов одно (в пространстве модели)
+        /// 
+        /// Данный класс будет сделан с помощью синглтона
+        /// 
+        /// Он реализует следующие функции:
+        /// Хранить состояние параметров макетов (размер, стартовые точки, конечные точки)
+        /// 
+        /// Возвращать указанные состояния
+        /// 
+        /// Вернуть стартовую точку, исходя из параметров полей 
+        /// 
+        /// </summary>
+        /// 
+
+        public Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
+        public Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
+
+        private static FieldList<Field> fields;
+
+        private static FieldDistributionOnModel instance;
         public static FieldDistributionOnModel GetInstance()
         {
             if (instance == null)
             {
                 instance = new FieldDistributionOnModel();
+                fields = FieldList<Field>.GetInstance();
             }
+
+
             return instance;
         }
         private FieldDistributionOnModel()
         {
-
-        }
-    }
-
-
-
-    /// <summary>
-    /// Создать массив Полей
-    /// </summary>
-    public class FieldList
-    {
-        // Общие параметры
-        public List<Field> Fields { get; set; } = new List<Field>();
-        public Point2d StartPoint { get; set; }
-        public static Point2d CurrentStartPoint { get; set; }
-        public static int ColorIndexForField { get; set; }
-        public static int ColorIndexForViewport { get; set; }
-        public double BorderValueLayout { get; set; } = 300;
-        // Параметры размеров
-        public static string DownScale { get; set; } = "1:1";
-
-        public static Dictionary<string, Point2d> StartsPointsFields = new Dictionary<string, Point2d>();
-        public static Dictionary<string, Point2d> EndsPointsFields = new Dictionary<string, Point2d>();
-
-        public void AddField(string nameLayout, string LayoutFormat, string PlotterName)
-        {
-            if ((Fields.Count == 0 || !Fields.Select(x => x.NameLayout).Contains(nameLayout)) && CheckPageFormat(LayoutFormat, PlotterName) && CheckPlotter(PlotterName))
-            {
-                Field field = new Field(nameLayout, LayoutFormat, PlotterName);
-                Fields.Add(field);
-                
-                StartsPointsFields.Add(nameLayout, CurrentStartPoint);
-                
-                Point2d EndPoint = new Point2d(field.StartPoint.X + field.DownScaleSizeLayout.Width, field.StartPoint.Y);
-
-                EndsPointsFields.Add(nameLayout, EndPoint);
-
-                CurrentStartPoint = new Point2d(EndPoint.X + BorderValueLayout, StartPoint.Y);
-            }
         }
 
-        /// <summary>
-        /// Обновить словари конечных и начальных точек для сравнения точек при переотрисовке полилиний макетов и видовых экранов
-        /// </summary>
-        public void UpdateDictionary()
+        public override Point2d GetStartPoint()
         {
-            StartsPointsFields.Clear();
-            EndsPointsFields.Clear();
-
-            foreach (Field f in Fields)
+            if (fields.Count == 0)
             {
-                StartsPointsFields.Add(f.NameLayout, f.StartPoint);
-                EndsPointsFields.Add(f.NameLayout, new Point2d(f.StartPoint.X + f.DownScaleSizeLayout.Width, f.StartPoint.Y));
+                CurrentStartPoint = config.StartPointModel;
             }
+            else
+            {
+                CurrentStartPoint = new Point2d(fields[fields.Count - 2].StartPoint.X + fields[fields.Count - 2].DownScaleSize.Width + config.BorderValueLayout, fields[fields.Count - 2].StartPoint.Y);
+            }
+            return CurrentStartPoint;
         }
 
-        /// <summary>
-        /// Перерисовывает полилинию макета, если не совпадают стартовые точки в словаре стартовых точек полей и стартой точки в классе поля. Обновляет словарь в конце
-        /// </summary>
-        /// <exception cref="System.Exception"></exception>
-        public void RedrawFieldsViewports()
+        public override Point2d GetEndPoint()
         {
-            for (int i = 0; i < Fields.Count;i++)
-            {
-                Field f = Fields[i];
-
-                double EndPoint = (f.StartPoint.X + f.DownScaleSizeLayout.Width + BorderValueLayout);
-
-                if (i == 0 && new Point2d(EndPoint, f.StartPoint.Y) != EndsPointsFields[f.NameLayout])
-                {
-                    double CorrectX = f.StartPoint.X;
-                    double CorrectY = f.StartPoint.Y;
-                    
-                    Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
-                    f.StartPoint = CorrectStartFieldPoint;
-                    CreateLayoutModel.DeleteObjects(f.ContourField);
-                    f.Draw();
-
-                    StartsPointsFields[f.NameLayout] = CorrectStartFieldPoint;
-                    EndsPointsFields[f.NameLayout] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSizeLayout.Width, CorrectStartFieldPoint.Y);
-
-                    foreach (ViewportInField vp in f.Viewports)
-                    {
-                        vp.StartPoint.StartPoint = CorrectStartFieldPoint;
-                        CreateLayoutModel.DeleteObjects(vp.ContourObjects);
-                        vp.Draw();
-                    }
-                }
-                else
-                {
-                    Field pastField = Fields[i - 1];
-
-                    if (f.StartPoint.X - (pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout) != 0)
-                    {
-                        double CorrectX = pastField.StartPoint.X + pastField.DownScaleSizeLayout.Width + BorderValueLayout;
-                        double CorrectY = pastField.StartPoint.Y;
-
-                        Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
-                        f.StartPoint = CorrectStartFieldPoint;
-                        CreateLayoutModel.DeleteObjects(f.ContourField);
-                        f.Draw();
-
-                        StartsPointsFields[f.NameLayout] = CorrectStartFieldPoint;
-                        EndsPointsFields[f.NameLayout] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSizeLayout.Width, CorrectStartFieldPoint.Y);
-
-                        foreach (ViewportInField vp in f.Viewports)
-                        {
-                            vp.StartPoint.StartPoint = CorrectStartFieldPoint;
-                            CreateLayoutModel.DeleteObjects(vp.ContourObjects);
-                            vp.Draw();
-                        }
-                    }
-                }
-            }
+            CurrentEndPoint = new Point2d(CurrentStartPoint.X + fields[fields.Count - 1].DownScaleSize.Width, CurrentStartPoint.Y);
+            return CurrentEndPoint;
         }
     }
 
     /// <summary>
-    /// Класс содержащий в себе область объектов в видовых экранах, относящихся к определенному листу
+    /// Распределение видовых экранов на пространстве модели в пределах полилинии одного макета
     /// </summary>
-    public class Field
+    public class ViewportDistributionOnModel : DistribitionOnModel
     {
-        public Identificator Id { get; private set; }
-        public ObjectId ContourField { get; set; }
-        
-
-        public string _NameLayout;
-        public string NameLayout
+        Field field;
+        ViewportInField viewport;
+        public ViewportDistributionOnModel(Field field, ViewportInField viewport)
         {
-            get { return _NameLayout; }
-            set
-            {
-                if (_NameLayout != null && _NameLayout != value)
-                {
-                    FieldList.StartsPointsFields.Add(value, FieldList.StartsPointsFields[_NameLayout]);
-                    FieldList.EndsPointsFields.Add(value, FieldList.EndsPointsFields[_NameLayout]);
-                    FieldList.StartsPointsFields.Remove(_NameLayout);
-                    FieldList.EndsPointsFields.Remove(_NameLayout);
-                }
-                _NameLayout = value;
-            }
+            this.field = field;
+            this.viewport = viewport;
         }
 
-        // Формат макета
-        private string _LayoutFormat;
-        public string LayoutFormat 
+        public override Point2d GetStartPoint()
         {
-            get { return _LayoutFormat; }
-            set 
-            {
-                if (_LayoutFormat != value)
-                {
-                    _LayoutFormat = value;
-                    if (ContourField != ObjectId.Null) 
-                    {
-                        CreateLayoutModel.DeleteObjects(ContourField);
-                    }
-                    this.UpdatePaperSize();
-                    Draw();
-                }
-            } 
+            return field.StartPoint;
         }
 
-        // Плоттер макета
-        private string _PlotterName;
-        public string PlotterName 
+        public override Point2d GetEndPoint()
         {
-            get { return _PlotterName; }
-            set 
-            {
-                _PlotterName = value;
-            } 
-        }
-
-        public Size OriginalSizeLayout { get; set; }
-        public Size DownScaleSizeLayout { get; set; }
-        // Общие параметры
-        public State StateInModel { get; set; } = State.NoExist;
-        public Point2d StartPoint { get; set; }
-        public List<ViewportInField> Viewports = new List<ViewportInField>();
-
-        public Field(string NameLayout, string LayoutFormat, string PlotterName)
-        {
-            Id = new Identificator();
-
-            StartPoint = new Point2d(FieldList.CurrentStartPoint.X, FieldList.CurrentStartPoint.Y);
-
-            this.NameLayout = NameLayout;
-            this.PlotterName = PlotterName;
-            this.LayoutFormat = LayoutFormat;
-        }
-
-        /// <summary>
-        /// Добавление видового экрана, а также перерасчет некоторых важных параметров для Field
-        /// </summary>
-        /// <param name="AnnotationScaleViewport"></param>
-        /// <param name="ObjectsId"></param>
-        public ViewportInField AddViewport(string AnnotationScaleViewport, ObjectIdCollection ObjectsId, string NameViewport)
-        {
-            DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
-            // Добавляем параметры видового экрана
-            var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout, NameViewport);
-            Viewports.Add(viewport);
-            return viewport;
-        }
-
-        public void UpdatePaperSize()
-        {
-            // Получаем оригинальный масштаб
-            OriginalSizeLayout = GetSizePaper(LayoutFormat, PlotterName);
-            // Применяем уменьшающий коэффициент
-            DownScaleSizeLayout = ApplyScaleToSizeObjectsInModel(OriginalSizeLayout, FieldList.DownScale);
-        }
-
-        /// <summary
-        /// Рисуем Field
-        /// </summary>
-        /// <returns></returns>
-        public void Draw()
-        {
-            ContourField = DrawRectangle(StartPoint, DownScaleSizeLayout, FieldList.ColorIndexForField);
-            SetLayer(ContourField, NameLayout);
-            StateInModel = State.Exist;
-        }
-    }
-
-    /// <summary>
-    /// Класс содержащий в себе информацию об отдельном видовом экране на макете
-    /// </summary>
-    public class ViewportInField
-    {
-        // Параметры идентификации
-        public Identificator Id { get; private set; }
-        public ObjectId ContourObjects { get; set; }
-        public ObjectIdCollection ObjectsIDs { get; set; }
-        public string NameLayout { get; set; }
-        public string NameViewport { get; set; }
-        // Параметры размеров
-        private string _AnnotationScaleViewport;
-        public string AnnotationScaleViewport 
-        {   get { return _AnnotationScaleViewport; }
-            set 
-            {
-                if (_AnnotationScaleViewport != value)
-                {
-                    if (ContourObjects != ObjectId.Null) 
-                    {
-                        CreateLayoutModel.DeleteObjects(ContourObjects);
-                    }
-                    _AnnotationScaleViewport = value;
-                    this.UpdateSizeVP();
-                    Draw();
-                }
-            }
-        }
-        public double CustomScaleViewport { get; set; }
-        public Size SizeObjectsWithoutScaling { get; set; }
-        public Size SizeObjectsWithScaling { get; set; }
-        // Общие параметры
-        public Point2d CenterPoint { get; set; }
-        public State StateInModel { get; set; } = State.NoExist;
-        public DistributionViewportOnField StartPoint { get; set; }
-
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout, string NameViewport)
-        {
-            this.Id = new Identificator();
-            this.ObjectsIDs = ObjectsIDs;
-            this.StartPoint = StartDrawPointVP;
-            this.NameLayout = NameLayout;
-            this.NameViewport = NameViewport;
-            this.AnnotationScaleViewport = AnnotationScaleViewport;
-
-            SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, FieldList.DownScale);
-            CenterPoint = Point3dTo2d(CheckCenterModel(ObjectsIDs));
-        }
-
-        /// <summary>
-        /// Рисуем контур объектов в пространстве модели
-        /// </summary>
-        /// <returns></returns>
-        public void Draw()
-        {
-            ContourObjects = DrawRectangle(StartPoint.ToPoint2d(), SizeObjectsWithScaling, FieldList.ColorIndexForViewport);
-            SetLayer(ContourObjects, NameLayout);
-            StateInModel = State.Exist;
-        }
-
-        public void UpdateSizeVP()
-        {
-            SizeObjectsWithoutScaling = CheckModelSize(ObjectsIDs);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScaling, AnnotationScaleViewport);
-            SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, FieldList.DownScale);
+            return new Point2d(field.StartPoint.X + viewport.DownScaleSize.Width, field.StartPoint.Y);
         }
     }
 

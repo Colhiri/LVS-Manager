@@ -33,7 +33,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get 
             { 
-                bool first = !CreateLayoutModel.FL.Fields.Select(x => x.NameLayout).Contains(EditFieldName) && model.IsValidName(EditFieldName);
+                bool first = !CreateLayoutModel.FL.Fields.Select(x => x.Name).Contains(EditFieldName) && model.IsValidName(EditFieldName);
                 return first || EditFieldName == FieldName; 
             }
         }
@@ -69,20 +69,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _FieldName = value;
-                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.NameLayout == _FieldName).First();
+                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.Name == _FieldName).First();
 
-                EditFieldName = CurrentField.NameLayout;
+                EditFieldName = CurrentField.Name;
                 
                 OnPropertyChanged(nameof(EditFieldName));
 
-                PlotterName = CurrentField.PlotterName;
+                PlotterName = CurrentField.Plotter;
                 OnPropertyChanged(nameof(PlotterName));
 
-                LayoutFormat = CurrentField.LayoutFormat;
+                LayoutFormat = CurrentField.Format;
                 OnPropertyChanged(nameof(LayoutFormat));
 
                 /// Если видовые экраны удалены, замещаем на нулевое значение
-                Viewports = CurrentField.Viewports.Select(x => x.Id.ToString()).ToList();
+                Viewports = CurrentField.Viewports.Select(x => x.ID.ToString()).ToList();
                 ViewportId = Viewports.FirstOrDefault();
 
                 OnPropertyChanged(nameof(Viewports));
@@ -121,7 +121,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             get
             {
                 _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
-                LayoutFormat = CurrentField.LayoutFormat;
+                LayoutFormat = CurrentField.Format;
                 OnPropertyChanged(nameof(LayoutFormat));
                 return _Formats;
             }

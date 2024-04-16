@@ -5,6 +5,8 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCAD 2022 Plugin1", "AutoCAD 2022 Plugin1\AutoCAD 2022 Plugin1.csproj", "{33D098D5-7073-4C6F-8C43-96951EC53BF2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAutocad", "TestAutocad\TestAutocad.csproj", "{0EA993BB-7293-43B6-9CFF-B74AED75492A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{33D098D5-7073-4C6F-8C43-96951EC53BF2}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{33D098D5-7073-4C6F-8C43-96951EC53BF2}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{33D098D5-7073-4C6F-8C43-96951EC53BF2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0EA993BB-7293-43B6-9CFF-B74AED75492A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0EA993BB-7293-43B6-9CFF-B74AED75492A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0EA993BB-7293-43B6-9CFF-B74AED75492A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0EA993BB-7293-43B6-9CFF-B74AED75492A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
