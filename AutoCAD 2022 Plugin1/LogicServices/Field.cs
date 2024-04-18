@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using static AutoCAD_2022_Plugin1.Working_functions;
 using AutoCAD_2022_Plugin1.LogicServices;
+using System;
+using System.Windows.Input;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -25,7 +27,7 @@ namespace AutoCAD_2022_Plugin1
     }
 
     /// <summary>
-    /// Создать массив Полей
+    /// Регулирование создания полей и их полилиний
     /// </summary>
     public class Regulator
     {
@@ -36,40 +38,48 @@ namespace AutoCAD_2022_Plugin1
         // Получаем распределение макетов по пространству модели
         public FieldDistributionOnModel distribution { get; set; } = FieldDistributionOnModel.GetInstance();
 
-        public Point2d StartPoint { get; set; }
-        public static Point2d CurrentStartPoint { get; set; }
+        /// <summary>
+        /// Переотрисовка полилиний макетов и видовых экранов
+        /// </summary>
+        /// <param name="field"></param>
+        /// <param name="CorrectStartFieldPoint"></param>
+        private void RedrawPolylines(Field field, Point2d CorrectStartFieldPoint)
+        {
+            field.StartPoint = CorrectStartFieldPoint;
+            CreateLayoutModel.DeleteObjects(field.ContourPolyline);
+            field.Draw();
+
+            distribution.StartsPointsFields[field.Name] = CorrectStartFieldPoint;
+            distribution.EndsPointsFields[field.Name] = new Point2d(CorrectStartFieldPoint.X + field.DownScaleSize.Width, CorrectStartFieldPoint.Y);
+
+            foreach (ViewportInField vp in field.Viewports)
+            {
+                vp.StartPoint = CorrectStartFieldPoint;
+                CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
+                vp.Draw();
+            }
+        }
 
         /// <summary>
-        /// Перерисовывает полилинию макета, если не совпадают стартовые точки в словаре стартовых точек полей и стартой точки в классе поля. Обновляет словарь в конце
+        /// Логика, определяющая необходимость переотрисовки полилиний макетов и видовых экранов
         /// </summary>
         /// <exception cref="System.Exception"></exception>
-        public void RedrawFieldsViewports()
+        public void CreateNewPoints()
         {
             for (int i = 0; i < Fields.Count;i++)
             {
                 Field f = Fields[i];
 
-                double EndPoint = (f.StartPoint.X + f.DownScaleSize.Width + config.BorderValueLayout);
+                Point2d EndPoint = new Point2d((f.StartPoint.X + f.DownScaleSize.Width + config.BorderValueLayout), f.StartPoint.Y);
 
-                if (i == 0 && new Point2d(EndPoint, f.StartPoint.Y) != distribution.EndsPointsFields[f.Name])
+                if (i == 0 && EndPoint != distribution.EndsPointsFields[f.Name])
                 {
                     double CorrectX = f.StartPoint.X;
                     double CorrectY = f.StartPoint.Y;
                     
                     Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
-                    f.StartPoint = CorrectStartFieldPoint;
-                    CreateLayoutModel.DeleteObjects(f.ContourPolyline);
-                    f.Draw();
 
-                    distribution.StartsPointsFields[f.Name] = CorrectStartFieldPoint;
-                    distribution.EndsPointsFields[f.Name] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSize.Width, CorrectStartFieldPoint.Y);
-
-                    foreach (ViewportInField vp in f.Viewports)
-                    {
-                        vp.StartPoint = CorrectStartFieldPoint;
-                        CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
-                        vp.Draw();
-                    }
+                    RedrawPolylines(f, CorrectStartFieldPoint);
                 }
                 else
                 {
@@ -81,25 +91,13 @@ namespace AutoCAD_2022_Plugin1
                         double CorrectY = pastField.StartPoint.Y;
 
                         Point2d CorrectStartFieldPoint = new Point2d(CorrectX, CorrectY);
-                        f.StartPoint = CorrectStartFieldPoint;
-                        CreateLayoutModel.DeleteObjects(f.ContourPolyline);
-                        f.Draw();
 
-                        distribution.StartsPointsFields[f.Name] = CorrectStartFieldPoint;
-                        distribution.EndsPointsFields[f.Name] = new Point2d(CorrectStartFieldPoint.X + f.DownScaleSize.Width, CorrectStartFieldPoint.Y);
-
-                        foreach (ViewportInField vp in f.Viewports)
-                        {
-                            vp.StartPoint = CorrectStartFieldPoint;
-                            CreateLayoutModel.DeleteObjects(vp.ContourPolyline);
-                            vp.Draw();
-                        }
+                        RedrawPolylines(f, CorrectStartFieldPoint);
                     }
                 }
             }
         }
     }
-    
 
     /// <summary>
     /// Базовый класс
@@ -145,7 +143,7 @@ namespace AutoCAD_2022_Plugin1
         /// </summary>
         public void Draw()
         {
-            ContourPolyline = DrawRectangle(Distribution.CurrentStartPoint, DownScaleSize, ColorIndex);
+            ContourPolyline = DrawRectangle(StartPoint, DownScaleSize, ColorIndex);
             // Не имеет смысла ставить слой на созданную полилинию
             // SetLayer(ContourPolyline, Name);
             StateInModel = State.Exist;
@@ -165,7 +163,17 @@ namespace AutoCAD_2022_Plugin1
         // Плоттер
         public string Plotter { get; set; }
         // Формат макета
-        public string Format { get; set; }
+        private string _Format;
+        public string Format 
+        {
+            get { return _Format; }
+            set 
+            { 
+                _Format = value;
+
+                UpdatePolylineSize();
+            }
+        }
         // Видовые экраны
         public List<ViewportInField> Viewports { get; set; }
 
@@ -182,8 +190,6 @@ namespace AutoCAD_2022_Plugin1
 
             this.StartPoint = Distribution.GetStartPoint();
             this.EndPoint = new Point2d(StartPoint.X + DownScaleSize.Width, StartPoint.Y);
-
-            Draw();
         }
 
         /// <summary>
@@ -204,14 +210,23 @@ namespace AutoCAD_2022_Plugin1
     public class ViewportInField : Element
     {
         // Аннотационный масштаб видового экрана
-        public string AnnotationScale { get; set; }
+        private string _AnnotationScale;
+        public string AnnotationScale 
+        {
+            get { return _AnnotationScale; }
+            set 
+            { 
+                _AnnotationScale = value;
+                UpdatePolylineSize();
+            } 
+        }
         // Список объектов на пространстве модели, которые будут показаны на видовом экране
         public ObjectIdCollection ObjectIDs { get; set; }
 
         public ViewportInField(string Name, string AnnotationScale, ObjectIdCollection ObjectIDs, Field field) : base(Name)
         {
-            this.AnnotationScale = AnnotationScale;
             this.ObjectIDs = ObjectIDs;
+            this.AnnotationScale = AnnotationScale;
             this.ColorIndex = config.ColorIndexForViewport;
             UpdatePolylineSize();
 
@@ -256,6 +271,12 @@ namespace AutoCAD_2022_Plugin1
     {
         private static FieldDistributionOnModel dist;
 
+        public event NotifyInputEventHandler InputChanged;
+
+        // Учет добавленных имен полей
+        private List<string> FieldNames = new List<string>();
+
+        // Синглтон
         private static FieldList<T> instance;
         public static FieldList<T> GetInstance()
         {
@@ -271,16 +292,37 @@ namespace AutoCAD_2022_Plugin1
 
         }
 
+        /// <summary>
+        /// Добавляет новое поле, если его имени еще нет в списке учета
+        /// </summary>
+        /// <param name="Item"></param>
         public new void Add(T Item)
         {
-            if (!Contains(Item))
+            if (!FieldNames.Contains((Item as Field).Name))
             {
                 dist.StartsPointsFields.Add((Item as Field).Name, dist.GetStartPoint());
                 dist.EndsPointsFields.Add((Item as Field).Name, dist.GetStartPoint());
                 base.Add(Item);
+                FieldNames.Add((Item as Field).Name);
+                (Item as Field).Draw();
+
             }
         }
 
+        /// <summary>
+        /// Удалить существуеющее поле
+        /// </summary>
+        /// <param name="Item"></param>
+        public new void Remove(T Item)
+        {
+            if (FieldNames.Contains((Item as Field).Name))
+            {
+                dist.StartsPointsFields.Remove((Item as Field).Name);
+                dist.EndsPointsFields.Remove((Item as Field).Name);
+                FieldNames.Remove((Item as Field).Name);
+                base.Remove(Item);
+            }
+        }
     }
 
     /// <summary>
@@ -336,7 +378,7 @@ namespace AutoCAD_2022_Plugin1
             }
             else
             {
-                CurrentStartPoint = new Point2d(fields[fields.Count - 2].StartPoint.X + fields[fields.Count - 2].DownScaleSize.Width + config.BorderValueLayout, fields[fields.Count - 2].StartPoint.Y);
+                CurrentStartPoint = new Point2d(fields[fields.Count - 1].StartPoint.X + fields[fields.Count - 1].DownScaleSize.Width + config.BorderValueLayout, fields[fields.Count - 1].StartPoint.Y);
             }
             return CurrentStartPoint;
         }

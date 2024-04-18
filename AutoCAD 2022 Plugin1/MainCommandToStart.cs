@@ -167,5 +167,39 @@ namespace LightProgram
             
             if (Application.ShowModalWindow(window) != true) return;
         }
+
+
+        /// <summary>
+        /// Запускает создание листов и видовых экранов в соответствии с их параметрами в массиве Fields / Viewports
+        /// </summary>
+        [CommandMethod("CreateFV")]
+        public void CreateFV()
+        {
+            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            Database AcDatabase = AcDocument.Database;
+            Editor AcEditor = AcDocument.Editor;
+            LayoutManager layManager = LayoutManager.Current;
+            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
+
+            // Цикл по массиву макетов 
+            foreach (Field field in FL.Fields)
+            {
+                // Создать макет по параметрам
+                CreateLayout(nameLayout: field.Name, canonicalScale: field.Format, deviceName: field.Plotter);
+
+                // (вложенный цикл по массиву видовых экранов)
+                foreach (ViewportInField vp in field.Viewports)
+                {
+                    Vector3d vector = new Vector3d(1, 0, 0);
+                    // Создать на макете видовые экраны
+                    ObjectId vpID = CreateViewport(widthObjectsModel: vp.DownScaleSize.Width, heightObjectsModel: vp.DownScaleSize.Height, layoutName: field.Name,
+                                   centerPoint: CheckCenterModel(vp.ObjectIDs), orientation: vector, scaleVP: vp.AnnotationScale);
+
+                    // Обозначить объекты на видовых экранах
+                    MoveSelectToVP(vp.ObjectIDs, vpID);
+                }
+            }
+        }
     }
 }

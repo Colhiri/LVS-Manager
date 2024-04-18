@@ -8,12 +8,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 {
     public partial class ManageLayoutViewportVM : MainVM
     {
+        FieldDistributionOnModel dist = FieldDistributionOnModel.GetInstance();
 
         public ManageLayoutViewportVM()
         {
             _LayoutToDelete = new ObservableCollection<string>();
             _ViewportToDelete = new ObservableCollection<string>();
-            _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name));
+            _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name).ToList());
         }
 
         /// <summary>
@@ -43,6 +44,15 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
             set
             {
+                switch (ActiveTab.Name)
+                {
+                    case "Layout":
+                        TypeActiveTab = WorkObject.Field;
+                        break;
+                    case "Viewport":
+                        TypeActiveTab = WorkObject.Viewport;
+                        break;
+                }
                 _ActiveTab = value;
             }
         }
@@ -76,12 +86,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         /// </summary>
         private void AddDelete()
         {
-            switch (ActiveTab.Name)
+            switch (TypeActiveTab)
             {
-                case "Layout":
+                case WorkObject.Field:
                     LayoutToDelete.Add(FieldName);
                     break;
-                case "Viewport":
+                case WorkObject.Viewport:
                     ViewportToDelete.Add(ViewportId);
                     break;
             }
@@ -108,12 +118,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         /// </summary>
         private void RemoveDelete()
         {
-            switch (ActiveTab.Name)
+            switch (TypeActiveTab)
             {
-                case "Layout":
+                case WorkObject.Field:
                     LayoutToDelete.Remove(FieldName);
                     break;
-                case "Viewport":
+                case WorkObject.Viewport:
                     ViewportToDelete.Remove(ViewportId);
                     break;
             }
@@ -128,9 +138,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         /// </summary>
         private void SaveChanges()
         {
-            switch (ActiveTab.Name)
+            switch (TypeActiveTab)
             {
-                case "Layout":
+                case WorkObject.Field:
                     if (!LayoutToDelete.Contains(FieldName))
                     {
                         CurrentField.Name = EditFieldName;
@@ -149,11 +159,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         NamesLayouts.Remove(FieldName);
                         LayoutToDelete.Remove(FieldName);
                     }
-                    OnPropertyChanged(nameof(ViewportId));
-                    OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-                    OnPropertyChanged(nameof(Viewports));
                     break;
-                case "Viewport":
+                case WorkObject.Viewport:
                     if (!ViewportToDelete.Contains(ViewportId))
                     {
                         CurrentViewport.Name = NameViewport;
@@ -166,13 +173,13 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         Viewports.Remove(ViewportId);
                         ViewportToDelete.Remove(ViewportId);
                     }
-                    OnPropertyChanged(nameof(ViewportId));
-                    OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-                    OnPropertyChanged(nameof(Viewports));
                     break;
             }
+            OnPropertyChanged(nameof(ViewportId));
+            OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
+            OnPropertyChanged(nameof(Viewports));
             // Перерисовываем если есть изменения в формате макета
-            CreateLayoutModel.FL.RedrawFieldsViewports();
+            CreateLayoutModel.FL.CreateNewPoints();
         }
 
         private RelayCommand _CancelDeleteCommand;
