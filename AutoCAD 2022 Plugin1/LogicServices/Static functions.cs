@@ -23,6 +23,18 @@ namespace AutoCAD_2022_Plugin1
         public static Regulator FL = new Regulator();
 
         /// <summary>
+        /// Преобразует аннотационный масштаб видового экрана из строкового представления в числовое
+        /// </summary>
+        /// <param name="AnnotationScale"></param>
+        /// <returns></returns>
+        public static double ReformatAnnotationScale(string AnnotationScale)
+        {
+            double[] parts = AnnotationScale.Split(':').Select(x => double.Parse(x)).ToArray();
+            return parts[0] / parts[1];
+
+        }
+
+        /// <summary>
         /// Создает видовой экран по заданным параметрам
         /// Creating viewport in set layout in set point
         /// 
@@ -39,7 +51,7 @@ namespace AutoCAD_2022_Plugin1
         /// Creating viewport ID
         /// </returns>
         public static ObjectId CreateViewport(double widthObjectsModel, double heightObjectsModel, string layoutName, 
-                                              Point3d centerPoint, Vector3d orientation, StandardScaleType scaleVP)
+                                              Point3d centerPoint, Vector3d orientation, string scaleVP)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -69,7 +81,8 @@ namespace AutoCAD_2022_Plugin1
                 viewport.ViewDirection = orientation;
                 viewport.On = true;
 
-                viewport.StandardScale = StandardScaleType.Scale1To1;
+                // viewport.StandardScale = StandardScaleType.CustomScale;
+                // viewport.CustomScale = ReformatAnnotationScale(scaleVP);
 
                 acTrans.Commit();
                 
@@ -80,13 +93,10 @@ namespace AutoCAD_2022_Plugin1
                 Viewport vp = acTrans.GetObject(viewportID, OpenMode.ForWrite) as Viewport;
 
                 AnnotationScale dbAnnoScale = AcDatabase.Cannoscale;
-                // AnnotationScale vpAnnScale = vp.AnnotationScale;
-                // double AnnScale = vpAnnScale.Scale;
-
-                // vp.AnnotationScale.Name = "1:4";
                 double cstScaleVP = vp.CustomScale;
 
-                vp.StandardScale = scaleVP;
+                // vp.StandardScale = scaleVP;
+                vp.StandardScale = StandardScaleType.CustomScale;
                 cstScaleVP = vp.CustomScale;
 
                 acTrans.Commit();
@@ -717,7 +727,7 @@ namespace AutoCAD_2022_Plugin1
         /// <param name="nameLayout"></param>
         /// <param name="canonicalScale"></param>
         /// <exception cref="System.Exception"></exception>
-        public static void SetSizeLayout(string nameLayout, string canonicalScale)
+        public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -728,7 +738,8 @@ namespace AutoCAD_2022_Plugin1
                 var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
 
                 // Получаем значение девайса печати для макета
-                string deviceName = layWrite.PlotConfigurationName;
+                // string deviceName = layWrite.PlotConfigurationName;
+                // string deviceName1 = layWrite.PlotViewName;
 
                 if (!layoutManager.LayoutExists(nameLayout))
                     throw new System.Exception($"Layout with name {nameLayout} already exists.");
@@ -761,7 +772,7 @@ namespace AutoCAD_2022_Plugin1
             ObjectId id = layoutManager.CreateLayout(nameLayout);
 
             // Меняем масштаб листа на заданный масштаб выбранного девайса
-            SetSizeLayout(nameLayout, canonicalScale);
+            SetSizeLayout(nameLayout, deviceName, canonicalScale);
 
             AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
 
