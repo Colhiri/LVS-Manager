@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="ConfigFile.json" />
     <None Include="packages.config" />
     <None Include="Services\start.scr">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>

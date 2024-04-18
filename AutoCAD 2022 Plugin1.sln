@@ -5,7 +5,7 @@ VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoCAD 2022 Plugin1", "AutoCAD 2022 Plugin1\AutoCAD 2022 Plugin1.csproj", "{33D098D5-7073-4C6F-8C43-96951EC53BF2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAutocad", "TestAutocad\TestAutocad.csproj", "{0EA993BB-7293-43B6-9CFF-B74AED75492A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestAutocad", "TestAutocad\TestAutocad.csproj", "{0EA993BB-7293-43B6-9CFF-B74AED75492A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
