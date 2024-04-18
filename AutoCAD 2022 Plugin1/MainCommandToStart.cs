@@ -191,10 +191,10 @@ namespace LightProgram
                 // (вложенный цикл по массиву видовых экранов)
                 foreach (ViewportInField vp in field.Viewports)
                 {
-                    Vector3d vector = new Vector3d(1, 0, 0);
-                    // Создать на макете видовые экраны
+                    Vector3d vector = new Vector3d(0, 0, 1);
+                    // Создать на макете видовые экраны   CheckCenterModel(vp.ObjectIDs)
                     ObjectId vpID = CreateViewport(widthObjectsModel: vp.DownScaleSize.Width, heightObjectsModel: vp.DownScaleSize.Height, layoutName: field.Name,
-                                   centerPoint: CheckCenterModel(vp.ObjectIDs), orientation: vector, scaleVP: vp.AnnotationScale);
+                                   centerPoint: new Point3d(0, 0, 0), orientation: vector, scaleVP: vp.AnnotationScale);
 
                     // Обозначить объекты на видовых экранах
                     MoveSelectToVP(vp.ObjectIDs, vpID);

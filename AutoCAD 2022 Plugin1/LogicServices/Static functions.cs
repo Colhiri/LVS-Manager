@@ -81,7 +81,7 @@ namespace AutoCAD_2022_Plugin1
                 viewport.ViewDirection = orientation;
                 viewport.On = true;
 
-                // viewport.StandardScale = StandardScaleType.CustomScale;
+                viewport.StandardScale = StandardScaleType.Scale1To1;
                 // viewport.CustomScale = ReformatAnnotationScale(scaleVP);
 
                 acTrans.Commit();
@@ -96,13 +96,112 @@ namespace AutoCAD_2022_Plugin1
                 double cstScaleVP = vp.CustomScale;
 
                 // vp.StandardScale = scaleVP;
-                vp.StandardScale = StandardScaleType.CustomScale;
-                cstScaleVP = vp.CustomScale;
+                vp.StandardScale = StandardScaleType.Scale1To1;
+                // cstScaleVP = vp.CustomScale;
 
                 acTrans.Commit();
             }
 
             return viewportID;
+        }
+
+        /// <summary>
+        /// Переносит выбранные объекты на выбранный видовой экран
+        /// </summary>
+        /// <param name="ids"></param>
+        /// <param name="viewportID"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void MoveSelectToVP(ObjectIdCollection ids, ObjectId viewportID)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            double modelHeight;
+            double modelWidth;
+            double mScrRatio;
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                Extents3d ext = new Extents3d();
+                foreach (ObjectId id in ids)
+                {
+                    var ent = acTrans.GetObject(id, OpenMode.ForRead) as Entity;
+                    if (ent != null)
+                    {
+                        ext.AddExtents(ent.GeometricExtents);
+                    }
+                }
+
+                Viewport vp = (Viewport)acTrans.GetObject(viewportID, OpenMode.ForRead);
+                mScrRatio = (vp.Width / vp.Height);
+                // prepare Matrix for DCS to WCS transformation
+                Matrix3d matWCS2DCS;
+                matWCS2DCS = Matrix3d.PlaneToWorld(vp.ViewDirection);
+                matWCS2DCS = Matrix3d.Displacement(vp.ViewTarget - Point3d.Origin) * matWCS2DCS;
+                matWCS2DCS = Matrix3d.Rotation(-vp.TwistAngle, vp.ViewDirection, vp.ViewTarget) * matWCS2DCS;
+                matWCS2DCS = matWCS2DCS.Inverse();
+                ext.TransformBy(matWCS2DCS);
+                // width of the extents in current view
+                double mWidth;
+                mWidth = (ext.MaxPoint.X - ext.MinPoint.X);
+                // height of the extents in current view
+                double mHeight;
+                mHeight = (ext.MaxPoint.Y - ext.MinPoint.Y);
+                // get the view center point
+                Point2d mCentPt = new Point2d(
+                  ((ext.MaxPoint.X + ext.MinPoint.X) * 0.5),
+                  ((ext.MaxPoint.Y + ext.MinPoint.Y) * 0.5));
+                vp.UpgradeOpen();
+                if (mWidth > (mHeight * mScrRatio)) mHeight = mWidth / mScrRatio;
+                vp.ViewHeight = mHeight * 1.0; // 1.01
+                // set the view center
+                vp.ViewCenter = mCentPt;
+                vp.Visible = true;
+                vp.On = true;
+                vp.UpdateDisplay();
+
+                acTrans.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Создать макет с указанным именем и масштабом
+        /// </summary>
+        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Нет")
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            if (layoutManager.LayoutExists(nameLayout))
+                throw new System.Exception($"Layout with name {nameLayout} already exists.");
+
+            if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
+                throw new System.Exception($"Canonical scale is wrong.");
+
+            ObjectId id = layoutManager.CreateLayout(nameLayout);
+
+            // Меняем масштаб листа на заданный масштаб выбранного девайса
+            SetSizeLayout(nameLayout, deviceName, canonicalScale);
+
+            AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
+
+            using (Transaction AcTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                layoutManager.CurrentLayout = nameLayout;
+
+                DBDictionary LayoutDict = AcTrans.GetObject(AcDatabase.LayoutDictionaryId, OpenMode.ForRead) as DBDictionary;
+                Layout CurrentLo = AcTrans.GetObject((ObjectId)LayoutDict[layoutManager.CurrentLayout], OpenMode.ForRead) as Layout;
+                BlockTableRecord BlkTblRec = AcTrans.GetObject(CurrentLo.BlockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
+                foreach (ObjectId ID in BlkTblRec)
+                {
+                    Viewport VP = AcTrans.GetObject(ID, OpenMode.ForWrite) as Viewport;
+                    if (VP != null)
+                    {
+                        VP.UpgradeOpen();
+                        VP.Erase();
+                    }
+                }
+             AcTrans.Commit();
+            }
+            return id;
         }
 
         /// <summary>
@@ -203,64 +302,6 @@ namespace AutoCAD_2022_Plugin1
         public static Point2d Point3dTo2d(Point3d point)
         {
             return new Point2d(point.X, point.Y);
-        }
-
-        /// <summary>
-        /// Переносит выбранные объекты на выбранный видовой экран
-        /// </summary>
-        /// <param name="ids"></param>
-        /// <param name="viewportID"></param>
-        /// <exception cref="System.Exception"></exception>
-        public static void MoveSelectToVP(ObjectIdCollection ids, ObjectId viewportID)
-        {
-            if (AcDocument is null) throw new System.Exception("No active document!");
-
-            double modelHeight;
-            double modelWidth;
-            double mScrRatio;
-
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            {
-                Extents3d ext = new Extents3d();
-                foreach (ObjectId id in ids)
-                {
-                    var ent = acTrans.GetObject(id, OpenMode.ForRead) as Entity;
-                    if (ent != null)
-                    {
-                        ext.AddExtents(ent.GeometricExtents);
-                    }
-                }
-
-                Viewport vp = (Viewport)acTrans.GetObject(viewportID, OpenMode.ForRead);
-                mScrRatio = (vp.Width / vp.Height);
-                // prepare Matrix for DCS to WCS transformation
-                Matrix3d matWCS2DCS;
-                matWCS2DCS = Matrix3d.PlaneToWorld(vp.ViewDirection);
-                matWCS2DCS = Matrix3d.Displacement(vp.ViewTarget - Point3d.Origin) * matWCS2DCS;
-                matWCS2DCS = Matrix3d.Rotation(-vp.TwistAngle, vp.ViewDirection, vp.ViewTarget) * matWCS2DCS;
-                matWCS2DCS = matWCS2DCS.Inverse();
-                ext.TransformBy(matWCS2DCS);
-                // width of the extents in current view
-                double mWidth;
-                mWidth = (ext.MaxPoint.X - ext.MinPoint.X);
-                // height of the extents in current view
-                double mHeight;
-                mHeight = (ext.MaxPoint.Y - ext.MinPoint.Y);
-                // get the view center point
-                Point2d mCentPt = new Point2d(
-                  ((ext.MaxPoint.X + ext.MinPoint.X) * 0.5),
-                  ((ext.MaxPoint.Y + ext.MinPoint.Y) * 0.5));
-                vp.UpgradeOpen();
-                if (mWidth > (mHeight * mScrRatio)) mHeight = mWidth / mScrRatio;
-                vp.ViewHeight = mHeight * 1.0; // 1.01
-                // set the view center
-                vp.ViewCenter = mCentPt;
-                vp.Visible = true;
-                vp.On = true;
-                vp.UpdateDisplay();
-
-                acTrans.Commit();
-            }
         }
 
 
@@ -754,30 +795,7 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.Commit();
             }
         }
-
-
-        /// <summary>
-        /// Создать макет с указанным именем и масштабом
-        /// </summary>
-        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Нет")
-        {
-            if (AcDocument is null) throw new System.Exception("No active document!");
-
-            if (layoutManager.LayoutExists(nameLayout))
-                throw new System.Exception($"Layout with name {nameLayout} already exists.");
-
-            if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
-                throw new System.Exception($"Canonical scale is wrong.");
-
-            ObjectId id = layoutManager.CreateLayout(nameLayout);
-
-            // Меняем масштаб листа на заданный масштаб выбранного девайса
-            SetSizeLayout(nameLayout, deviceName, canonicalScale);
-
-            AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
-
-            return id;
-        }
+        
 
         /// <summary>
         /// Наводится объекты в пространстве модели

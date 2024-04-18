@@ -1,8 +1,7 @@
 ﻿using Autodesk.AutoCAD.ApplicationServices;
 using Autodesk.AutoCAD.Geometry;
+using Newtonsoft.Json;
 using System.IO;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 
 namespace AutoCAD_2022_Plugin1.LogicServices
@@ -13,7 +12,7 @@ namespace AutoCAD_2022_Plugin1.LogicServices
     public class Config
     {
         // Путь к конфигурации (Автоматический путь)
-        private string PathToConfigFile = $"ConfigFile.json";
+        private string PathToConfigFile = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.MyDocuments), $"ConfigFile.json");
 
         // Единственный экземпляр класса (Синглтон)
         private static Config instance;
@@ -53,16 +52,23 @@ namespace AutoCAD_2022_Plugin1.LogicServices
             {
                 Application.ShowAlertDialog("Configuration does not exists file. \nI will create a new file with default parameters!");
                 DefaultInitialize();
-                using (FileStream f = new FileStream(PathToConfigFile, FileMode.OpenOrCreate))
+
+                var serializer = new JsonSerializer();
+
+                using (StreamWriter sw = new StreamWriter(PathToConfigFile))
+                using (JsonWriter writer = new JsonTextWriter(sw))
                 {
-                    JsonSerializer.Serialize<Config>(f, this);
+                    serializer.Serialize(writer, this);
                 }
             }
             else
             {
-                using (FileStream f = new FileStream(PathToConfigFile, FileMode.OpenOrCreate))
+                var serializer = new JsonSerializer();
+
+                using (StreamReader sw = new StreamReader(PathToConfigFile))
+                using (JsonReader writer = new JsonTextReader(sw))
                 {
-                    Config config = JsonSerializer.Deserialize<Config>(f);
+                    Config config = serializer.Deserialize<Config>(writer);
                     InitializeWithCopy(config);
                 }
             }
