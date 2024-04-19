@@ -15,14 +15,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                return !LayoutToDelete.Contains(FieldName);
+                return !LayoutToDelete.Contains(FieldName) && CurrentField != null;
             }
         }
         public bool InvertEnabledFormsParamatersLayout
         {
             get
             {
-                return LayoutToDelete.Contains(FieldName);
+                return LayoutToDelete.Contains(FieldName) && CurrentField != null;
             }
         }
 
@@ -34,7 +34,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             get 
             { 
                 bool first = !CreateLayoutModel.FL.Fields.Select(x => x.Name).Contains(EditFieldName) && model.IsValidName(EditFieldName);
-                return first || EditFieldName == FieldName; 
+                return  CurrentField != null && (first || EditFieldName == FieldName); 
             }
         }
 
@@ -68,23 +68,22 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
             set
             {
+                // Если макет существует, получаем его параметры, иначе null
                 _FieldName = value;
-                CurrentField = CreateLayoutModel.FL.Fields.Where(x => x.Name == _FieldName).First();
 
-                EditFieldName = CurrentField.Name;
-                
-                OnPropertyChanged(nameof(EditFieldName));
+                CurrentField = _FieldName != null ? CreateLayoutModel.FL.Fields.Where(x => x.Name == _FieldName).First() : null;
 
-                PlotterName = CurrentField.Plotter;
-                OnPropertyChanged(nameof(PlotterName));
-
-                LayoutFormat = CurrentField.Format;
-                OnPropertyChanged(nameof(LayoutFormat));
+                EditFieldName = _FieldName != null ? CurrentField.Name : null;
+                PlotterName = _FieldName != null ? CurrentField.Plotter : null;
+                LayoutFormat = _FieldName != null ? CurrentField.Format : null;
 
                 /// Если видовые экраны удалены, замещаем на нулевое значение
-                Viewports = CurrentField.Viewports.Select(x => x.ID.ToString()).ToList();
-                ViewportId = Viewports.FirstOrDefault();
+                Viewports = _FieldName != null ? CurrentField.Viewports.Select(x => x.ID.ToString()).ToList() : null;
+                ViewportId = _FieldName != null ? Viewports.FirstOrDefault() : null;
 
+                OnPropertyChanged(nameof(EditFieldName));
+                OnPropertyChanged(nameof(PlotterName));
+                OnPropertyChanged(nameof(LayoutFormat));
                 OnPropertyChanged(nameof(Viewports));
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
             }

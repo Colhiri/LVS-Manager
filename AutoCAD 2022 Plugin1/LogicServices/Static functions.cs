@@ -191,7 +191,7 @@ namespace AutoCAD_2022_Plugin1
                 Layout CurrentLo = AcTrans.GetObject((ObjectId)LayoutDict[layoutManager.CurrentLayout], OpenMode.ForRead) as Layout;
                 BlockTableRecord BlkTblRec = AcTrans.GetObject(CurrentLo.BlockTableRecordId, OpenMode.ForRead) as BlockTableRecord;
                 foreach (ObjectId ID in BlkTblRec)
-                {
+                { 
                     Viewport VP = AcTrans.GetObject(ID, OpenMode.ForWrite) as Viewport;
                     if (VP != null)
                     {
@@ -202,6 +202,79 @@ namespace AutoCAD_2022_Plugin1
              AcTrans.Commit();
             }
             return id;
+        }
+
+        /// <summary>
+        /// Изменить масштаб листа на заданный стандартный масштаб
+        /// </summary>
+        /// <param name="nameLayout"></param>
+        /// <param name="scale"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void SetSizeLayout(string nameLayout, StdScaleType scale)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+
+            ObjectId layID = layoutManager.GetLayoutId(nameLayout);
+
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+                pltValidator.SetStdScaleType(layWrite, scale);
+
+                acTrans.Commit();
+            }
+        }
+
+        /// <summary>
+        /// Меняет масштаб листа на заданный канонический масштаб печати
+        /// </summary>
+        /// <param name="nameLayout"></param>
+        /// <param name="canonicalScale"></param>
+        /// <exception cref="System.Exception"></exception>
+        public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale)
+        {
+            if (AcDocument is null) throw new System.Exception("No active document!");
+            if (!layoutManager.LayoutExists(nameLayout))
+                throw new System.Exception($"Layout with name {nameLayout} already exists.");
+            if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
+                throw new System.Exception($"Canonical scale is wrong.");
+
+            ObjectId layID = layoutManager.GetLayoutId(nameLayout);
+
+            // Получаем макет
+            Layout layWrite;
+            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
+            {
+                layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+                acTrans.Commit();
+            }
+
+            // Применяем параметры
+            using (var ps = new PlotSettings(layWrite.ModelType))
+            {
+                ps.CopyFrom(layWrite);
+                PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+                pltValidator.SetPlotConfigurationName(ps, deviceName, null);
+                pltValidator.RefreshLists(ps);
+
+                pltValidator.SetCanonicalMediaName(ps, canonicalScale);
+
+                var upgraded = false;
+
+                if (!layWrite.IsWriteEnabled)
+                {
+                    layWrite.UpgradeOpen();
+                    upgraded = true;
+                }
+
+                layWrite.CopyFrom(ps);
+
+                if (upgraded)
+                {
+                    layWrite.DowngradeOpen();
+                }
+            }
         }
 
         /// <summary>
@@ -740,61 +813,7 @@ namespace AutoCAD_2022_Plugin1
         }
 
 
-        /// <summary>
-        /// Изменить масштаб листа на заданный стандартный масштаб
-        /// </summary>
-        /// <param name="nameLayout"></param>
-        /// <param name="scale"></param>
-        /// <exception cref="System.Exception"></exception>
-        public static void SetSizeLayout(string nameLayout, StdScaleType scale)
-        {
-            if (AcDocument is null) throw new System.Exception("No active document!");
-
-            ObjectId layID = layoutManager.GetLayoutId(nameLayout);
-
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            {
-                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
-
-                pltValidator.SetStdScaleType(layWrite, scale);
-
-                acTrans.Commit();
-            }
-        }
-
-        /// <summary>
-        /// Меняет масштаб листа на заданный канонический масштаб печати
-        /// </summary>
-        /// <param name="nameLayout"></param>
-        /// <param name="canonicalScale"></param>
-        /// <exception cref="System.Exception"></exception>
-        public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale)
-        {
-            if (AcDocument is null) throw new System.Exception("No active document!");
-
-            ObjectId layID = layoutManager.GetLayoutId(nameLayout);
-
-            using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
-            {
-                var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
-
-                // Получаем значение девайса печати для макета
-                // string deviceName = layWrite.PlotConfigurationName;
-                // string deviceName1 = layWrite.PlotViewName;
-
-                if (!layoutManager.LayoutExists(nameLayout))
-                    throw new System.Exception($"Layout with name {nameLayout} already exists.");
-                if (!GetAllCanonicalScales(deviceName).Contains(canonicalScale))
-                    throw new System.Exception($"Canonical scale is wrong.");
-
-                PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
-
-                pltValidator.SetPlotConfigurationName(layWrite, deviceName, null);
-                pltValidator.SetCanonicalMediaName(layWrite, canonicalScale);
-
-                acTrans.Commit();
-            }
-        }
+        
         
 
         /// <summary>

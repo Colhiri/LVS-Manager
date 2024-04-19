@@ -8,7 +8,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800" WindowStyle="ToolWindow" SizeToContent="WidthAndHeight" Title="ManageLayout">
     <StackPanel>
-        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100">
+        <TabControl Name="Managing" Margin="2" MinHeight="50" MinWidth="100" SelectedItem="{Binding ActiveTab}">
             <TabItem Name="Layout" Header="Макет">
                 <TabItem.Content>
                     <Grid>
