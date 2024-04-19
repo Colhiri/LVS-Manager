@@ -70,22 +70,14 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
             set
             {
+                // Если видовой экран существует, получаем его параметры, иначе null
                 _ViewportId = value;
-                
-                if (_ViewportId != null)
-                {
-                    CurrentViewport = CreateLayoutModel.FL.Fields.Where(x => x.Name == FieldName)
-                                                             .First()
-                                                             .Viewports.Where(x => x.ID.ToString() == _ViewportId).First();
-                    AnnotationScaleObjectsVP = CurrentViewport.AnnotationScale;
-                    NameViewport = CurrentViewport.Name;
-                }
-                else
-                {
-                    CurrentViewport = null;
-                    AnnotationScaleObjectsVP = null;
-                    NameViewport = null;
-                }
+                CurrentViewport = _ViewportId != null ? CreateLayoutModel.FL.Fields.Where(x => x.Name == FieldName)
+                                                         .First()
+                                                         .Viewports.Where(x => x.ID.ToString() == _ViewportId).First() : null;
+                AnnotationScaleObjectsVP = _ViewportId != null ? CurrentViewport.AnnotationScale : null;
+                NameViewport = _ViewportId != null ? CurrentViewport.Name : null;
+
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
                 OnPropertyChanged(nameof(NameViewport));
                 OnPropertyChanged(nameof(EnabledFormsParamatersViewport));

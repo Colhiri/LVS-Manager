@@ -44,6 +44,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             }
             set
             {
+                _ActiveTab = value;
                 switch (ActiveTab.Name)
                 {
                     case "Layout":
@@ -53,7 +54,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         TypeActiveTab = WorkObject.Viewport;
                         break;
                 }
-                _ActiveTab = value;
             }
         }
 
@@ -158,6 +158,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         CreateLayoutModel.FL.Fields.Remove(CurrentField);
                         NamesLayouts.Remove(FieldName);
                         LayoutToDelete.Remove(FieldName);
+
+                        // Назначаем новый макет, если он имеется
+                        FieldName = CreateLayoutModel.FL.Fields.Count > 0 ? CreateLayoutModel.FL.Fields[0].Name : null;
                     }
                     break;
                 case WorkObject.Viewport:
@@ -172,12 +175,19 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                         CurrentField.Viewports.Remove(CurrentViewport);
                         Viewports.Remove(ViewportId);
                         ViewportToDelete.Remove(ViewportId);
+
+                        // Назначаем новый видовой экран, если он имеется
+                        ViewportId = Viewports.Count == 0 ? null : Viewports[0];
                     }
                     break;
             }
             OnPropertyChanged(nameof(ViewportId));
             OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
             OnPropertyChanged(nameof(Viewports));
+            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersLayout));
+            OnPropertyChanged(nameof(InvertEnabledFormsParamatersViewport));
             // Перерисовываем если есть изменения в формате макета
             CreateLayoutModel.FL.CreateNewPoints();
         }
