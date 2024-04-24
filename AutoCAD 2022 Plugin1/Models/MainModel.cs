@@ -24,7 +24,7 @@ namespace AutoCAD_2022_Plugin1.Models
             if (string.IsNullOrEmpty(AnnotationScaleObjectsVP)) return false;
             try
             {
-                int[] parts = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
+                double[] parts = AnnotationScaleObjectsVP.Split(':').Select(x => double.Parse(x)).ToArray();
             }
             catch
             {
