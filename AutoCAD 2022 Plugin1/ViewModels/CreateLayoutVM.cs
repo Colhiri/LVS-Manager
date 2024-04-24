@@ -82,9 +82,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels
                 OnPropertyChanged(nameof(Formats));
                 OnPropertyChanged(nameof(LayoutFormat));
 
-                OnPropertyChanged(nameof(Scales));
-                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-
                 OnPropertyChanged(nameof(DoneButtonIsEnabled));
                 OnPropertyChanged(nameof(FormatsIsEnabled));
                 OnPropertyChanged(nameof(PlottersIsEnabled));
@@ -150,7 +147,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         public string AnnotationScaleObjectsVP
         {
             get { return _AnnotationScaleObjectsVP; }
-            set { _AnnotationScaleObjectsVP = value; }
+            set 
+            { 
+                _AnnotationScaleObjectsVP = value;
+                OnPropertyChanged(nameof(DoneButtonIsEnabled));
+            }
         }
     }
 }

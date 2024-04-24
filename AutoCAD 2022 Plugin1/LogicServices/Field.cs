@@ -228,7 +228,6 @@ namespace AutoCAD_2022_Plugin1
             this.ObjectIDs = ObjectIDs;
             this.AnnotationScale = AnnotationScale;
             this.ColorIndex = config.ColorIndexForViewport;
-            UpdatePolylineSize();
 
             Distribution = new ViewportDistributionOnModel(field, this);
 

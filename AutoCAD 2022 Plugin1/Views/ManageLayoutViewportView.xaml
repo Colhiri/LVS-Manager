@@ -87,7 +87,7 @@
 
                         <TextBlock Margin="2" Grid.Row="0" Grid.Column="0">Выбрать видовой экран в макете</TextBlock>
                         <ComboBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2"  Margin="2"
-                                  SelectedItem="{Binding Path=ViewportId}"
+                                  SelectedItem="{Binding Path=ViewportId, UpdateSourceTrigger=PropertyChanged}"
                                   ItemsSource="{Binding Viewports}" IsEnabled="{Binding EnabledFormsParamatersLayout}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
@@ -97,8 +97,9 @@
 
                         <TextBlock Margin="2" Grid.Row="2" Grid.Column="0">Изменить аннотационный масштаб</TextBlock>
                         <ComboBox Margin="2" Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2"
-                                  SelectedItem="{Binding Path=AnnotationScaleObjectsVP}" IsEditable="True"
-                                  ItemsSource="{Binding Scales}" IsEnabled="{Binding EnabledFormsParamatersViewport}"
+                                  ItemsSource="{Binding Scales}"
+                                  Text="{Binding Path=AnnotationScaleObjectsVP, UpdateSourceTrigger=PropertyChanged}" IsEditable="True"
+                                  IsEnabled="{Binding EnabledFormsParamatersViewport}"
                                   IsSynchronizedWithCurrentItem="True">
                         </ComboBox>
 

@@ -1,5 +1,6 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
+using Autodesk.AutoCAD.DatabaseServices;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows.Controls;
@@ -15,6 +16,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             _LayoutToDelete = new ObservableCollection<string>();
             _ViewportToDelete = new ObservableCollection<string>();
             _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name).ToList());
+            _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
         }
 
         /// <summary>
@@ -168,6 +170,9 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     {
                         CurrentViewport.Name = NameViewport;
                         CurrentViewport.AnnotationScale = AnnotationScaleObjectsVP;
+                        Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
+                        OnPropertyChanged(nameof(ViewportId));
+                        AnnotationScaleObjectsVP = CurrentViewport.AnnotationScale;
                     }
                     if (ViewportToDelete.Contains(ViewportId))
                     {
@@ -181,13 +186,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                     }
                     break;
             }
-            OnPropertyChanged(nameof(ViewportId));
-            OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-            OnPropertyChanged(nameof(Viewports));
-            OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
-            OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
-            OnPropertyChanged(nameof(InvertEnabledFormsParamatersLayout));
-            OnPropertyChanged(nameof(InvertEnabledFormsParamatersViewport));
             // Перерисовываем если есть изменения в формате макета
             CreateLayoutModel.FL.CreateNewPoints();
         }

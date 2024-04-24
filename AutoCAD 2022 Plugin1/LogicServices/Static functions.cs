@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using Autodesk.AutoCAD.Internal;
+using System.Windows.Annotations;
 
 namespace AutoCAD_2022_Plugin1
 {
@@ -234,6 +235,13 @@ namespace AutoCAD_2022_Plugin1
         /// <exception cref="System.Exception"></exception>
         public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale)
         {
+
+            // https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-9B330DCF-6A4E-4C58-B5C1-085E34912077
+
+            // Исправь
+            // Исправь
+            // Исправь
+            // Исправь
             if (AcDocument is null) throw new System.Exception("No active document!");
             if (!layoutManager.LayoutExists(nameLayout))
                 throw new System.Exception($"Layout with name {nameLayout} already exists.");
@@ -243,37 +251,43 @@ namespace AutoCAD_2022_Plugin1
             ObjectId layID = layoutManager.GetLayoutId(nameLayout);
 
             // Получаем макет
-            Layout layWrite;
+            ;
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
-                layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+                Layout layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
+
+                // Применяем параметры
+                using (PlotSettings ps = new PlotSettings(layWrite.ModelType))
+                {
+                    ps.CopyFrom(layWrite);
+                    PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
+                    pltValidator.SetPlotConfigurationName(ps, deviceName, canonicalScale);
+
+                    /*
+                    pltValidator.RefreshLists(ps);
+
+                    pltValidator.SetCanonicalMediaName(ps, canonicalScale);
+
+                    var upgraded = false;
+
+                    if (!layWrite.IsWriteEnabled)
+                    {
+                        layWrite.UpgradeOpen();
+                        upgraded = true;
+                    }
+
+                    layWrite.CopyFrom(ps);
+
+                    if (upgraded)
+                    {
+                        layWrite.DowngradeOpen();
+                    }
+                    */
+
+                    acTrans.GetObject(layoutManager.GetLayoutId(layoutManager.CurrentLayout), OpenMode.ForWrite);
+                    layWrite.CopyFrom(ps);
+                }
                 acTrans.Commit();
-            }
-
-            // Применяем параметры
-            using (var ps = new PlotSettings(layWrite.ModelType))
-            {
-                ps.CopyFrom(layWrite);
-                PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
-                pltValidator.SetPlotConfigurationName(ps, deviceName, null);
-                pltValidator.RefreshLists(ps);
-
-                pltValidator.SetCanonicalMediaName(ps, canonicalScale);
-
-                var upgraded = false;
-
-                if (!layWrite.IsWriteEnabled)
-                {
-                    layWrite.UpgradeOpen();
-                    upgraded = true;
-                }
-
-                layWrite.CopyFrom(ps);
-
-                if (upgraded)
-                {
-                    layWrite.DowngradeOpen();
-                }
             }
         }
 
@@ -315,6 +329,11 @@ namespace AutoCAD_2022_Plugin1
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
+            // Получаем аннотационный масштаб модели, который необходимо применить на полученный размер объектов
+            AnnotationScale scaleDatabase = AcDatabase.Cannoscale;
+            double scale = ReformatAnnotationScale(scaleDatabase.Name);
+            double invertScale = 1 / scale;
+
             double ModelWidth;
             double ModelHeight;
 
@@ -333,7 +352,10 @@ namespace AutoCAD_2022_Plugin1
                 acTrans.Abort();
             }
 
-            return new Size(ModelWidth, ModelHeight);
+            // Применяем аннотационный масштаб модели к текущему размеру объектов
+            Size sizeObjectInModel = new Size(ModelWidth * invertScale, ModelHeight * invertScale);
+
+            return sizeObjectInModel;
         }
 
 
@@ -439,6 +461,11 @@ namespace AutoCAD_2022_Plugin1
             string[] devices = pltValidator.GetPlotDeviceList().Cast<string>().ToArray();
             if (!devices.Contains(devicePlotter)) throw new System.Exception("Not found your device in device list in Autocad.");
 
+            // Получаем аннотационный масштаб модели, который необходимо применить на полученный размер объектов
+            AnnotationScale scaleDatabase = AcDatabase.Cannoscale;
+            double scale = ReformatAnnotationScale(scaleDatabase.Name);
+            // double invertScale = 1 / scale;
+
             string[] scales;
 
             ObjectId ModelSpaceId;
@@ -466,7 +493,11 @@ namespace AutoCAD_2022_Plugin1
                     }
                 }
             }
-            return new Size(width, height);
+
+            // Применяем аннотационный масштаб модели к текущему размеру макета
+            Size sizeLayoutInModel = new Size(width * scale, height * scale);
+
+            return sizeLayoutInModel;
         }
 
         /// <summary>
@@ -572,19 +603,33 @@ namespace AutoCAD_2022_Plugin1
         /// <exception cref="System.Exception"></exception>
         public static void AddNewAnnotationScale(string annoScale)
         {
-            int[] parts = annoScale.Split(':').Select(x => int.Parse(x)).ToArray();
+            double[] parts = annoScale.Split(':').Select(x => double.Parse(x)).ToArray();
 
-            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
-            if (occ == null) throw new System.Exception("Object Context Collection is null. Some errors with standart annotation scales.");
-
-            AnnotationScale newAnnoScale = new AnnotationScale()
+            try
             {
-                Name = annoScale,
-                PaperUnits = parts[0],
-                DrawingUnits = parts[1],
-            };
+                ObjectContextManager cm = AcDatabase.ObjectContextManager;
+                if (cm != null)
+                {
+                    // Now get the Annotation Scaling context collection
+                    // (named ACDB_ANNOTATIONSCALES_COLLECTION)
+                    ObjectContextCollection occ = cm.GetContextCollection("ACDB_ANNOTATIONSCALES");
+                    if (occ != null)
+                    {
+                        // Create a brand new scale context
+                        AnnotationScale asc = new AnnotationScale();
+                        asc.Name = annoScale;
+                        asc.PaperUnits = parts[0];
+                        asc.DrawingUnits = parts[1];
+                        // Add it to the drawing's context collection
+                        occ.AddContext(asc);
+                    }
+                }
+            }
+            catch (System.Exception ex)
 
-            occ.AddContext(newAnnoScale);
+            {
+                AcEditor.WriteMessage(ex.ToString());
+            }
         }
 
 
@@ -602,6 +647,21 @@ namespace AutoCAD_2022_Plugin1
             double newWidth;
             double newHeight;
 
+            ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
+            // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
+            List<AnnotationScale> annotation = occ.Cast<AnnotationScale>().ToList();
+            AnnotationScale rightScale = annotation[0];
+            try
+            {
+                rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
+            }
+            catch
+            {
+                AddNewAnnotationScale(annotationScaleName);
+                annotation = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES").Cast<AnnotationScale>().ToList();
+                rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
+            }
+
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
                 var layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
@@ -617,30 +677,12 @@ namespace AutoCAD_2022_Plugin1
                     CenterPoint = new Point3d(0, 0, 0),
                 };
 
-                ObjectContextCollection occ = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES");
-
                 // Add new DBObject in Database
                 // Set ObjectId Creating ViewPort
                 ObjectId viewportID = acBlkTblRec.AppendEntity(viewport);
                 acTrans.AddNewlyCreatedDBObject(viewport, true);
 
                 Viewport vp = acTrans.GetObject(viewportID, OpenMode.ForWrite) as Viewport;
-
-                // Activate this parameters vork only drop DBObject in acDB (PS vp.ON only)
-                List<AnnotationScale> annotation = occ.Cast<AnnotationScale>().ToList();
-
-                AnnotationScale rightScale = annotation[0];
-
-                try
-                {
-                    rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
-                }
-                catch
-                {
-                    AddNewAnnotationScale(annotationScaleName);
-                    annotation = OCM.GetContextCollection("ACDB_ANNOTATIONSCALES").Cast<AnnotationScale>().ToList();
-                    rightScale = annotation.Where(x => x.Name == annotationScaleName).First();
-                }
 
                 vp.On = true;
                 vp.AnnotationScale = rightScale;

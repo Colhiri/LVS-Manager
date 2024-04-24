@@ -75,13 +75,12 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 CurrentViewport = _ViewportId != null ? CreateLayoutModel.FL.Fields.Where(x => x.Name == FieldName)
                                                          .First()
                                                          .Viewports.Where(x => x.ID.ToString() == _ViewportId).First() : null;
-                AnnotationScaleObjectsVP = _ViewportId != null ? CurrentViewport.AnnotationScale : null;
                 NameViewport = _ViewportId != null ? CurrentViewport.Name : null;
+                AnnotationScaleObjectsVP = _ViewportId != null ? CurrentViewport.AnnotationScale : null;
 
-                OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
-                OnPropertyChanged(nameof(NameViewport));
                 OnPropertyChanged(nameof(EnabledFormsParamatersViewport));
                 OnPropertyChanged(nameof(EnabledDoneCommandViewport));
+                OnPropertyChanged(nameof(InvertEnabledFormsParamatersViewport));
             }
         }
 
@@ -101,8 +100,11 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
                 return _Scales;
+            }
+            set
+            {
+                _Scales = value;
             }
         }
         private string _AnnotationScaleObjectsVP;

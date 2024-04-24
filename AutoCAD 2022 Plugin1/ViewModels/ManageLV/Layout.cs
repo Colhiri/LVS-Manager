@@ -81,11 +81,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
                 Viewports = _FieldName != null ? CurrentField.Viewports.Select(x => x.ID.ToString()).ToList() : null;
                 ViewportId = _FieldName != null ? Viewports.FirstOrDefault() : null;
 
-                OnPropertyChanged(nameof(EditFieldName));
-                OnPropertyChanged(nameof(PlotterName));
-                OnPropertyChanged(nameof(LayoutFormat));
-                OnPropertyChanged(nameof(Viewports));
                 OnPropertyChanged(nameof(EnabledFormsParamatersLayout));
+                OnPropertyChanged(nameof(InvertEnabledFormsParamatersLayout));
             }
         }
 
@@ -121,7 +118,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             {
                 _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
                 LayoutFormat = CurrentField.Format;
-                OnPropertyChanged(nameof(LayoutFormat));
+                // OnPropertyChanged(nameof(LayoutFormat));
                 return _Formats;
             }
         }
