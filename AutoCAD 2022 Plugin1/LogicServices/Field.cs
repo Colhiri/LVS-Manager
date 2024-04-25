@@ -2,38 +2,12 @@
 using Autodesk.AutoCAD.Geometry;
 using System.Collections.Generic;
 using System.Linq;
-using static AutoCAD_2022_Plugin1.Working_functions;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
-namespace AutoCAD_2022_Plugin1
+#warning Поправь класс Field List, если не получится вот старый вариант
+
+namespace AutoCAD_2022_Plugin1.NoUse
 {
-    /// <summary>
-    /// Состояние отрисовки видового экрана или поля в пространстве модели
-    /// </summary>
-    public enum State
-    {
-        Exist,
-        NoExist
-    }
-
-    /// <summary>
-    /// Где находится стартовая точка отрисовки полей и видовых экранов
-    /// </summary>
-    public enum LocationDraw
-    {
-        TopLeft, 
-        TopRight, 
-        BottomLeft,
-        BottomRight,
-        Custom
-    }
-
-    public enum WorkObject
-    {
-        Field,
-        Viewport,
-        None
-    }
-
     /// <summary>
     /// Создать массив Полей
     /// </summary>
@@ -119,11 +93,13 @@ namespace AutoCAD_2022_Plugin1
         public Size OriginalSizeLayout { get; private set; }
         public Size DownScaleSizeLayout { get; private set; }
         // Общие параметры
-        public int CountViewport => Viewports.Count;
         public State StateInModel { get; private set; } = State.NoExist;
         public Point2d StartPoint { get; private set; }
         private List<ViewportInField> Viewports { get; set; } = new List<ViewportInField>();
         // Свойства для Field
+        public bool CheckViewport(Identificator Id) => Viewports.Select(x => x.Id == Id).Contains(true);
+        public bool CheckViewport(ObjectId Id) => Viewports.Select(x => x.ContourObjects == Id).Contains(true);
+        public bool CheckViewport(string Id) => Viewports.Select(x => x.Id.ToString() == Id).Contains(true);
         public ViewportInField GetViewport(Identificator Id) => Viewports.Where(x => x.Id == Id).First();
         public ViewportInField GetViewport(ObjectId Id) => Viewports.Where(x => x.ContourObjects == Id).First();
         public ViewportInField GetViewport(string Id) => Viewports.Where(x => x.Id.ToString() == Id).First();
@@ -134,12 +110,12 @@ namespace AutoCAD_2022_Plugin1
         public void DeleteViewport(Identificator Id) => Viewports.Remove(Viewports.Where(x => x.Id == Id).First());
         public void DeleteViewport(ObjectId Id) => Viewports.Remove(Viewports.Where(x => x.ContourObjects == Id).First());
         public void DeleteViewport(string Id) => Viewports.Remove(Viewports.Where(x => x.Id.ToString() == Id).First());
-        public void SetFieldName(Field FieldForEdit, string newNameLayout) => FieldForEdit.NameLayout = newNameLayout;
-        public void SetFieldPlotter(Field FieldForEdit, string newPlotterLayout) => FieldForEdit.PlotterName = newPlotterLayout;
-        public void SetFieldFormat(Field FieldForEdit, string newFormatLayout)
+        public void SetFieldName(string newNameLayout) => this.NameLayout = newNameLayout;
+        public void SetFieldPlotter(string newPlotterLayout) => this.PlotterName = newPlotterLayout;
+        public void SetFieldFormat(string newFormatLayout)
         {
-            FieldForEdit.LayoutFormat = newFormatLayout;
-            FieldForEdit.UpdatePaperSize();
+            this.LayoutFormat = newFormatLayout;
+            this.UpdatePaperSize();
         }
 
         public Field(string NameLayout, string LayoutFormat, string PlotterName)
@@ -164,7 +140,7 @@ namespace AutoCAD_2022_Plugin1
                 StartPoint = new Point2d(FieldList.CurrentStartPoint.X - DownScaleSizeLayout.Width * 0.5,
                                          FieldList.CurrentStartPoint.Y);
             }
-            DistributionViewportOnField PointVP = new DistributionViewportOnField(StartPoint);
+            DistributionObjectsInModel PointVP = new DistributionObjectsInModel(StartPoint);
             // Добавляем параметры видового экрана
             var viewport = new ViewportInField(AnnotationScaleViewport, ObjectsId, PointVP, NameLayout);
             Viewports.Add(viewport);
@@ -215,14 +191,14 @@ namespace AutoCAD_2022_Plugin1
         // Общие параметры
         public Point2d CenterPoint { get; private set; }
         public State StateInModel { get; private set; } = State.NoExist;
-        public DistributionViewportOnField StartPoint { get; private set; }
-        public void SetScaleVP(ViewportInField VPforEdit, string NewScaleVP)
+        public DistributionObjectsInModel StartPoint { get; private set; }
+        public void SetScaleVP(string NewScaleVP)
         {
-            VPforEdit.AnnotationScaleViewport = NewScaleVP;
-            VPforEdit.UpdateSizeVP();
+            this.AnnotationScaleViewport = NewScaleVP;
+            this.UpdateSizeVP();
         }
 
-        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionViewportOnField StartDrawPointVP, string NameLayout)
+        public ViewportInField(string AnnotationScaleViewport, ObjectIdCollection ObjectsIDs, DistributionObjectsInModel StartDrawPointVP, string NameLayout)
         {
             this.AnnotationScaleViewport = AnnotationScaleViewport;
             this.ObjectsIDs = ObjectsIDs;
@@ -253,33 +229,6 @@ namespace AutoCAD_2022_Plugin1
             SizeObjectsWithoutScale = CheckModelSize(ObjectsIDs);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithoutScale, AnnotationScaleViewport);
             SizeObjectsWithScaling = ApplyScaleToSizeObjectsInModel(SizeObjectsWithScaling, Field.DownScale);
-        }
-    }
-
-    /// <summary>
-    /// Инкапсуляция логики идентификатора для возможных будущих изменений
-    /// </summary>
-    public class Identificator
-    {
-        private static int _ID { get; set; } = 0;
-        private int ID { get; set; }
-        public override string ToString() => ID.ToString();
-        public Identificator()
-        {
-            ID = _ID;
-            _ID++;
-        }
-    }
-
-    public class DistributionViewportOnField
-    {
-        public Point2d StartPoint { get; set; }
-        private Point2d PointDrawing { get; set; }
-        public Point2d ToPoint2d() => StartPoint;
-
-        public DistributionViewportOnField(Point2d StartPoint)
-        {
-            this.StartPoint = StartPoint;
         }
     }
 }

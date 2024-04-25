@@ -57,6 +57,9 @@
     <Reference Include="Microsoft.Bcl.HashCode, Version=1.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
       <HintPath>..\packages\Microsoft.Bcl.HashCode.1.0.0\lib\net461\Microsoft.Bcl.HashCode.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Xaml.Behaviors, Version=1.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Xaml.Behaviors.Wpf.1.1.77\lib\net462\Microsoft.Xaml.Behaviors.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -86,29 +89,37 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Models\ManageLayoutModel.cs" />
+    <Compile Include="LogicServices\DistributionObjectsInModel.cs" />
+    <Compile Include="LogicServices\Enums.cs" />
+    <Compile Include="LogicServices\Identificator.cs" />
+    <Compile Include="LogicServices\NewField.cs" />
+    <Compile Include="Models\ManageModels\MainManageModel.cs" />
+    <Compile Include="Models\ManageModels\ManageViewportModel.cs" />
+    <Compile Include="Models\ManageModels\ManageLayoutModel.cs" />
     <Compile Include="Models\MainModel.cs" />
     <Compile Include="Models\CreateLayoutModel.cs" />
+    <Compile Include="Services\MyViewSelector.cs" />
+    <Compile Include="Services\Observer.cs" />
     <Compile Include="Services\RelayCommand.cs" />
     <Compile Include="ViewModels\MainVM.cs" />
-    <Compile Include="ViewModels\ManageLayoutViewportVM.cs" />
     <Compile Include="LogicServices\Size.cs" />
     <Compile Include="NoUse\NoUseCommands.cs" />
     <Compile Include="Services\Initialization.cs" />
     <Compile Include="MainCommandToStart.cs" />
+    <Compile Include="Services\DummyViewModel.cs" />
+    <Compile Include="Services\IMyTabContentViewModel.cs" />
     <Compile Include="ViewModels\ManageVM\ManageVIewportVM.cs" />
     <Compile Include="ViewModels\ManageVM\ManageLayoutVM.cs" />
     <Compile Include="ViewModels\ManageVM\MainManageVM.cs" />
+    <Compile Include="Services\TypeView.cs" />
+    <Compile Include="LogicServices\ParametersLVS.cs" />
     <Compile Include="Views\CreateLayoutView.xaml.cs">
       <DependentUpon>CreateLayoutView.xaml</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="LogicServices\Static functions.cs" />
+    <Compile Include="LogicServices\CadUtilityLib.cs" />
     <Compile Include="LogicServices\Field.cs" />
     <Compile Include="ViewModels\CreateLayoutVM.cs" />
-    <Compile Include="Views\ManageLayoutViewportView.xaml.cs">
-      <DependentUpon>ManageLayoutViewportView.xaml</DependentUpon>
-    </Compile>
     <Compile Include="NoUse\WrapInfoScale.cs" />
     <Compile Include="Views\ManageViews\ManageViewportView.xaml.cs">
       <DependentUpon>ManageViewportView.xaml</DependentUpon>
@@ -122,6 +133,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
+    <None Include="Managing.vsdx" />
     <None Include="packages.config" />
     <None Include="Services\start.scr">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -130,10 +142,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="Views\CreateLayoutView.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="Views\ManageLayoutViewportView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

@@ -5,7 +5,7 @@ using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using System.Collections.Generic;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
-using static AutoCAD_2022_Plugin1.Working_functions;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
 
 [assembly: CommandClass(typeof(AutoCAD_2022_Plugin1.NoUseCommands))]

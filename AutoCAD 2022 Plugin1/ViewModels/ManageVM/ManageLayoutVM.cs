@@ -1,13 +1,64 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using AutoCAD_2022_Plugin1.Services;
 using System.Collections.ObjectModel;
-using System.Windows;
 
 namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
 {
-    public class ManageLayoutVM : MainVM
+    public class ManageLayoutVM : MainVM, IMyTabContentViewModel, IObserver
     {
-        public ManageLayoutVM(Window window) : base(window) { }
+        private CurrentLayoutObservable obs;
+        private ManageLayoutModel Model;
+        public ManageLayoutVM(ManageLayoutModel Model, CurrentLayoutObservable obs)
+        {
+            this.Model = Model;
+            this.obs = obs;
+            this.obs.AddObserver(this);
+            this._Plotters = Model.GetPlotters();
+        }
+
+        #region Properties
+        /// Проверка корректности имени
+        private bool _ApplyButtonEnabled;
+        public bool ApplyButtonEnabled
+        {
+            get
+            {
+                _ApplyButtonEnabled = Model.IsValidName(Name);
+                if (_ApplyButtonEnabled == false)
+                {
+                    Application.ShowAlertDialog("Введено неправильное имя макета! Исправьте!");
+                }
+                return _ApplyButtonEnabled;
+            }
+        }
+
+        /// Позволяет блокировать Tab Viewport'a
+        public bool CheckTabEnabled
+        {
+            get
+            {
+                return EnabledFormsParamaters;
+            }
+        }
+
+        /// Проверка редактирования некоторых частей View
+        public bool EnabledFormsParamaters
+        {
+            get
+            {
+                if (Name == null) return false;
+                return Model.CheckToDelete();
+            }
+        }
+
+        public bool InvertEnabledForms 
+        { 
+            get 
+            {
+                if (Name == null) return false;
+                return !EnabledFormsParamaters;  
+            }
+        }
 
         #region Properties
         /// <summary>
@@ -95,6 +146,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (Name == null) return null;
                 return _PlotterName;
             }
             set
@@ -120,12 +172,36 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         {
             get
             {
+                if (PlotterName == null) return null;
                 return _LayoutFormat;
             }
             set
             {
                 _LayoutFormat = value;
             }
+        }
+
+        #endregion
+
+        #region Commands
+        public void Update()
+        {
+            ManageLayout Current = Model.GetCurrentLayout(Name);
+            _Name = Current.Name;
+            _PlotterName = Current.Plotter;
+            _LayoutFormat = Current.Format; 
+        }
+
+        /// <summary>
+        /// Добавление имени макета в список на удаление
+        /// </summary>
+        private void AddDelete()
+        {
+            if (Name == null) return;
+            //throw new System.Exception("Сделай удаление");
+            Model.SetDelete();
+            OnPropertyChanged(nameof(EnabledFormsParamaters));
+            OnPropertyChanged(nameof(InvertEnabledForms));
         }
         #endregion
 

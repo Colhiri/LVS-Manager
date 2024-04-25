@@ -13,6 +13,8 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageVM
         public ManageVIewportVM ManageVIewport { get; private set; }
         public ObservableCollection<DummyViewModel> tabs { get; set; }
 
+        /// Список для отслеживания вкладкок в Manage
+        public ObservableCollection<DummyViewModel> Tabs { get; set; }
 
         public MainManageVM(Window window) : base(window) 
         {

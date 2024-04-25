@@ -1,13 +1,14 @@
 ﻿using AutoCAD_2022_Plugin1.Models;
 using System.Collections.ObjectModel;
-using System.Windows;
+using System.Linq;
 
 namespace AutoCAD_2022_Plugin1.ViewModels
 {
     public class CreateLayoutVM : MainVM
     {
-        private CreateLayoutModel model = new CreateLayoutModel();
-        public CreateLayoutVM(Window window) : base(window) { }
+        CreateLayoutModel Model = new CreateLayoutModel();
+
+        public FieldList FL = FieldList.GetInstance();
 
         /// <summary>
         /// Доступность Button "Применить"
@@ -17,34 +18,19 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _DoneButtonIsEnabled = model.IsValidName(_Name) && model.IsValidScale(_AnnotationScaleObjectsVP);
+                _DoneButtonIsEnabled = Model.IsValidName(_Name) && Model.IsValidScale(_AnnotationScaleObjectsVP);
                 return _DoneButtonIsEnabled;
             }
         }
 
         /// <summary>
-        /// Доступность ComboBox выбора плоттеров
+        /// Можно выбрать плоттер и формат когда макет еще не создан, если наоборот, то нужно менять плоттер  и формат макета через Managing
         /// </summary>
-        private bool _PlottersIsEnabled;
-        public bool PlottersIsEnabled
+        public bool EnabledForms
         {
             get
             {
-                _PlottersIsEnabled = CreateLayoutModel.FL.Contains(_Name);
-                return _PlottersIsEnabled;
-            }
-        }
-
-        /// <summary>
-        /// Доступность ComboBox выбора плоттеров
-        /// </summary>
-        private bool _FormatsIsEnabled;
-        public bool FormatsIsEnabled
-        {
-            get
-            {
-                _FormatsIsEnabled = CreateLayoutModel.FL.Contains(_Name);
-                return _FormatsIsEnabled;
+                return !FL.Fields.Select(x => x.Name).Contains(_Name);
             }
         }
 
@@ -53,7 +39,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Names = new ObservableCollection<string>(CreateLayoutModel.FL.GetNames());
+                _Names = new ObservableCollection<string>(FL.Fields.Select(x => x.Name));
                 return _Names;
             }
         }
@@ -77,8 +63,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
                 OnPropertyChanged(nameof(AnnotationScaleObjectsVP));
 
                 OnPropertyChanged(nameof(DoneButtonIsEnabled));
-                OnPropertyChanged(nameof(FormatsIsEnabled));
-                OnPropertyChanged(nameof(PlottersIsEnabled));
+                OnPropertyChanged(nameof(EnabledForms));
             }
         }
 
@@ -87,7 +72,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
+                _Plotters = new ObservableCollection<string>(CadUtilityLib.GetPlotters());
                 return _Plotters;
             }
         }
@@ -110,7 +95,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels
         {
             get
             {
-                _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                _Formats = new ObservableCollection<string>(CadUtilityLib.GetAllCanonicalScales(_PlotterName));
                 return _Formats;
             }
         }
@@ -127,12 +112,19 @@ namespace AutoCAD_2022_Plugin1.ViewModels
             }
         }
 
+        private string _ViewportName;
+        public string ViewportName
+        {
+            get { return _ViewportName; }
+            set { _ViewportName = value; }
+        }
+
         private ObservableCollection<string> _Scales;
         public ObservableCollection<string> Scales
         {
             get
             {
-                _Scales = new ObservableCollection<string>(CreateLayoutModel.GetAllAnnotationScales());
+                _Scales = new ObservableCollection<string>(CadUtilityLib.GetAllAnnotationScales());
                 return _Scales;
             }
         }

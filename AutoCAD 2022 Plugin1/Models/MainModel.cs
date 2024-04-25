@@ -1,10 +1,17 @@
 ﻿using Autodesk.AutoCAD.DatabaseServices;
+using Autodesk.AutoCAD.Geometry;
+using System.Collections.Generic;
 using System.Linq;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 
 namespace AutoCAD_2022_Plugin1.Models
 {
-    public class MainModel : Working_functions
+    public class MainModel
     {
+        public static CadUtilityLib MainWorkFunctions = CadUtilityLib.GetCurrent();
+
+        public FieldList FL = FieldList.GetInstance();
+
         public bool IsValidName(string Name)
         {
             if (string.IsNullOrEmpty(Name)) return false;
@@ -19,12 +26,14 @@ namespace AutoCAD_2022_Plugin1.Models
             return true;
         }
 
-        public bool IsValidScale(string AnnotationScaleObjectsVP)
+        public bool IsValidScale(string Scale)
         {
-            if (string.IsNullOrEmpty(AnnotationScaleObjectsVP)) return false;
+            if (string.IsNullOrEmpty(Scale)) return false;
             try
             {
-                int[] parts = AnnotationScaleObjectsVP.Split(':').Select(x => int.Parse(x)).ToArray();
+                int[] parts = Scale.Split(':')
+                                   .Select(x => int.Parse(x))
+                                   .ToArray();
             }
             catch
             {
@@ -32,6 +41,5 @@ namespace AutoCAD_2022_Plugin1.Models
             }
             return true;
         }
-
     }
 }

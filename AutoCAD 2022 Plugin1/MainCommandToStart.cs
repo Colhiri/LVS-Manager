@@ -4,10 +4,10 @@ using Autodesk.AutoCAD.EditorInput;
 using Autodesk.AutoCAD.Geometry;
 using Autodesk.AutoCAD.Runtime;
 using System;
-using static AutoCAD_2022_Plugin1.Working_functions;
+using System.Linq;
+using static AutoCAD_2022_Plugin1.CadUtilityLib;
 using AcCoreAp = Autodesk.AutoCAD.ApplicationServices.Core.Application;
 using AutoCAD_2022_Plugin1;
-using Field = AutoCAD_2022_Plugin1.Field;
 using AutoCAD_2022_Plugin1.ViewModels;
 using AutoCAD_2022_Plugin1.Views;
 using AutoCAD_2022_Plugin1.Views.ManageViews;
@@ -38,6 +38,7 @@ namespace LightProgram
          * в) перерисовать все исходя из новых параметров --- НУЖЕН КЛАСС ПЕРЕОТРИСОВКИ И ПЕРЕРАСПРЕДЕЛЕНИЯ ЗНАЧЕНИЙ
          */
         public static LocationDraw StartLocationDrawing { get; private set; } = LocationDraw.TopLeft;
+        public static FieldList FL = FieldList.GetInstance();
 
         /// <summary>
         /// 
@@ -57,18 +58,18 @@ namespace LightProgram
             // располагаются точки, какой начальный принтер.
             // Здесь должен располагаться конфиг, откуда все подгружается
             // Имитация
-            FieldList.ColorIndexForField = 3;
-            FieldList.ColorIndexForViewport = 4;
-            FL.StartPoint = new Point2d(0.0, 0.0);
+            Point2d StartPoint = new Point2d(0, 0);
+            int ColorIndexLayout = 3;
             string plotterNameFromConfig = "Нет";
+            int ColorIndexViewport = 4;
+            string DownScale = "1:1";
+            FieldList FL = FieldList.GetInstance(StartPoint, ColorIndexLayout, ColorIndexViewport, DownScale);
 
-            /// Особая инициализация формы из клиентского кода 
-            /// (сначала окно, потом передаем в VM параметр формы, потом грузим форму контекстом)
-            CreateLayoutView window = new CreateLayoutView();
-            CreateLayoutVM tempData = new CreateLayoutVM(window);
-            window.DataContext = tempData;
-
+            /// инициализация формы из клиентского кода 
+            CreateLayoutVM tempData = new CreateLayoutVM();
             tempData.PlotterName = plotterNameFromConfig;
+            CreateLayoutView window = new CreateLayoutView(tempData);
+
             if (Application.ShowModalWindow(window) != true) return;
 
             // Получаем выбранные объекты
@@ -76,7 +77,7 @@ namespace LightProgram
             if (select.Status != PromptStatus.OK)
             {
                 Application.ShowAlertDialog("Объекты не выбраны! Заново!");
-                // select = AcEditor.GetSelection();
+                return;
             }
             ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
 
@@ -84,17 +85,18 @@ namespace LightProgram
             string resultPlotter = tempData.PlotterName;
             string resultLayoutFormat = tempData.LayoutFormat;
             string resultScale = tempData.AnnotationScaleObjectsVP;
+            string resultNameViewport = tempData.ViewportName;
 
             // Добавлем новую филду
-            Field field = FL.AddField(resultNameLayout, resultLayoutFormat, resultPlotter) as Field;
-            if (field == null) throw new ArgumentNullException();
-            ViewportInField viewport = field.AddViewport(resultScale, objectsIDs);
+            LayoutModel layout = FL.AddLayout(resultNameLayout, resultLayoutFormat, resultPlotter);
+            if (layout == null) throw new ArgumentNullException();
+            ViewportModel viewport = layout.AddViewport(resultNameViewport, resultScale, objectsIDs);
             //viewport.ChangeStartPoint(new Point2d(0, 0));
 
-            if (field.StateInModel == State.NoExist) 
-                field.Draw();
+            if (layout.StateType == State.NoExist) 
+                layout.Draw();
 
-            if (viewport.StateInModel == State.NoExist)
+            if (viewport.StateType == State.NoExist)
                 viewport.Draw();
         }
 
@@ -128,33 +130,31 @@ namespace LightProgram
             string AnnotationScaleObjects = null;
             WorkObject TypeWorkObject = WorkObject.None;
 
-            foreach (string NameField in FL.GetNames())
+            try
             {
-                Field field = FL.GetField(NameField);
-                if (field.ContourField == objectID)
-                {
-                    NameLayoutObjects = field.NameLayout;
-                    PlotterNameObjects = field.PlotterName;
-                    LayoutFormatObjects = field.LayoutFormat;
-                    TypeWorkObject = WorkObject.Field;
-                    break;
-                }
-                else
-                {
-                    foreach (Identificator id in field.ViewportIdentificators())
-                    {
-                        ViewportInField vp = field.GetViewport(id);
+                LayoutModel field = FL.Fields.Where(x => x.ContourObject == objectID).First();
+                NameLayoutObjects = field.Name;
+                PlotterNameObjects = field.Plotter;
+                LayoutFormatObjects = field.Format;
+                TypeWorkObject = WorkObject.Layout;
+            }
+            catch (System.Exception ex)
+            {
+                Application.ShowAlertDialog(ex.Message);
 
-                        if (vp.ContourObjects == objectID)
-                        {
-                            NameLayoutObjects = field.NameLayout;
-                            PlotterNameObjects = field.PlotterName;
-                            LayoutFormatObjects = field.LayoutFormat;
-                            AnnotationScaleObjects = vp.AnnotationScaleViewport;
-                            TypeWorkObject = WorkObject.Viewport;
-                            break;
-                        }
-                    }
+                try
+                {
+                    LayoutModel field = FL.Fields.Where(x => x.Viewports.Select(vp => vp.ContourObject).Contains(objectID)).First();
+                    NameLayoutObjects = field.Name;
+                    PlotterNameObjects = field.Plotter;
+                    LayoutFormatObjects = field.Format;
+                    AnnotationScaleObjects = field.Viewports.Where(x => x.ContourObject == objectID).First().Scale;
+                    TypeWorkObject = WorkObject.Viewport;
+                }
+                catch (System.Exception ex2)
+                {
+                    Application.ShowAlertDialog($"Выбран неправильный объект. Заново. \n{ex2.Message}");
+                    return;
                 }
             }
 
@@ -181,31 +181,17 @@ namespace LightProgram
 
         }
 
-        /// <summary>
-        /// Тест работы второго окна и его функций
-        /// </summary>
-        [CommandMethod("zoomtest", CommandFlags.UsePickSet)]
-        public static void zoomtest()
-        {
-            Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
-            if (AcDocument is null) throw new System.Exception("No active document!");
-            Database AcDatabase = AcDocument.Database;
-            Editor AcEditor = AcDocument.Editor;
-            LayoutManager layManager = LayoutManager.Current;
-            ObjectContextManager OCM = AcDatabase.ObjectContextManager;
-
-            PromptSelectionResult select = AcEditor.SelectImplied();
-            if (select.Status != PromptStatus.OK)
+            ParametersLVS parameters = new ParametersLVS()
             {
-                Application.ShowAlertDialog("Выберите объекты");
-                select = AcEditor.GetSelection();
-            }
-            ObjectIdCollection objectsIDs = new ObjectIdCollection(select.Value.GetObjectIds());
+                NameLayout = NameLayoutObjects,
+                LayoutFormat = LayoutFormatObjects,
+                PlotterName = PlotterNameObjects,
+                AnnotationScaleObjectsVP = AnnotationScaleObjects,
+            };
+            MainManageVM manageData = new MainManageVM(parameters);
+            MainManageWindow window = new MainManageWindow(manageData);
+            if (Application.ShowModalWindow(window) != true) return;
 
-            AcEditor.WriteMessage("Objects selected");
-
-
-            // ZoomToObjects(objectsIDs);
         }
     }
 }
