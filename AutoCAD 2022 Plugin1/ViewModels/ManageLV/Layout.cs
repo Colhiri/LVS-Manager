@@ -92,10 +92,10 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
                 return _Plotters;
             }
         }
+        /// При выборе нового принтера, меняются доступные форматы макетов и обновляется текущий макет
         private string _PlotterName;
         public string PlotterName
         {
@@ -106,7 +106,20 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
             set
             {
                 _PlotterName = value;
-                OnPropertyChanged(nameof(Formats));
+                if (_PlotterName == CurrentField.Plotter)
+                {
+                    if (_Formats == null)
+                    {
+                        _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                    }
+                    LayoutFormat = CurrentField.Format;
+                }
+                else
+                {
+                    _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
+                    LayoutFormat = _Formats.FirstOrDefault();
+                }
+                OnPropertyChanged(nameof(LayoutFormat));
             }
         }
 
@@ -116,9 +129,6 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
         {
             get
             {
-                _Formats = new ObservableCollection<string>(CreateLayoutModel.GetAllCanonicalScales(_PlotterName));
-                LayoutFormat = CurrentField.Format;
-                // OnPropertyChanged(nameof(LayoutFormat));
                 return _Formats;
             }
         }

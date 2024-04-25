@@ -13,6 +13,7 @@ namespace AutoCAD_2022_Plugin1.ViewModels.ManageLV
 
         public ManageLayoutViewportVM()
         {
+            _Plotters = new ObservableCollection<string>(CreateLayoutModel.GetPlotters());
             _LayoutToDelete = new ObservableCollection<string>();
             _ViewportToDelete = new ObservableCollection<string>();
             _NamesLayouts = new ObservableCollection<string>(CreateLayoutModel.FL.Fields.Select(x => x.Name).ToList());
