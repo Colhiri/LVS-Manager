@@ -185,8 +185,11 @@ namespace LightProgram
             // Цикл по массиву макетов 
             foreach (Field field in FL.Fields)
             {
+                // Узнаем ротацию макета
+                PlotRotation plotRotation = GetPlotRotationFromSize(field.DownScaleSize); 
+
                 // Создать макет по параметрам
-                CreateLayout(nameLayout: field.Name, canonicalScale: field.Format, deviceName: field.Plotter);
+                CreateLayout(nameLayout: field.Name, canonicalScale: field.Format, deviceName: field.Plotter, plotRotation: plotRotation);
 
                 // (вложенный цикл по массиву видовых экранов)
                 foreach (ViewportInField vp in field.Viewports)

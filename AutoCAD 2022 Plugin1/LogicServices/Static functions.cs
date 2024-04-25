@@ -167,7 +167,7 @@ namespace AutoCAD_2022_Plugin1
         /// <summary>
         /// Создать макет с указанным именем и масштабом
         /// </summary>
-        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Нет")
+        public static ObjectId CreateLayout(string nameLayout, string canonicalScale, string deviceName = "Нет", PlotRotation plotRotation = PlotRotation.Degrees090)
         {
             if (AcDocument is null) throw new System.Exception("No active document!");
 
@@ -180,10 +180,11 @@ namespace AutoCAD_2022_Plugin1
             ObjectId id = layoutManager.CreateLayout(nameLayout);
 
             // Меняем масштаб листа на заданный масштаб выбранного девайса
-            SetSizeLayout(nameLayout, deviceName, canonicalScale);
+            SetSizeLayout(nameLayout, deviceName, canonicalScale, plotRotation);
 
             AcEditor.WriteMessage($"{nameLayout} created with scale {canonicalScale}");
 
+            // Удаляем стандартный видовой экран
             using (Transaction AcTrans = AcDatabase.TransactionManager.StartTransaction())
             {
                 layoutManager.CurrentLayout = nameLayout;
@@ -233,7 +234,7 @@ namespace AutoCAD_2022_Plugin1
         /// <param name="nameLayout"></param>
         /// <param name="canonicalScale"></param>
         /// <exception cref="System.Exception"></exception>
-        public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale)
+        public static void SetSizeLayout(string nameLayout, string deviceName, string canonicalScale, PlotRotation rotationLayout)
         {
 
             // https://help.autodesk.com/view/OARX/2023/ENU/?guid=GUID-9B330DCF-6A4E-4C58-B5C1-085E34912077
@@ -251,44 +252,40 @@ namespace AutoCAD_2022_Plugin1
             ObjectId layID = layoutManager.GetLayoutId(nameLayout);
 
             // Получаем макет
-            ;
             using (Transaction acTrans = AcDatabase.TransactionManager.StartTransaction())
             {
                 Layout layWrite = acTrans.GetObject(layID, OpenMode.ForWrite) as Layout;
 
-                // Применяем параметры
+                // Создаем параметры печати
                 using (PlotSettings ps = new PlotSettings(layWrite.ModelType))
                 {
-                    ps.CopyFrom(layWrite);
+                    // Получаем и обновляем параметры печати
                     PlotSettingsValidator pltValidator = PlotSettingsValidator.Current;
                     pltValidator.SetPlotConfigurationName(ps, deviceName, canonicalScale);
-
-                    /*
-                    pltValidator.RefreshLists(ps);
-
-                    pltValidator.SetCanonicalMediaName(ps, canonicalScale);
-
-                    var upgraded = false;
-
-                    if (!layWrite.IsWriteEnabled)
-                    {
-                        layWrite.UpgradeOpen();
-                        upgraded = true;
-                    }
-
-                    layWrite.CopyFrom(ps);
-
-                    if (upgraded)
-                    {
-                        layWrite.DowngradeOpen();
-                    }
-                    */
-
+                    pltValidator.SetPlotRotation(ps, rotationLayout);
+                    
+                    // Применяем их на созданный макет
                     acTrans.GetObject(layoutManager.GetLayoutId(layoutManager.CurrentLayout), OpenMode.ForWrite);
                     layWrite.CopyFrom(ps);
                 }
                 acTrans.Commit();
             }
+        }
+
+        /// <summary>
+        /// Получить ротацию макета, исходя из его размера
+        /// </summary>
+        /// <param name="sizeLayout"></param>
+        /// <returns></returns>
+        public static PlotRotation GetPlotRotationFromSize(Size sizeLayout)
+        {
+            PlotRotation plotRotation = PlotRotation.Degrees180;
+
+            if (sizeLayout.Width >= sizeLayout.Height)
+            {
+                plotRotation = PlotRotation.Degrees000;
+            }
+            return plotRotation;
         }
 
         /// <summary>
@@ -438,13 +435,13 @@ namespace AutoCAD_2022_Plugin1
                 // pltValidator.SetPlotWindowArea(layWrite, new Extents2d(new Point2d()));
                 Extents2d ext2 = layWrite.PlotPaperMargins;
 
-                layHeight = layWrite.PlotPaperSize.Y;
-
                 layWidth = layWrite.PlotPaperSize.X;
+
+                layHeight = layWrite.PlotPaperSize.Y;
 
                 acTrans.Commit();
             }
-            return new Size(layHeight, layWidth);
+            return new Size(layWidth, layHeight);
         }
 
         /// <summary>
@@ -483,8 +480,7 @@ namespace AutoCAD_2022_Plugin1
 
                     if (layout.ModelType)
                     {
-                        pltValidator.SetPlotConfigurationName(layout, devicePlotter, null);
-                        pltValidator.SetCanonicalMediaName(layout, formatPaper);
+                        pltValidator.SetPlotConfigurationName(layout, devicePlotter, formatPaper);
 
                         width = layout.PlotPaperSize.X;
                         height = layout.PlotPaperSize.Y;
