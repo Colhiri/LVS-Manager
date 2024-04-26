@@ -123,10 +123,14 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="ConfigFile.json" />
+    <None Include="ConfigFile.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Managing.vsdx" />
     <None Include="packages.config" />
-    <None Include="Services\start.scr" />
+    <None Include="Services\start.scr">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Include="Требования.docx" />
   </ItemGroup>
   <ItemGroup>

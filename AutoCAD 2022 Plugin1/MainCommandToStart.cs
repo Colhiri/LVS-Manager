@@ -42,7 +42,7 @@ namespace LightProgram
         /// <summary>
         /// 
         /// </summary>
-        [CommandMethod("COLHIRU", CommandFlags.UsePickSet)]
+        [CommandMethod("DrawLayoutViewportPolylines", CommandFlags.UsePickSet)]
         public static void COLHIRU()
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
@@ -87,7 +87,7 @@ namespace LightProgram
             field.Viewports.Add(new ViewportInField(NameViewport, resultScale, objectsIDs, field));
         }
 
-        [CommandMethod("Managing", CommandFlags.UsePickSet)]
+        [CommandMethod("ManagingLayoutViewport", CommandFlags.UsePickSet)]
         public static void ManagingLayVP()
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
@@ -172,7 +172,7 @@ namespace LightProgram
         /// <summary>
         /// Запускает создание листов и видовых экранов в соответствии с их параметрами в массиве Fields / Viewports
         /// </summary>
-        [CommandMethod("CreateFV")]
+        [CommandMethod("CreateLayoutViewport")]
         public void CreateFV()
         {
             Document AcDocument = AcCoreAp.DocumentManager.MdiActiveDocument;
